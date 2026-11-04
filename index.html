@@ -192,7 +192,7 @@
                         </div>
 
                         <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2">
-                            <span class="text-xs text-emerald-400 block font-bold">تسجيل / مراجعة اشتراك الشهر</span>
+                            <span class="text-xs text-slate-400 block font-bold">تسجيل / مراجعة اشتراك الشهر</span>
                             <div>
                                 <label class="block text-[11px] text-slate-400 mb-1">اختر الشهر:</label>
                                 <select id="input-payment-month" onchange="window.onMonthPaymentChange()" class="w-full bg-slate-900 text-white p-2 rounded-lg border border-slate-700 text-xs">
@@ -245,7 +245,6 @@
         
         let currentUser = null;
         
-        // البيانات الصحيحة والكاملة للعمارة وأسماء الملاك موثقة بالكامل
         let defaultData = {
             adminPassword: "admin123",
             passwords: {}, 
@@ -364,7 +363,9 @@
 
                 if (passTabBtn) passTabBtn.remove();
                 
-                document.getElementById('apt-select').value = currentUser.aptId;
+                // تعيين الشقة بشكل صحيح ومباشر فور تسجيل الدخول للساكن
+                const aptSelect = document.getElementById('apt-select');
+                if(aptSelect) aptSelect.value = currentUser.aptId;
                 window.switchTab('myApt');
             }
             renderApp();
@@ -507,6 +508,7 @@
 
         function renderPasswordsList() {
             const container = document.getElementById('passwords-list-container');
+            if(!container) return;
             container.innerHTML = '';
 
             Object.entries(globalData.apartments).forEach(([id, apt]) => {
@@ -522,7 +524,6 @@
         }
 
         function renderApp() {
-            // تحديث جدول الكاميرات
             const camerasBody = document.getElementById('cameras-table-rows');
             if (camerasBody) {
                 camerasBody.innerHTML = '';
@@ -549,6 +550,11 @@
                 Object.entries(globalData.apartments).forEach(([id, apt]) => {
                     aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
                 });
+                
+                // إذا كان المستخدم ساكناً، نحدد القائمة المنسدلة على رقم شقته حصرياً
+                if (currentUser && currentUser.role === 'resident') {
+                    aptSelect.value = currentUser.aptId;
+                }
             }
             window.onAptSelectChange();
         }
@@ -558,13 +564,10 @@
                 const res = await fetch(DB_URL);
                 if (res.ok) {
                     const data = await res.json();
-                    // لو الـ Firebase فيه بيانات صحيحة ومكتملة، نعتمدها، وإلا ندمجها مع البيانات الافتراضية
                     if (data && data.apartments) {
                         globalData = data;
-                        // ضمان وجود باسورد الأدمن والبيانات الأساسية لو مش موجودة
                         if (!globalData.adminPassword) globalData.adminPassword = defaultData.adminPassword;
                     } else {
-                        // لو قاعدة البيانات فاضية تماماً، نقوم برفع البيانات الافتراضية الصحيحة لأول مرة تلقائياً
                         await fetch(DB_URL, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
