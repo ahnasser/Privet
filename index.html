@@ -408,7 +408,13 @@
             const paid = globalData.projects?.cameras?.payments?.[selectedId]?.paid || 0;
             const target = globalData.projects?.cameras?.perApartmentShare || 1430;
 
+            // التصحيح الجذري هنا ليتطابق العنوان والشارة مع رقم الشقة الفعلي تماماً
             document.getElementById('edit-title').innerText = `كشف حساب شقة رقم ${selectedId}`;
+            const badgeEl = document.getElementById('user-role-badge');
+            if (currentUser && currentUser.role === 'resident') {
+                badgeEl.innerText = `حساب شقة رقم ${selectedId} 🏠`;
+            }
+
             document.getElementById('input-owner-name').value = apt.ownerName;
             document.getElementById('input-camera-paid').value = paid;
             
@@ -569,10 +575,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.apartments) {
-                        // دمج البيانات للتأكد من عدم وجود أي شقة فارغة
                         globalData = data;
                         if (!globalData.adminPassword) globalData.adminPassword = masterData.adminPassword;
-                        // دمج الملاك المفقودين لو وُجدوا
                         Object.keys(masterData.apartments).forEach(id => {
                             if (!globalData.apartments[id]) {
                                 globalData.apartments[id] = masterData.apartments[id];
