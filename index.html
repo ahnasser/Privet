@@ -82,7 +82,7 @@
             </div>
 
             <!-- Navigation Tabs -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="nav-tabs-container">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="nav-tabs-container">
                 <button type="button" onclick="window.switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص</button>
                 <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الشهر</button>
                 <button type="button" onclick="window.switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
@@ -139,12 +139,8 @@
             <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
                 <div class="flex justify-between items-center">
                     <h2 class="font-bold text-emerald-400">تفاصيل الشهر</h2>
-                    <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
-                        <option value="يوليو">يوليو</option>
-                        <option value="أغسطس">أغسطس</option>
-                        <option value="سبتمبر">سبتمبر</option>
-                        <option value="أكتوبر">أكتوبر</option>
-                        <option value="نوفمبر">نوفمبر</option>
+                    <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm months-dropdown">
+                        <!-- Filled by JS -->
                     </select>
                 </div>
                 <div class="p-4 bg-slate-900/60 rounded-xl text-sm">
@@ -197,12 +193,8 @@
                             <span class="text-xs text-slate-400 block font-bold">تسجيل / مراجعة اشتراك الشهر</span>
                             <div>
                                 <label class="block text-[11px] text-slate-400 mb-1">اختر الشهر:</label>
-                                <select id="input-payment-month" onchange="window.onMonthPaymentChange()" class="w-full bg-slate-900 text-white p-2 rounded-lg border border-slate-700 text-xs">
-                                    <option value="يوليو">يوليو (180 ج)</option>
-                                    <option value="أغسطس">أغسطس (180 ج)</option>
-                                    <option value="سبتمبر">سبتمبر (180 ج)</option>
-                                    <option value="أكتوبر">أكتوبر (180 ج)</option>
-                                    <option value="نوفمبر">نوفمبر (180 ج)</option>
+                                <select id="input-payment-month" onchange="window.onMonthPaymentChange()" class="w-full bg-slate-900 text-white p-2 rounded-lg border border-slate-700 text-xs months-dropdown">
+                                    <!-- Filled by JS -->
                                 </select>
                             </div>
                             <div>
@@ -218,12 +210,11 @@
                 </div>
             </div>
 
-            <!-- TAB 5: ADMIN SETTINGS & PASSWORDS -->
-            <div id="content-passwords" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-6">
-                <h2 class="font-bold text-amber-400 text-lg">إدارة كلمات السر وصلاحيات الحسابات والمصروفات 🛠️</h2>
+            <!-- TAB 5: ADMIN SETTINGS & PASSWORDS & EXPENSES -->
+            <div id="content-passwords" class="tab-content hidden space-y-6">
                 
-                <!-- Change Admin Pass -->
-                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <!-- 1. Change Admin Pass -->
+                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">تغيير كلمة سر الأدمن الرئيسي</h3>
                     <div class="flex gap-2">
                         <input type="text" id="new-admin-pass" placeholder="كلمة السر الجديدة للأدمن" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm">
@@ -231,23 +222,19 @@
                     </div>
                 </div>
 
-                <!-- Add New Expense / Cost (جديد للأدمن لإضافة مصروفات) -->
-                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <!-- 2. Add New Expense / Cost -->
+                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف أو تكلفة جديدة للصندوق</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-[11px] text-slate-400 mb-1">الشهر:</label>
-                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
-                                <option value="يوليو">يوليو</option>
-                                <option value="أغسطس">أغسطس</option>
-                                <option value="سبتمبر">سبتمبر</option>
-                                <option value="أكتوبر">أكتوبر</option>
-                                <option value="نوفمبر" selected>نوفمبر</option>
+                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs months-dropdown">
+                                <!-- Filled by JS -->
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">وصف المصروف (مثال: صيانة اسانسير):</label>
-                            <input type="text" id="expense-desc" placeholder="بند المصروف" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
+                            <label class="block text-[11px] text-slate-400 mb-1">وصف المصروف:</label>
+                            <input type="text" id="expense-desc" placeholder="مثال: صيانة اسانسير" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] text-slate-400 mb-1">المبلغ (ج):</label>
@@ -259,13 +246,15 @@
                     </button>
                 </div>
 
-                <!-- Change Resident Passwords Table (تم إصلاحها وعرضها بوضوح) -->
-                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق (تحكم كامل)</h3>
-                    <div class="max-h-72 overflow-y-auto space-y-2 pr-1" id="passwords-list-container">
+                <!-- 3. Change Resident Passwords Table (مستقل وواضح تماماً) -->
+                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <h3 class="font-bold text-emerald-400 text-base">🔑 كلمات سر الشقق (تحكم كامل)</h3>
+                    <p class="text-xs text-slate-400">يمكنك تعديل كلمة السر الخاصة بأي شقة مباشرة:</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1" id="passwords-list-container">
                         <!-- Filled by JS -->
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -276,6 +265,11 @@
         
         let currentUser = null;
         
+        const allMonths = [
+            "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
+            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
+
         const masterData = {
             adminPassword: "admin123",
             passwords: {}, 
@@ -304,7 +298,7 @@
                 }
             },
             monthlyPayments: {},
-            expenses: [] // قائمة المصروفات الجديدة
+            expenses: []
         };
 
         let globalData = structuredClone(masterData);
@@ -320,6 +314,24 @@
 
             if (loginSelect) loginSelect.innerHTML = optionsHTML;
             if (aptSelect) aptSelect.innerHTML = optionsHTML;
+
+            // تعبئة كافة شهور السنة في جميع قوائم الشهور
+            let monthsHTML = '';
+            allMonths.forEach(m => {
+                monthsHTML += `<option value="${m}">${m} (180 ج)</option>`;
+            });
+
+            document.querySelectorAll('.months-dropdown').forEach(select => {
+                const currentVal = select.value;
+                if (select.id === 'input-payment-month') {
+                    let simpleMonthsHTML = '';
+                    allMonths.forEach(m => { simpleMonthsHTML += `<option value="${m}">${m}</option>`; });
+                    select.innerHTML = simpleMonthsHTML;
+                } else {
+                    select.innerHTML = monthsHTML;
+                }
+                if (currentVal) select.value = currentVal;
+            });
         }
 
         window.switchRole = function(role) {
@@ -540,7 +552,6 @@
             await syncToCloud(`تم تحديث كلمة سر شقة ${aptId} بنجاح! 🔑`);
         };
 
-        // دالة إضافة مصروف جديد للصندوق
         window.addNewExpense = async function() {
             const month = document.getElementById('expense-month').value;
             const desc = document.getElementById('expense-desc').value;
@@ -578,7 +589,6 @@
             }
         }
 
-        // عرض جدول كلمات السر بوضوح تام لكل الشقق
         function renderPasswordsList() {
             const container = document.getElementById('passwords-list-container');
             if(!container) return;
