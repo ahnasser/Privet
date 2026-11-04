@@ -25,15 +25,17 @@
                 <button type="button" onclick="window.switchRole('admin')" id="role-btn-admin" class="py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white">دخول مشرف (Admin)</button>
             </div>
 
-            <!-- Resident Form -->
+            <!-- Resident Form (Dropdown with Names) -->
             <div id="form-resident" class="space-y-4">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">رقم الشقة (Username):</label>
-                    <input type="number" id="login-apt-number" placeholder="مثال: 1, 8, 12..." min="1" max="24" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
+                    <label class="block text-xs text-slate-400 mb-1.5">اختر شقتك:</label>
+                    <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500">
+                        <!-- Populated dynamically -->
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">كلمة السر الخاصة بالشقة:</label>
-                    <input type="password" id="resident-pass" placeholder="أدخل كلمة السر" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
+                    <input type="password" id="resident-pass" placeholder="أدخل كلمة السر" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500" value="1234">
                     <span class="text-[10px] text-slate-500 mt-1 block">الباسورد الافتراضي لكل الشقق: 1234</span>
                 </div>
                 <button type="button" onclick="window.executeLogin('resident')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
@@ -45,7 +47,7 @@
             <div id="form-admin" class="space-y-4 hidden">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">كلمة سر المشرف (Admin Password):</label>
-                    <input type="password" id="admin-pass-input" placeholder="أدخل كلمة سر الأدمن" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-amber-500">
+                    <input type="password" id="admin-pass-input" placeholder="أدخل كلمة سر الأدمن" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-amber-500" value="admin123">
                     <span class="text-[10px] text-slate-500 mt-1 block">الباسورد الافتراضي للإدارة: admin123</span>
                 </div>
                 <button type="button" onclick="window.executeLogin('admin')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
@@ -232,7 +234,7 @@
 
                 <!-- Change Resident Passwords Table -->
                 <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق (اليوزر هو رقم الشقة)</h3>
+                    <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق</h3>
                     <div class="max-h-60 overflow-y-auto space-y-2" id="passwords-list-container"></div>
                 </div>
             </div>
@@ -312,11 +314,11 @@
                     return;
                 }
             } else {
-                const aptId = Number(document.getElementById('login-apt-number').value);
+                const aptId = Number(document.getElementById('login-apt-select').value);
                 const passInput = document.getElementById('resident-pass').value;
                 
                 if (!aptId || !globalData.apartments[aptId]) {
-                    errDiv.innerText = "رقم الشقة غير صحيح! برجاء إدخال رقم شقة صحيح من 1 إلى 24.";
+                    errDiv.innerText = "رقم الشقة غير صحيح!";
                     errDiv.classList.remove('hidden');
                     return;
                 }
@@ -325,7 +327,7 @@
                 if (passInput === aptPass) {
                     currentUser = { role: 'resident', aptId: aptId };
                 } else {
-                    errDiv.innerText = "كلمة السر الخاصة بالشقة غير صحيحة! الباسورد الافتراضي: 1234";
+                    errDiv.innerText = "كلمة السر الخاصة بالشقة غير صحيحة! الافتراضي: 1234";
                     errDiv.classList.remove('hidden');
                     return;
                 }
@@ -362,9 +364,6 @@
                 document.getElementById('admin-select-wrapper').classList.add('hidden');
 
                 if (passTabBtn) passTabBtn.remove();
-                
-                const aptSelect = document.getElementById('apt-select');
-                if(aptSelect) aptSelect.value = currentUser.aptId;
                 window.switchTab('myApt');
             }
             renderApp();
@@ -408,11 +407,10 @@
             const paid = globalData.projects?.cameras?.payments?.[selectedId]?.paid || 0;
             const target = globalData.projects?.cameras?.perApartmentShare || 1430;
 
-            // التصحيح الجذري هنا ليتطابق العنوان والشارة مع رقم الشقة الفعلي تماماً
             document.getElementById('edit-title').innerText = `كشف حساب شقة رقم ${selectedId}`;
             const badgeEl = document.getElementById('user-role-badge');
             if (currentUser && currentUser.role === 'resident') {
-                badgeEl.innerText = `حساب شقة رقم ${selectedId} 🏠`;
+                badgeEl.innerText = `حساب شقة رقم ${selectedId} (${apt.ownerName}) 🏠`;
             }
 
             document.getElementById('input-owner-name').value = apt.ownerName;
@@ -534,7 +532,37 @@
             });
         }
 
+        function populateSelects() {
+            const loginSelect = document.getElementById('login-apt-select');
+            const aptSelect = document.getElementById('apt-select');
+            
+            if (loginSelect) {
+                const currentVal = loginSelect.value;
+                loginSelect.innerHTML = '';
+                Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                    loginSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
+                });
+                if (currentVal) loginSelect.value = currentVal;
+            }
+
+            if (aptSelect) {
+                const currentVal = aptSelect.value;
+                aptSelect.innerHTML = '';
+                Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                    aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
+                });
+                
+                if (currentUser && currentUser.role === 'resident') {
+                    aptSelect.value = currentUser.aptId;
+                } else if (currentVal) {
+                    aptSelect.value = currentVal;
+                }
+            }
+        }
+
         function renderApp() {
+            populateSelects();
+
             const camerasBody = document.getElementById('cameras-table-rows');
             if (camerasBody) {
                 camerasBody.innerHTML = '';
@@ -555,17 +583,6 @@
                 });
             }
 
-            const aptSelect = document.getElementById('apt-select');
-            if (aptSelect) {
-                aptSelect.innerHTML = '';
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-                });
-                
-                if (currentUser && currentUser.role === 'resident') {
-                    aptSelect.value = currentUser.aptId;
-                }
-            }
             window.onAptSelectChange();
         }
 
@@ -584,6 +601,11 @@
                         });
                     } else {
                         globalData = masterData;
+                        await fetch(DB_URL, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(masterData)
+                        });
                     }
                 }
             } catch (e) {
