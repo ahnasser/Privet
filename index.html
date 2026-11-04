@@ -25,12 +25,12 @@
                 <button type="button" onclick="window.switchRole('admin')" id="role-btn-admin" class="py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white">دخول مشرف (Admin)</button>
             </div>
 
-            <!-- Resident Form (Dropdown with Names) -->
+            <!-- Resident Form -->
             <div id="form-resident" class="space-y-4">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">اختر شقتك:</label>
                     <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500">
-                        <!-- Populated dynamically -->
+                        <!-- Filled by JS -->
                     </select>
                 </div>
                 <div>
@@ -279,6 +279,20 @@
 
         let globalData = structuredClone(masterData);
 
+        // تعبئة القوائم فوراً قبل أي شيء لضمان عدم ظهورها فارغة أبداً
+        function populateSelectsImmediately() {
+            const loginSelect = document.getElementById('login-apt-select');
+            const aptSelect = document.getElementById('apt-select');
+            
+            let optionsHTML = '';
+            Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                optionsHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
+            });
+
+            if (loginSelect) loginSelect.innerHTML = optionsHTML;
+            if (aptSelect) aptSelect.innerHTML = optionsHTML;
+        }
+
         window.switchRole = function(role) {
             const resBtn = document.getElementById('role-btn-resident');
             const admBtn = document.getElementById('role-btn-admin');
@@ -314,7 +328,8 @@
                     return;
                 }
             } else {
-                const aptId = Number(document.getElementById('login-apt-select').value);
+                const loginSelect = document.getElementById('login-apt-select');
+                const aptId = Number(loginSelect ? loginSelect.value : 1);
                 const passInput = document.getElementById('resident-pass').value;
                 
                 if (!aptId || !globalData.apartments[aptId]) {
@@ -532,36 +547,8 @@
             });
         }
 
-        function populateSelects() {
-            const loginSelect = document.getElementById('login-apt-select');
-            const aptSelect = document.getElementById('apt-select');
-            
-            if (loginSelect) {
-                const currentVal = loginSelect.value;
-                loginSelect.innerHTML = '';
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    loginSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-                });
-                if (currentVal) loginSelect.value = currentVal;
-            }
-
-            if (aptSelect) {
-                const currentVal = aptSelect.value;
-                aptSelect.innerHTML = '';
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-                });
-                
-                if (currentUser && currentUser.role === 'resident') {
-                    aptSelect.value = currentUser.aptId;
-                } else if (currentVal) {
-                    aptSelect.value = currentVal;
-                }
-            }
-        }
-
         function renderApp() {
-            populateSelects();
+            populateSelectsImmediately();
 
             const camerasBody = document.getElementById('cameras-table-rows');
             if (camerasBody) {
@@ -587,6 +574,7 @@
         }
 
         async function loadInitialData() {
+            populateSelectsImmediately(); // ملء القائمة فوراً قبل طلب السيرفر
             try {
                 const res = await fetch(DB_URL);
                 if (res.ok) {
@@ -599,23 +587,18 @@
                                 globalData.apartments[id] = masterData.apartments[id];
                             }
                         });
-                    } else {
-                        globalData = masterData;
-                        await fetch(DB_URL, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(masterData)
-                        });
                     }
                 }
             } catch (e) {
-                globalData = masterData;
+                console.warn("استخدام البيانات المحلية");
             }
 
             renderApp();
         }
 
+        // التشغيل الفوري عند تحميل الصفحة
         window.onload = function() {
+            populateSelectsImmediately();
             loadInitialData();
         };
     </script>
