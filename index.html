@@ -245,7 +245,7 @@
         
         let currentUser = null;
         
-        let defaultData = {
+        const masterData = {
             adminPassword: "admin123",
             passwords: {}, 
             apartments: {
@@ -275,7 +275,7 @@
             monthlyPayments: {}
         };
 
-        let globalData = structuredClone(defaultData);
+        let globalData = structuredClone(masterData);
 
         window.switchRole = function(role) {
             const resBtn = document.getElementById('role-btn-resident');
@@ -363,7 +363,6 @@
 
                 if (passTabBtn) passTabBtn.remove();
                 
-                // تعيين الشقة بشكل صحيح ومباشر فور تسجيل الدخول للساكن
                 const aptSelect = document.getElementById('apt-select');
                 if(aptSelect) aptSelect.value = currentUser.aptId;
                 window.switchTab('myApt');
@@ -397,12 +396,15 @@
         };
 
         window.onAptSelectChange = function() {
-            let selectedId = Number(document.getElementById('apt-select').value || 1);
+            let selectedId = 1;
             if (currentUser && currentUser.role === 'resident') {
                 selectedId = currentUser.aptId;
+            } else {
+                const aptSelect = document.getElementById('apt-select');
+                if (aptSelect) selectedId = Number(aptSelect.value || 1);
             }
 
-            const apt = globalData.apartments?.[selectedId] || { ownerName: "" };
+            const apt = globalData.apartments?.[selectedId] || { ownerName: "غير مسجل" };
             const paid = globalData.projects?.cameras?.payments?.[selectedId]?.paid || 0;
             const target = globalData.projects?.cameras?.perApartmentShare || 1430;
 
@@ -417,9 +419,12 @@
         };
 
         window.onMonthPaymentChange = function() {
-            let selectedId = Number(document.getElementById('apt-select').value || 1);
+            let selectedId = 1;
             if (currentUser && currentUser.role === 'resident') {
                 selectedId = currentUser.aptId;
+            } else {
+                const aptSelect = document.getElementById('apt-select');
+                if (aptSelect) selectedId = Number(aptSelect.value || 1);
             }
             const monthName = document.getElementById('input-payment-month').value;
             const monthPaid = globalData.monthlyPayments?.[selectedId]?.[monthName] || 0;
@@ -551,7 +556,6 @@
                     aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
                 });
                 
-                // إذا كان المستخدم ساكناً، نحدد القائمة المنسدلة على رقم شقته حصرياً
                 if (currentUser && currentUser.role === 'resident') {
                     aptSelect.value = currentUser.aptId;
                 }
@@ -565,20 +569,21 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.apartments) {
+                        // دمج البيانات للتأكد من عدم وجود أي شقة فارغة
                         globalData = data;
-                        if (!globalData.adminPassword) globalData.adminPassword = defaultData.adminPassword;
-                    } else {
-                        await fetch(DB_URL, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(defaultData)
+                        if (!globalData.adminPassword) globalData.adminPassword = masterData.adminPassword;
+                        // دمج الملاك المفقودين لو وُجدوا
+                        Object.keys(masterData.apartments).forEach(id => {
+                            if (!globalData.apartments[id]) {
+                                globalData.apartments[id] = masterData.apartments[id];
+                            }
                         });
-                        globalData = defaultData;
+                    } else {
+                        globalData = masterData;
                     }
                 }
             } catch (e) {
-                console.warn("استخدام البيانات الافتراضية للموقع");
-                globalData = defaultData;
+                globalData = masterData;
             }
 
             renderApp();
