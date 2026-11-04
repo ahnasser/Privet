@@ -25,11 +25,11 @@
                 <button type="button" onclick="window.switchRole('admin')" id="role-btn-admin" class="py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white">دخول مشرف (Admin)</button>
             </div>
 
-            <!-- Resident Form (Using Apt Number instead of names) -->
+            <!-- Resident Form -->
             <div id="form-resident" class="space-y-4">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">رقم الشقة (Username):</label>
-                    <input type="number" id="login-apt-number" placeholder="مثال: 1, 5, 12..." min="1" max="24" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
+                    <input type="number" id="login-apt-number" placeholder="مثال: 1, 8, 12..." min="1" max="24" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">كلمة السر الخاصة بالشقة:</label>
@@ -216,7 +216,7 @@
                 </div>
             </div>
 
-            <!-- TAB 5: ADMIN SETTINGS & PASSWORDS (Admin Only) -->
+            <!-- TAB 5: ADMIN SETTINGS & PASSWORDS -->
             <div id="content-passwords" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
                 <h2 class="font-bold text-amber-400 text-lg">إدارة كلمات السر وصلاحيات الحسابات 🛠️</h2>
                 <p class="text-xs text-slate-400">يمكنك هنا تغيير باسورد الأدمن الرئيسي، وتعديل كلمات السر الخاصة برقم كل شقة في العمارة.</p>
@@ -233,9 +233,7 @@
                 <!-- Change Resident Passwords Table -->
                 <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق (اليوزر هو رقم الشقة)</h3>
-                    <div class="max-h-60 overflow-y-auto space-y-2" id="passwords-list-container">
-                        <!-- Populated by JS -->
-                    </div>
+                    <div class="max-h-60 overflow-y-auto space-y-2" id="passwords-list-container"></div>
                 </div>
             </div>
 
@@ -246,7 +244,9 @@
         const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
         
         let currentUser = null;
-        let globalData = {
+        
+        // البيانات الصحيحة والكاملة للعمارة وأسماء الملاك موثقة بالكامل
+        let defaultData = {
             adminPassword: "admin123",
             passwords: {}, 
             apartments: {
@@ -264,10 +264,19 @@
                 23: { ownerName: "عادل عبد الرازق" }, 24: { ownerName: "عاطف محمد صادق" }
             },
             projects: {
-                cameras: { perApartmentShare: 1430, payments: {} }
+                cameras: { 
+                    perApartmentShare: 1430, 
+                    payments: {
+                        1: { paid: 1430 }, 3: { paid: 1430 }, 4: { paid: 1430 }, 5: { paid: 1430 },
+                        6: { paid: 1430 }, 7: { paid: 1430 }, 8: { paid: 1430 }, 9: { paid: 1430 },
+                        11: { paid: 1430 }, 13: { paid: 1430 }, 18: { paid: 1430 }, 20: { paid: 1430 }, 23: { paid: 1430 }
+                    } 
+                }
             },
             monthlyPayments: {}
         };
+
+        let globalData = structuredClone(defaultData);
 
         window.switchRole = function(role) {
             const resBtn = document.getElementById('role-btn-resident');
@@ -358,7 +367,7 @@
                 document.getElementById('apt-select').value = currentUser.aptId;
                 window.switchTab('myApt');
             }
-            window.onAptSelectChange();
+            renderApp();
         };
 
         window.handleLogout = function() {
@@ -448,6 +457,7 @@
 
                 if (res.ok) {
                     alert("تم حفظ البيانات بنجاح! 🟢");
+                    renderApp();
                 } else {
                     alert("تم الحفظ محلياً.");
                 }
@@ -511,25 +521,64 @@
             });
         }
 
+        function renderApp() {
+            // تحديث جدول الكاميرات
+            const camerasBody = document.getElementById('cameras-table-rows');
+            if (camerasBody) {
+                camerasBody.innerHTML = '';
+                const target = globalData.projects?.cameras?.perApartmentShare || 1430;
+                Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                    const aptId = Number(id);
+                    const paid = globalData.projects?.cameras?.payments?.[aptId]?.paid || 0;
+                    const rem = target - paid;
+
+                    camerasBody.innerHTML += `
+                        <tr class="hover:bg-slate-800/50">
+                            <td class="p-3 font-bold text-emerald-400">${aptId}</td>
+                            <td class="p-3">${apt.ownerName}</td>
+                            <td class="p-3 text-emerald-400">${paid} ج</td>
+                            <td class="p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem} ج</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const aptSelect = document.getElementById('apt-select');
+            if (aptSelect) {
+                aptSelect.innerHTML = '';
+                Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                    aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
+                });
+            }
+            window.onAptSelectChange();
+        }
+
         async function loadInitialData() {
             try {
                 const res = await fetch(DB_URL);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && Object.keys(data).length > 0) {
+                    // لو الـ Firebase فيه بيانات صحيحة ومكتملة، نعتمدها، وإلا ندمجها مع البيانات الافتراضية
+                    if (data && data.apartments) {
                         globalData = data;
+                        // ضمان وجود باسورد الأدمن والبيانات الأساسية لو مش موجودة
+                        if (!globalData.adminPassword) globalData.adminPassword = defaultData.adminPassword;
+                    } else {
+                        // لو قاعدة البيانات فاضية تماماً، نقوم برفع البيانات الافتراضية الصحيحة لأول مرة تلقائياً
+                        await fetch(DB_URL, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(defaultData)
+                        });
+                        globalData = defaultData;
                     }
                 }
             } catch (e) {
-                console.warn("جاري استخدام البيانات الافتراضية");
+                console.warn("استخدام البيانات الافتراضية للموقع");
+                globalData = defaultData;
             }
 
-            const aptSelect = document.getElementById('apt-select');
-            aptSelect.innerHTML = '';
-
-            Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-            });
+            renderApp();
         }
 
         window.onload = function() {
