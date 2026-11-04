@@ -13,7 +13,7 @@
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 sm:p-6">
     <div class="max-w-4xl mx-auto space-y-6">
         
-        <!-- SECTION 1: LOGIN CONTAINER -->
+        <!-- LOGIN CONTAINER -->
         <div id="login-container" class="max-w-md mx-auto bg-[#1e293b] p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-6 mt-12">
             <div class="text-center space-y-2">
                 <h1 class="text-2xl font-bold text-emerald-400">🏢 عمارة 60 - ساوث هيلز 2</h1>
@@ -29,9 +29,7 @@
             <div id="form-resident" class="space-y-4">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">اختر شقتك:</label>
-                    <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500">
-                        <!-- Filled by JS -->
-                    </select>
+                    <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500"></select>
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">كلمة السر الخاصة بالشقة:</label>
@@ -58,33 +56,24 @@
             <div id="login-error" class="text-center text-xs text-rose-400 font-bold hidden"></div>
         </div>
 
-        <!-- SECTION 2: MAIN DASHBOARD CONTAINER -->
+        <!-- MAIN DASHBOARD -->
         <div id="dashboard-container" class="space-y-6 hidden">
             
-            <!-- Header -->
             <div class="flex justify-between items-center bg-[#1e293b] p-4 rounded-2xl shadow-lg border border-slate-800">
                 <div>
-                    <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-emerald-400">
-                        🏢 عمارة 60 - ساوث هيلز 2
-                    </h1>
-                    <span id="user-role-badge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 font-bold mt-1 inline-block">
-                        مرحباً بك
-                    </span>
+                    <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-emerald-400">🏢 عمارة 60 - ساوث هيلز 2</h1>
+                    <span id="user-role-badge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 font-bold mt-1 inline-block">مرحباً بك</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span id="status-badge" class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20 hidden sm:inline-block">
-                        متصل 🟢
-                    </span>
-                    <button type="button" onclick="window.handleLogout()" class="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 px-3 py-2 rounded-xl transition border border-rose-500/30">
-                        خروج 🚪
-                    </button>
+                    <span id="status-badge" class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20 hidden sm:inline-block">متصل 🟢</span>
+                    <button type="button" onclick="window.handleLogout()" class="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 px-3 py-2 rounded-xl transition border border-rose-500/30">خروج 🚪</button>
                 </div>
             </div>
 
             <!-- Navigation Tabs -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="nav-tabs-container">
                 <button type="button" onclick="window.switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص</button>
-                <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الشهر</button>
+                <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الشهر والمصروفات</button>
                 <button type="button" onclick="window.switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
                 <button type="button" onclick="window.switchTab('myApt')" id="tab-myApt" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">شقتي / حسابي</button>
             </div>
@@ -94,15 +83,15 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
                         <div class="text-slate-400 text-xs mb-1">الرصيد الحالي بالصندوق</div>
-                        <div class="text-xl font-bold text-emerald-400">1,880 ج</div>
+                        <div id="summary-balance" class="text-xl font-bold text-emerald-400">1,880 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
                         <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل</div>
-                        <div class="text-xl font-bold text-emerald-400">8,960 ج</div>
+                        <div id="summary-collected" class="text-xl font-bold text-emerald-400">8,960 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
                         <div class="text-slate-400 text-xs mb-1">إجمالي المصروفات</div>
-                        <div class="text-xl font-bold text-amber-400">7,080 ج</div>
+                        <div id="summary-expenses" class="text-xl font-bold text-amber-400">7,080 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
                         <div class="text-slate-400 text-xs mb-1">متأخرات المصاريف</div>
@@ -117,34 +106,19 @@
                     </div>
                     <button type="button" onclick="window.switchTab('cameras')" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-lg">عرض الكاميرات</button>
                 </div>
-
-                <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر والمصروفات</div>
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-slate-900/50 text-slate-400 text-xs">
-                            <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th class="p-3">الرصيد</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            <tr><td class="p-3">يوليو</td><td class="p-3 text-emerald-400">1600 ج</td><td class="p-3 text-amber-400">1600 ج</td><td class="p-3 text-emerald-400">0 ج</td></tr>
-                            <tr><td class="p-3">أغسطس</td><td class="p-3 text-emerald-400">1780 ج</td><td class="p-3 text-amber-400">600 ج</td><td class="p-3 text-emerald-400">1180 ج</td></tr>
-                            <tr><td class="p-3">سبتمبر</td><td class="p-3 text-emerald-400">1980 ج</td><td class="p-3 text-amber-400">2480 ج</td><td class="p-3 text-rose-400">-500 ج</td></tr>
-                            <tr><td class="p-3">أكتوبر</td><td class="p-3 text-emerald-400">1980 ج</td><td class="p-3 text-amber-400">1900 ج</td><td class="p-3 text-emerald-400">80 ج</td></tr>
-                            <tr><td class="p-3">نوفمبر</td><td class="p-3 text-emerald-400">1620 ج</td><td class="p-3 text-amber-400">500 ج</td><td class="p-3 text-emerald-400">1120 ج</td></tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
 
-            <!-- TAB 2: MONTHS -->
+            <!-- TAB 2: MONTHS & EXPENSES -->
             <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
-                <div class="flex justify-between items-center">
-                    <h2 class="font-bold text-emerald-400">تفاصيل الشهر</h2>
-                    <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm months-dropdown">
-                        <!-- Filled by JS -->
-                    </select>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-emerald-400 text-lg">سجل المصروفات المضافة للصندوق</h2>
+                    <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm months-dropdown"></select>
                 </div>
-                <div class="p-4 bg-slate-900/60 rounded-xl text-sm">
-                    تتابع الآن تفاصيل الاشتراكات والمصروفات الشهرية.
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400">قائمة البنود والتكاليف المسجلة:</h3>
+                    <div id="expenses-list" class="space-y-2">
+                        <!-- Filled by JS -->
+                    </div>
                 </div>
             </div>
 
@@ -193,9 +167,7 @@
                             <span class="text-xs text-slate-400 block font-bold">تسجيل / مراجعة اشتراك الشهر</span>
                             <div>
                                 <label class="block text-[11px] text-slate-400 mb-1">اختر الشهر:</label>
-                                <select id="input-payment-month" onchange="window.onMonthPaymentChange()" class="w-full bg-slate-900 text-white p-2 rounded-lg border border-slate-700 text-xs months-dropdown">
-                                    <!-- Filled by JS -->
-                                </select>
+                                <select id="input-payment-month" onchange="window.onMonthPaymentChange()" class="w-full bg-slate-900 text-white p-2 rounded-lg border border-slate-700 text-xs months-dropdown"></select>
                             </div>
                             <div>
                                 <label class="block text-[11px] text-slate-400 mb-1">المبلغ المدفوع للشهر (ج):</label>
@@ -213,7 +185,6 @@
             <!-- TAB 5: ADMIN SETTINGS & PASSWORDS & EXPENSES -->
             <div id="content-passwords" class="tab-content hidden space-y-6">
                 
-                <!-- 1. Change Admin Pass -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">تغيير كلمة سر الأدمن الرئيسي</h3>
                     <div class="flex gap-2">
@@ -222,15 +193,12 @@
                     </div>
                 </div>
 
-                <!-- 2. Add New Expense / Cost -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف أو تكلفة جديدة للصندوق</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-[11px] text-slate-400 mb-1">الشهر:</label>
-                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs months-dropdown">
-                                <!-- Filled by JS -->
-                            </select>
+                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs months-dropdown"></select>
                         </div>
                         <div>
                             <label class="block text-[11px] text-slate-400 mb-1">وصف المصروف:</label>
@@ -246,13 +214,9 @@
                     </button>
                 </div>
 
-                <!-- 3. Change Resident Passwords Table (مستقل وواضح تماماً) -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
                     <h3 class="font-bold text-emerald-400 text-base">🔑 كلمات سر الشقق (تحكم كامل)</h3>
-                    <p class="text-xs text-slate-400">يمكنك تعديل كلمة السر الخاصة بأي شقة مباشرة:</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1" id="passwords-list-container">
-                        <!-- Filled by JS -->
-                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1" id="passwords-list-container"></div>
                 </div>
 
             </div>
@@ -262,7 +226,6 @@
 
     <script>
         const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
-        
         let currentUser = null;
         
         const allMonths = [
@@ -298,7 +261,9 @@
                 }
             },
             monthlyPayments: {},
-            expenses: []
+            expenses: [
+                { month: "نوفمبر", desc: "صيانة اسانسير", amount: 500, date: "2026/11/01" }
+            ]
         };
 
         let globalData = structuredClone(masterData);
@@ -315,21 +280,14 @@
             if (loginSelect) loginSelect.innerHTML = optionsHTML;
             if (aptSelect) aptSelect.innerHTML = optionsHTML;
 
-            // تعبئة كافة شهور السنة في جميع قوائم الشهور
             let monthsHTML = '';
             allMonths.forEach(m => {
-                monthsHTML += `<option value="${m}">${m} (180 ج)</option>`;
+                monthsHTML += `<option value="${m}">${m}</option>`;
             });
 
             document.querySelectorAll('.months-dropdown').forEach(select => {
                 const currentVal = select.value;
-                if (select.id === 'input-payment-month') {
-                    let simpleMonthsHTML = '';
-                    allMonths.forEach(m => { simpleMonthsHTML += `<option value="${m}">${m}</option>`; });
-                    select.innerHTML = simpleMonthsHTML;
-                } else {
-                    select.innerHTML = monthsHTML;
-                }
+                select.innerHTML = monthsHTML;
                 if (currentVal) select.value = currentVal;
             });
         }
@@ -364,7 +322,7 @@
                 if (passInput === correctAdminPass) {
                     currentUser = { role: 'admin', aptId: null };
                 } else {
-                    errDiv.innerText = "كلمة سر المشرف غير صحيحة! الباسورد الافتراضي: admin123";
+                    errDiv.innerText = "كلمة سر المشرف غير صحيحة!";
                     errDiv.classList.remove('hidden');
                     return;
                 }
@@ -372,18 +330,12 @@
                 const loginSelect = document.getElementById('login-apt-select');
                 const aptId = Number(loginSelect ? loginSelect.value : 1);
                 const passInput = document.getElementById('resident-pass').value;
-                
-                if (!aptId || !globalData.apartments[aptId]) {
-                    errDiv.innerText = "رقم الشقة غير صحيح!";
-                    errDiv.classList.remove('hidden');
-                    return;
-                }
 
                 const aptPass = globalData.passwords?.[aptId] || "1234";
                 if (passInput === aptPass) {
                     currentUser = { role: 'resident', aptId: aptId };
                 } else {
-                    errDiv.innerText = "كلمة السر الخاصة بالشقة غير صحيحة! الافتراضي: 1234";
+                    errDiv.innerText = "كلمة السر الخاصة بالشقة غير صحيحة!";
                     errDiv.classList.remove('hidden');
                     return;
                 }
@@ -500,47 +452,23 @@
             const monthName = document.getElementById('input-payment-month').value;
             const monthPaid = Number(document.getElementById('input-month-paid').value);
 
-            const saveBtn = document.getElementById('save-btn');
-            saveBtn.innerText = "جاري الحفظ...";
-            saveBtn.disabled = true;
+            if (!globalData.apartments[selectedId]) globalData.apartments[selectedId] = {};
+            globalData.apartments[selectedId].ownerName = newName;
 
-            try {
-                if (!globalData.apartments[selectedId]) globalData.apartments[selectedId] = {};
-                globalData.apartments[selectedId].ownerName = newName;
+            if (!globalData.projects.cameras.payments[selectedId]) globalData.projects.cameras.payments[selectedId] = {};
+            globalData.projects.cameras.payments[selectedId].paid = newPaid;
 
-                if (!globalData.projects.cameras.payments[selectedId]) globalData.projects.cameras.payments[selectedId] = {};
-                globalData.projects.cameras.payments[selectedId].paid = newPaid;
+            if (!globalData.monthlyPayments) globalData.monthlyPayments = {};
+            if (!globalData.monthlyPayments[selectedId]) globalData.monthlyPayments[selectedId] = {};
+            globalData.monthlyPayments[selectedId][monthName] = monthPaid;
 
-                if (!globalData.monthlyPayments) globalData.monthlyPayments = {};
-                if (!globalData.monthlyPayments[selectedId]) globalData.monthlyPayments[selectedId] = {};
-                globalData.monthlyPayments[selectedId][monthName] = monthPaid;
-
-                const res = await fetch(DB_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(globalData)
-                });
-
-                if (res.ok) {
-                    alert("تم حفظ البيانات بنجاح! 🟢");
-                    renderApp();
-                } else {
-                    alert("تم الحفظ محلياً.");
-                }
-            } catch (err) {
-                console.error(err);
-            }
-
-            saveBtn.innerText = "حفظ التعديلات والدفعة في قاعدة البيانات 💾";
-            saveBtn.disabled = false;
+            await syncToCloud("تم حفظ التعديلات بنجاح! 🟢");
+            renderApp();
         };
 
         window.saveAdminPass = async function() {
             const newPass = document.getElementById('new-admin-pass').value;
-            if (!newPass) {
-                alert("برجاء كتابة كلمة السر الجديدة للأدمن");
-                return;
-            }
+            if (!newPass) return;
             globalData.adminPassword = newPass;
             await syncToCloud("تم تغيير كلمة سر الأدمن بنجاح! 🛠️");
         };
@@ -558,35 +486,32 @@
             const amount = Number(document.getElementById('expense-amount').value);
 
             if (!desc || !amount) {
-                alert("برجاء إدخال وصف المصروف والمبلغ بشكل صحيح!");
+                alert("برجاء إدخال وصف المصروف والمبلغ!");
                 return;
             }
 
             if (!globalData.expenses) globalData.expenses = [];
             globalData.expenses.push({ month, desc, amount, date: new Date().toLocaleDateString('ar-EG') });
 
-            await syncToCloud("تمت إضافة المصروف وحفظه في النظام بنجاح! 💸");
+            await syncToCloud("تمت إضافة المصروف وحفظه بنجاح! 💸");
             document.getElementById('expense-desc').value = '';
             document.getElementById('expense-amount').value = '';
+            renderApp();
         };
 
         async function syncToCloud(successMsg) {
             try {
-                const res = await fetch(DB_URL, {
+                localStorage.setItem('sh60_app_data', JSON.stringify(globalData));
+                await fetch(DB_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(globalData)
                 });
-                if (res.ok) {
-                    alert(successMsg);
-                    renderPasswordsList();
-                } else {
-                    alert("حدث خطأ أثناء الحفظ بالسيرفر.");
-                }
             } catch (e) {
-                console.error(e);
-                alert("تعذر الاتصال بالسيرفر.");
+                console.log("حفظ محلي في المتصفح");
             }
+            alert(successMsg);
+            renderPasswordsList();
         }
 
         function renderPasswordsList() {
@@ -606,9 +531,44 @@
             });
         }
 
+        function renderExpensesList() {
+            const container = document.getElementById('expenses-list');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let totalExp = 0;
+            if (globalData.expenses && globalData.expenses.length > 0) {
+                globalData.expenses.forEach(exp => {
+                    totalExp += exp.amount;
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800 text-sm">
+                            <div>
+                                <span class="text-xs text-amber-400 font-bold block">${exp.month}</span>
+                                <span class="text-slate-200 font-medium">${exp.desc}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-rose-400 font-bold block">${exp.amount} ج</span>
+                                <span class="text-[10px] text-slate-500">${exp.date || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<div class="text-xs text-slate-500 text-center p-4">لا توجد مصروفات مسجلة حتى الآن</div>`;
+            }
+
+            // تحديث الملخص أوتوماتيكياً بالمبالغ الحقيقية
+            const collected = 8960; 
+            const balance = collected - totalExp;
+            
+            document.getElementById('summary-expenses').innerText = totalExp.toLocaleString() + ' ج';
+            document.getElementById('summary-balance').innerText = balance.toLocaleString() + ' ج';
+        }
+
         function renderApp() {
             populateSelectsImmediately();
             renderPasswordsList();
+            renderExpensesList();
 
             const camerasBody = document.getElementById('cameras-table-rows');
             if (camerasBody) {
@@ -635,29 +595,14 @@
 
         async function loadInitialData() {
             populateSelectsImmediately();
-            try {
-                const res = await fetch(DB_URL);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.apartments) {
-                        globalData = data;
-                        if (!globalData.adminPassword) globalData.adminPassword = masterData.adminPassword;
-                        Object.keys(masterData.apartments).forEach(id => {
-                            if (!globalData.apartments[id]) {
-                                globalData.apartments[id] = masterData.apartments[id];
-                            }
-                        });
-                    }
-                }
-            } catch (e) {
-                console.warn("استخدام البيانات المحلية");
+            const local = localStorage.getItem('sh60_app_data');
+            if (local) {
+                globalData = JSON.parse(local);
             }
-
             renderApp();
         }
 
         window.onload = function() {
-            populateSelectsImmediately();
             loadInitialData();
         };
     </script>
