@@ -4,260 +4,285 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مصاريف عمارة 60 - ساوث هيلز 2</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 sm:p-6">
-    <div id="app" class="max-w-4xl mx-auto space-y-6"></div>
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center bg-[#1e293b] p-4 rounded-2xl shadow-lg border border-slate-800">
+            <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-emerald-400">
+                🏢 عمارة 60 - ساوث هيلز 2
+            </h1>
+            <span id="status-badge" class="text-xs bg-amber-500/10 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/20">
+                جاري الاتصال... 🟡
+            </span>
+        </div>
 
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <!-- Navigation Tabs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص</button>
+            <button onclick="switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الشهر</button>
+            <button onclick="switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
+            <button onclick="switchTab('myApt')" id="tab-myApt" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">شقتي (تعديل)</button>
+        </div>
 
-    <script type="text/babel">
+        <!-- TAB 1: SUMMARY -->
+        <div id="content-summary" class="tab-content space-y-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                    <div class="text-slate-400 text-xs mb-1">الرصيد الحالي بالصندوق</div>
+                    <div class="text-xl font-bold text-emerald-400">1,880 ج</div>
+                </div>
+                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                    <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل</div>
+                    <div class="text-xl font-bold text-emerald-400">8,960 ج</div>
+                </div>
+                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                    <div class="text-slate-400 text-xs mb-1">إجمالي المصروفات</div>
+                    <div class="text-xl font-bold text-amber-400">7,080 ج</div>
+                </div>
+                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                    <div class="text-slate-400 text-xs mb-1">متأخرات المصاريف</div>
+                    <div class="text-xl font-bold text-rose-400">12,640 ج</div>
+                </div>
+            </div>
+
+            <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+                <div>
+                    <div class="text-slate-400 text-xs">متبقي الكاميرات (لم يتم تحصيله)</div>
+                    <div id="summary-cam-remaining" class="text-lg font-bold text-rose-400">15,730 ج</div>
+                </div>
+                <button onclick="switchTab('cameras')" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-lg">عرض الكاميرات</button>
+            </div>
+
+            <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
+                <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر</div>
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-slate-900/50 text-slate-400 text-xs">
+                        <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th className="p-3">الرصيد</th></tr>
+                    </thead>
+                    <tbody id="months-history-rows" class="divide-y divide-slate-800">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: MONTHS -->
+        <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
+            <div class="flex justify-between items-center">
+                <h2 class="font-bold text-emerald-400">تفاصيل الشهر</h2>
+                <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
+                    <option value="يوليو">يوليو</option>
+                    <option value="أغسطس">أغسطس</option>
+                    <option value="سبتمبر">سبتمبر</option>
+                    <option value="أكتوبر">أكتوبر</option>
+                    <option value="نوفمبر">نوفمبر</option>
+                </select>
+            </div>
+            <div class="p-4 bg-slate-900/60 rounded-xl text-sm">
+                تتابع الآن بيانات شهر: <span id="selected-month-label" class="font-bold text-emerald-400">يوليو</span>
+            </div>
+        </div>
+
+        <!-- TAB 3: CAMERAS -->
+        <div id="content-cameras" class="tab-content hidden bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <span class="font-bold text-emerald-400">مشروع الكاميرات (المطلوب 1,430 ج لكل شقة)</span>
+                <span id="cameras-badge-remaining" class="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded-full">المتبقي: 15,730 ج</span>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-slate-900/50 text-slate-400 text-xs sticky top-0">
+                        <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع</th><th class="p-3">المتبقي</th></tr>
+                    </thead>
+                    <tbody id="cameras-table-rows" class="divide-y divide-slate-800">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: MY APT / EDIT -->
+        <div id="content-myApt" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
+            <h2 class="font-bold text-emerald-400">اختر الشقة للتعديل وتحديث البيانات:</h2>
+            <select id="apt-select" onchange="onAptSelectChange()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm">
+                <!-- Options populated by JS -->
+            </select>
+            
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div id="edit-title" class="text-lg font-bold text-emerald-400">تعديل بيانات شقة رقم 1</div>
+                
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">اسم المالك / الحالة:</label>
+                    <input type="text" id="input-owner-name" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">المَدْفُوع لمشروع الكاميرات (ج):</label>
+                    <input type="number" id="input-camera-paid" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm">
+                </div>
+
+                <button id="save-btn" onclick="saveData()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-3 rounded-xl transition shadow-lg mt-2">
+                    حفظ التعديلات في قاعدة البيانات 💾
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
         const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
+        let globalData = null;
 
-        function BuildingApp() {
-            const [buildingData, setBuildingData] = React.useState(null);
-            const [loading, setLoading] = React.useState(true);
-            const [activeTab, setActiveTab] = React.useState("summary");
-            const [selectedApt, setSelectedApt] = React.useState(1);
-            const [selectedMonth, setSelectedMonth] = React.useState("يوليو");
-            const [saving, setSaving] = React.useState(false);
+        // Switch Tabs
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800";
+            });
 
-            // حالة التعديل للشقة المحددة
-            const [editOwnerName, setEditOwnerName] = React.useState("");
-            const [editCameraPaid, setEditCameraPaid] = React.useState(0);
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg";
+        }
 
-            // جلب البيانات من فايربيز
-            const fetchData = () => {
-                fetch(DB_URL)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data) {
-                            setBuildingData(data);
-                            // تحديث قيم الحقول المؤقتة للشقة المختارة
-                            const apt = data.apartments?.[selectedApt];
-                            const camPaid = data.projects?.cameras?.payments?.[selectedApt]?.paid || 0;
-                            setEditOwnerName(apt?.ownerName || "");
-                            setEditCameraPaid(camPaid);
-                        }
-                        setLoading(false);
-                    })
-                    .catch(err => {
-                        console.error("خطأ في جلب البيانات:", err);
-                        setLoading(false);
-                    });
-            };
-
-            React.useEffect(() => {
-                fetchData();
-            }, []);
-
-            // عند تغيير الشقة المختارة، تحديث المدخلات الخاصة بها
-            React.useEffect(() => {
-                if (buildingData) {
-                    const apt = buildingData.apartments?.[selectedApt];
-                    const camPaid = buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0;
-                    setEditOwnerName(apt?.ownerName || "");
-                    setEditCameraPaid(camPaid);
+        // Fetch Data
+        async function loadData() {
+            try {
+                const res = await fetch(DB_URL);
+                const data = await res.json();
+                if (data) {
+                    globalData = data;
+                    document.getElementById('status-badge').className = "text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20";
+                    document.getElementById('status-badge').innerText = "متصل بقاعدة البيانات 🟢";
+                    renderApp();
                 }
-            }, [selectedApt, buildingData]);
+            } catch (err) {
+                console.error("Error loading data:", err);
+                document.getElementById('status-badge').className = "text-xs bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-full border border-rose-500/20";
+                document.getElementById('status-badge').innerText = "خطأ في الاتصال 🔴";
+            }
+        }
 
-            // حفظ التعديلات في قاعدة البيانات
-            const handleSaveChanges = async () => {
-                if (!buildingData) return;
-                setSaving(true);
-                try {
-                    // تحديث بيانات الشقة محلياً في الـ state
-                    const updatedData = { ...buildingData };
-                    if (!updatedData.apartments[selectedApt]) {
-                        updatedData.apartments[selectedApt] = {};
-                    }
-                    updatedData.apartments[selectedApt].ownerName = editOwnerName;
+        // Render Data into DOM
+        function renderApp() {
+            if (!globalData) return;
 
-                    if (!updatedData.projects) updatedData.projects = {};
-                    if (!updatedData.projects.cameras) updatedData.projects.cameras = {};
-                    if (!updatedData.projects.cameras.payments) updatedData.projects.cameras.payments = {};
-                    
-                    if (!updatedData.projects.cameras.payments[selectedApt]) {
-                        updatedData.projects.cameras.payments[selectedApt] = {};
-                    }
-                    updatedData.projects.cameras.payments[selectedApt].paid = Number(editCameraPaid);
-
-                    // إرسال البيانات المحدثة بالكامل إلى قاعدة بيانات فايربيز
-                    const response = await fetch(DB_URL, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updatedData)
-                    });
-
-                    if (response.ok) {
-                        setBuildingData(updatedData);
-                        alert("تم حفظ التعديلات بنجاح في قاعدة البيانات! 🟢");
-                    } else {
-                        alert("حدث خطأ أثناء الحفظ.");
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert("تعذر الاتصال بقاعدة البيانات.");
-                }
-                setSaving(false);
-            };
-
-            if (loading) {
-                return <div className="text-center py-20 text-emerald-400 text-lg font-bold">جاري تحميل بيانات العمارة...</div>;
+            // 1. Months History
+            const monthsBody = document.getElementById('months-history-rows');
+            monthsBody.innerHTML = '';
+            if (globalData.monthsHistory) {
+                globalData.monthsHistory.forEach(m => {
+                    monthsBody.innerHTML += `
+                        <tr class="hover:bg-slate-800/50">
+                            <td class="p-3 font-medium">${m.name}</td>
+                            <td class="p-3 text-emerald-400">${m.collected} ج</td>
+                            <td class="p-3 text-amber-400">${m.expenses} ج</td>
+                            <td class="p-3 font-bold ${m.balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${m.balance} ج</td>
+                        </tr>
+                    `;
+                });
             }
 
-            if (!buildingData) {
-                return <div className="text-center py-20 text-rose-400 text-lg font-bold">تعذّر تحميل البيانات.</div>;
+            // 2. Cameras & Apartment Dropdown
+            const aptSelect = document.getElementById('apt-select');
+            const camerasBody = document.getElementById('cameras-table-rows');
+            camerasBody.innerHTML = '';
+            aptSelect.innerHTML = '';
+
+            const target = globalData.projects?.cameras?.perApartmentShare || 1430;
+
+            if (globalData.apartments) {
+                Object.entries(globalData.apartments).forEach(([id, apt]) => {
+                    const aptId = Number(id);
+                    const paid = globalData.projects?.cameras?.payments?.[aptId]?.paid || 0;
+                    const rem = target - paid;
+
+                    // Cameras table row
+                    camerasBody.innerHTML += `
+                        <tr class="hover:bg-slate-800/50">
+                            <td class="p-3 font-bold text-emerald-400">${aptId}</td>
+                            <td class="p-3">${apt.ownerName}</td>
+                            <td class="p-3 text-emerald-400">${paid} ج</td>
+                            <td class="p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem} ج</td>
+                        </tr>
+                    `;
+
+                    // Dropdown option
+                    aptSelect.innerHTML += `<option value="${aptId}">شقة ${aptId} - ${apt.ownerName}</option>`;
+                });
             }
 
-            return (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center bg-[#1e293b] p-4 rounded-2xl shadow-lg border border-slate-800">
-                    <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-emerald-400">
-                      🏢 {buildingData.buildingName || "عمارة 60 - ساوث هيلز 2"}
-                    </h1>
-                    <span className="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                      متصل بقاعدة البيانات 🟢
-                    </span>
-                  </div>
+            // Init Edit Form for Apt 1
+            onAptSelectChange();
+        }
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['summary', 'months', 'cameras', 'myApt'].map((tab) => {
-                      const labels = { summary: "الملخص", months: "الشهر", cameras: "الكاميرات", myApt: "شقتي (تعديل)" };
-                      return (
-                        <button key={tab} onClick={() => setActiveTab(tab)}
-                          className={`p-3 rounded-xl font-medium transition text-center ${activeTab === tab ? "bg-emerald-500 text-slate-950 font-bold shadow-lg" : "bg-[#1e293b] text-slate-300 hover:bg-slate-800"}`}>
-                          {labels[tab]}
-                        </button>
-                      );
-                    })}
-                  </div>
+        // Handle Apt Selection Change
+        function onAptSelectChange() {
+            if (!globalData) return;
+            const selectedId = Number(document.getElementById('apt-select').value || 1);
+            const apt = globalData.apartments?.[selectedId];
+            const paid = globalData.projects?.cameras?.payments?.[selectedId]?.paid || 0;
 
-                  {activeTab === "summary" && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                          <div className="text-slate-400 text-xs mb-1">الرصيد الحالي بالصندوق</div>
-                          <div className="text-xl font-bold text-emerald-400">1,880 ج</div>
-                        </div>
-                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                          <div className="text-slate-400 text-xs mb-1">إجمالي المحصّل</div>
-                          <div className="text-xl font-bold text-emerald-400">8,960 ج</div>
-                        </div>
-                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                          <div className="text-slate-400 text-xs mb-1">إجمالي المصروفات</div>
-                          <div className="text-xl font-bold text-amber-400">7,080 ج</div>
-                        </div>
-                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                          <div className="text-slate-400 text-xs mb-1">متأخرات المصاريف</div>
-                          <div className="text-xl font-bold text-rose-400">12,640 ج</div>
-                        </div>
-                      </div>
+            document.getElementById('edit-title').innerText = `تعديل بيانات شقة رقم ${selectedId}`;
+            document.getElementById('input-owner-name').value = apt?.ownerName || "";
+            document.getElementById('input-camera-paid').value = paid;
+        }
 
-                      <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
-                        <div>
-                          <div className="text-slate-400 text-xs">متبقي الكاميرات (لم يتم تحصيله)</div>
-                          <div className="text-lg font-bold text-rose-400">{buildingData.projects?.cameras?.totalRemaining || 15730} ج</div>
-                        </div>
-                        <button onClick={() => setActiveTab("cameras")} className="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-lg">عرض الكاميرات</button>
-                      </div>
+        // Save Data to Firebase
+        async function saveData() {
+            if (!globalData) return;
+            const selectedId = Number(document.getElementById('apt-select').value || 1);
+            const newName = document.getElementById('input-owner-name').value;
+            const newPaid = Number(document.getElementById('input-camera-paid').value);
+            const saveBtn = document.getElementById('save-btn');
 
-                      <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                        <div className="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر</div>
-                        <table className="w-full text-right text-sm">
-                          <thead className="bg-slate-900/50 text-slate-400 text-xs">
-                            <tr><th className="p-3">الشهر</th><th className="p-3">المحصّل</th><th className="p-3">المصروف</th><th className="p-3">الرصيد</th></tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800">
-                            {buildingData.monthsHistory && buildingData.monthsHistory.map((m, idx) => (
-                              <tr key={idx} className="hover:bg-slate-800/50">
-                                <td className="p-3 font-medium">{m.name}</td>
-                                <td className="p-3 text-emerald-400">{m.collected} ج</td>
-                                <td className="p-3 text-amber-400">{m.expenses} ج</td>
-                                <td className={`p-3 font-bold ${m.balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{m.balance} ج</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+            saveBtn.innerText = "جاري الحفظ...";
+            saveBtn.disabled = true;
 
-                  {activeTab === "months" && (
-                    <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h2 className="font-bold text-emerald-400">تفاصيل الشهر</h2>
-                        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
-                          {buildingData.monthsHistory && buildingData.monthsHistory.map((m, i) => <option key={i} value={m.name}>{m.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="p-4 bg-slate-900/60 rounded-xl text-sm">
-                        تتابع الآن بيانات شهر: <span className="font-bold text-emerald-400">{selectedMonth}</span>
-                      </div>
-                    </div>
-                  )}
+            try {
+                // Mutate local data
+                if (!globalData.apartments) globalData.apartments = {};
+                if (!globalData.apartments[selectedId]) globalData.apartments[selectedId] = {};
+                globalData.apartments[selectedId].ownerName = newName;
 
-                  {activeTab === "cameras" && (
-                    <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                      <div className="p-4 border-b border-slate-800 flex justify-between items-center">
-                        <span className="font-bold text-emerald-400">مشروع الكاميرات (المطلوب {buildingData.projects?.cameras?.perApartmentShare || 1430} ج)</span>
-                        <span className="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded-full">المتبقي: {buildingData.projects?.cameras?.totalRemaining || 15730} ج</span>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto">
-                        <table className="w-full text-right text-sm">
-                          <thead className="bg-slate-900/50 text-slate-400 text-xs sticky top-0">
-                            <tr><th className="p-3">شقة</th><th className="p-3">المالك</th><th className="p-3">المدفوع</th><th className="p-3">المتبقي</th></tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800">
-                            {buildingData.apartments && Object.entries(buildingData.apartments).map(([id, apt]) => {
-                              const aptId = Number(id);
-                              const paid = buildingData.projects?.cameras?.payments?.[aptId]?.paid || 0;
-                              const target = buildingData.projects?.cameras?.perApartmentShare || 1430;
-                              const rem = target - paid;
-                              return (
-                                <tr key={aptId} className="hover:bg-slate-800/50">
-                                  <td className="p-3 font-bold text-emerald-400">{aptId}</td>
-                                  <td className="p-3">{apt.ownerName}</td>
-                                  <td className="p-3 text-emerald-400">{paid} ج</td>
-                                  <td className={`p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}`}>{rem} ج</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                if (!globalData.projects) globalData.projects = {};
+                if (!globalData.projects.cameras) globalData.projects.cameras = {};
+                if (!globalData.projects.cameras.payments) globalData.projects.cameras.payments = {};
+                if (!globalData.projects.cameras.payments[selectedId]) globalData.projects.cameras.payments[selectedId] = {};
+                
+                globalData.projects.cameras.payments[selectedId].paid = newPaid;
 
-                  {activeTab === "myApt" && (
-                    <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                      <h2 className="font-bold text-emerald-400">اختر الشقة للتعديل وتحديث البيانات:</h2>
-                      <select value={selectedApt} onChange={(e) => setSelectedApt(Number(e.target.value))} className="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm">
-                        {buildingData.apartments && Object.entries(buildingData.apartments).map(([id, apt]) => <option key={id} value={Number(id)}>شقة {id} - {apt.ownerName}</option>)}
-                      </select>
-                      
-                      <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-                        <div className="text-lg font-bold text-emerald-400">تعديل بيانات شقة رقم {selectedApt}</div>
-                        
-                        <div>
-                          <label className="block text-xs text-slate-400 mb-1">اسم المالك / الحالة:</label>
-                          <input 
-                            type="text" 
-                            value={editOwnerName} 
-                            onChange={(e) => setEditOwnerName(e.target.value)} 
-                            className="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm"
-                          />
-                        </div>
+                // PUT to Firebase
+                const res = await fetch(DB_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(globalData)
+                });
 
-                        <div>
-                          <label className="block text-xs text-slate-400 mb-1">المَدْفُوع لمشروع الكاميرات (ج):</label>
-                          <input 
-                            type="number" 
-                            value={editCameraPaid} 
-                            onChange={(
+                if (res.ok) {
+                    alert("تم حفظ التعديلات بنجاح في قاعدة البيانات! 🟢");
+                    renderApp();
+                } else {
+                    alert("حدث خطأ أثناء الحفظ.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("تعذر الاتصال بقاعدة البيانات.");
+            }
+
+            saveBtn.innerText = "حفظ التعديلات في قاعدة البيانات 💾";
+            saveBtn.disabled = false;
+        }
+
+        // Run on load
+        loadData();
+    </script>
+</body>
+</html>
