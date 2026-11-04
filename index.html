@@ -82,7 +82,7 @@
             </div>
 
             <!-- Navigation Tabs -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="nav-tabs-container">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="nav-tabs-container">
                 <button type="button" onclick="window.switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص</button>
                 <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الشهر</button>
                 <button type="button" onclick="window.switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
@@ -119,7 +119,7 @@
                 </div>
 
                 <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر</div>
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر والمصروفات</div>
                     <table class="w-full text-right text-sm">
                         <thead class="bg-slate-900/50 text-slate-400 text-xs">
                             <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th class="p-3">الرصيد</th></tr>
@@ -219,10 +219,9 @@
             </div>
 
             <!-- TAB 5: ADMIN SETTINGS & PASSWORDS -->
-            <div id="content-passwords" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                <h2 class="font-bold text-amber-400 text-lg">إدارة كلمات السر وصلاحيات الحسابات 🛠️</h2>
-                <p class="text-xs text-slate-400">يمكنك هنا تغيير باسورد الأدمن الرئيسي، وتعديل كلمات السر الخاصة برقم كل شقة في العمارة.</p>
-
+            <div id="content-passwords" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-6">
+                <h2 class="font-bold text-amber-400 text-lg">إدارة كلمات السر وصلاحيات الحسابات والمصروفات 🛠️</h2>
+                
                 <!-- Change Admin Pass -->
                 <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">تغيير كلمة سر الأدمن الرئيسي</h3>
@@ -232,10 +231,40 @@
                     </div>
                 </div>
 
-                <!-- Change Resident Passwords Table -->
+                <!-- Add New Expense / Cost (جديد للأدمن لإضافة مصروفات) -->
                 <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق</h3>
-                    <div class="max-h-60 overflow-y-auto space-y-2" id="passwords-list-container"></div>
+                    <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف أو تكلفة جديدة للصندوق</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">الشهر:</label>
+                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
+                                <option value="يوليو">يوليو</option>
+                                <option value="أغسطس">أغسطس</option>
+                                <option value="سبتمبر">سبتمبر</option>
+                                <option value="أكتوبر">أكتوبر</option>
+                                <option value="نوفمبر" selected>نوفمبر</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">وصف المصروف (مثال: صيانة اسانسير):</label>
+                            <input type="text" id="expense-desc" placeholder="بند المصروف" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">المبلغ (ج):</label>
+                            <input type="number" id="expense-amount" placeholder="0" class="w-full bg-slate-800 text-emerald-400 font-bold p-2.5 rounded-lg border border-slate-700 text-xs">
+                        </div>
+                    </div>
+                    <button type="button" onclick="window.addNewExpense()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-2.5 rounded-lg text-xs transition mt-2">
+                        إضافة وحفظ المصروف في النظام 💸
+                    </button>
+                </div>
+
+                <!-- Change Resident Passwords Table (تم إصلاحها وعرضها بوضوح) -->
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <h3 class="font-bold text-emerald-400 text-sm">كلمات سر الشقق (تحكم كامل)</h3>
+                    <div class="max-h-72 overflow-y-auto space-y-2 pr-1" id="passwords-list-container">
+                        <!-- Filled by JS -->
+                    </div>
                 </div>
             </div>
 
@@ -274,12 +303,12 @@
                     } 
                 }
             },
-            monthlyPayments: {}
+            monthlyPayments: {},
+            expenses: [] // قائمة المصروفات الجديدة
         };
 
         let globalData = structuredClone(masterData);
 
-        // تعبئة القوائم فوراً قبل أي شيء لضمان عدم ظهورها فارغة أبداً
         function populateSelectsImmediately() {
             const loginSelect = document.getElementById('login-apt-select');
             const aptSelect = document.getElementById('apt-select');
@@ -511,6 +540,25 @@
             await syncToCloud(`تم تحديث كلمة سر شقة ${aptId} بنجاح! 🔑`);
         };
 
+        // دالة إضافة مصروف جديد للصندوق
+        window.addNewExpense = async function() {
+            const month = document.getElementById('expense-month').value;
+            const desc = document.getElementById('expense-desc').value;
+            const amount = Number(document.getElementById('expense-amount').value);
+
+            if (!desc || !amount) {
+                alert("برجاء إدخال وصف المصروف والمبلغ بشكل صحيح!");
+                return;
+            }
+
+            if (!globalData.expenses) globalData.expenses = [];
+            globalData.expenses.push({ month, desc, amount, date: new Date().toLocaleDateString('ar-EG') });
+
+            await syncToCloud("تمت إضافة المصروف وحفظه في النظام بنجاح! 💸");
+            document.getElementById('expense-desc').value = '';
+            document.getElementById('expense-amount').value = '';
+        };
+
         async function syncToCloud(successMsg) {
             try {
                 const res = await fetch(DB_URL, {
@@ -530,6 +578,7 @@
             }
         }
 
+        // عرض جدول كلمات السر بوضوح تام لكل الشقق
         function renderPasswordsList() {
             const container = document.getElementById('passwords-list-container');
             if(!container) return;
@@ -538,10 +587,10 @@
             Object.entries(globalData.apartments).forEach(([id, apt]) => {
                 const currentPass = globalData.passwords?.[id] || "1234";
                 container.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-800 p-2.5 rounded-xl text-xs gap-2">
-                        <span class="font-bold text-emerald-400 w-32">شقة ${id}: ${apt.ownerName}</span>
-                        <input type="text" id="pass-input-${id}" value="${currentPass}" class="bg-slate-900 text-white p-1.5 rounded border border-slate-700 w-32 text-center">
-                        <button type="button" onclick="window.updateResidentPass(${id})" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-3 py-1.5 rounded transition">تحديث</button>
+                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl text-xs gap-2 border border-slate-800">
+                        <span class="font-bold text-emerald-400 w-40">شقة ${id} (${apt.ownerName})</span>
+                        <input type="text" id="pass-input-${id}" value="${currentPass}" class="bg-slate-800 text-white p-2 rounded border border-slate-700 w-28 text-center font-bold">
+                        <button type="button" onclick="window.updateResidentPass(${id})" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-3 py-2 rounded-lg transition">تحديث</button>
                     </div>
                 `;
             });
@@ -549,6 +598,7 @@
 
         function renderApp() {
             populateSelectsImmediately();
+            renderPasswordsList();
 
             const camerasBody = document.getElementById('cameras-table-rows');
             if (camerasBody) {
@@ -574,7 +624,7 @@
         }
 
         async function loadInitialData() {
-            populateSelectsImmediately(); // ملء القائمة فوراً قبل طلب السيرفر
+            populateSelectsImmediately();
             try {
                 const res = await fetch(DB_URL);
                 if (res.ok) {
@@ -596,7 +646,6 @@
             renderApp();
         }
 
-        // التشغيل الفوري عند تحميل الصفحة
         window.onload = function() {
             populateSelectsImmediately();
             loadInitialData();
