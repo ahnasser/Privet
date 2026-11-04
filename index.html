@@ -31,11 +31,31 @@
                 <div>
                     <label class="block text-xs text-slate-400 mb-1.5">اختر رقم الشقة:</label>
                     <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500">
-                        <!-- Options generated dynamically -->
+                        <option value="1">شقة 1 - السيد كرم الدين</option>
+                        <option value="3">شقة 3 - أحمد محمد عبدالرحمن</option>
+                        <option value="4">شقة 4 - هاني محمود حسين</option>
+                        <option value="5">شقة 5 - أسماء صلاح حسن</option>
+                        <option value="6">شقة 6 - إيمان إبراهيم محمود</option>
+                        <option value="7">شقة 7 - أحمد يوسف حسن</option>
+                        <option value="8">شقة 8 - أحمد ناصر</option>
+                        <option value="9">شقة 9 - أميرة محمد فاروق</option>
+                        <option value="10">شقة 10 - شريف صلاح الدين</option>
+                        <option value="11">شقة 11 - منى محمود نجيب</option>
+                        <option value="12">شقة 12 - لبيب أنور</option>
+                        <option value="13">شقة 13 - أحمد فتحي محمد</option>
+                        <option value="14">شقة 14 - إسلام عماد الدين</option>
+                        <option value="15">شقة 15 - نهى حسين حافظ أمين</option>
+                        <option value="16">شقة 16 - مصطفى أمدين</option>
+                        <option value="18">شقة 18 - أحمد ربيع شوقي</option>
+                        <option value="19">شقة 19 - محمد أحمد عبد الفتاح</option>
+                        <option value="20">شقة 20 - أماني محمد مصطفى</option>
+                        <option value="21">شقة 21 - أحمد سمير</option>
+                        <option value="23">شقة 23 - عادل عبد الرازق</option>
+                        <option value="24">شقة 24 - عاطف محمد صادق</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">كلمة السر (الافتراضية 1234):</label>
+                    <label class="block text-xs text-slate-400 mb-1.5">كلمة السر (اختياري - افتراضية 1234):</label>
                     <input type="password" id="resident-pass" placeholder="****" value="1234" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
                 </div>
                 <button onclick="handleLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
@@ -43,21 +63,20 @@
                 </button>
             </div>
 
-            <!-- Admin Form -->
+            <!-- Admin Form (No Password Required) -->
             <div id="form-admin" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">كلمة سر المشرف (Admin Pass):</label>
-                    <input type="password" id="admin-pass" placeholder="كلمة سر الأدمن" value="admin123" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500">
+                <div class="p-4 bg-slate-900/60 rounded-xl text-center text-xs text-slate-300">
+                    دخول بصلاحيات المشرف الكاملة (إدارة وتعديل كل الشقق والحسابات).
                 </div>
                 <button onclick="handleLogin()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
-                    الدخول بصلاحية الأدمن 🛠️
+                    دخول مباشر للأدمن 🛠️
                 </button>
             </div>
 
             <div id="login-error" class="text-center text-xs text-rose-400 font-bold hidden"></div>
         </div>
 
-        <!-- SECTION 2: MAIN DASHBOARD CONTAINER (Hidden initially) -->
+        <!-- SECTION 2: MAIN DASHBOARD CONTAINER -->
         <div id="dashboard-container" class="space-y-6 hidden">
             
             <!-- Header -->
@@ -123,9 +142,7 @@
                         <thead class="bg-slate-900/50 text-slate-400 text-xs">
                             <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th class="p-3">الرصيد</th></tr>
                         </thead>
-                        <tbody id="months-history-rows" class="divide-y divide-slate-800">
-                            <!-- Filled by JS -->
-                        </tbody>
+                        <tbody id="months-history-rows" class="divide-y divide-slate-800"></tbody>
                     </table>
                 </div>
             </div>
@@ -158,9 +175,7 @@
                         <thead class="bg-slate-900/50 text-slate-400 text-xs sticky top-0">
                             <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع</th><th class="p-3">المتبقي</th></tr>
                         </thead>
-                        <tbody id="cameras-table-rows" class="divide-y divide-slate-800">
-                            <!-- Filled by JS -->
-                        </tbody>
+                        <tbody id="cameras-table-rows" class="divide-y divide-slate-800"></tbody>
                     </table>
                 </div>
             </div>
@@ -169,9 +184,7 @@
             <div id="content-myApt" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
                 <div id="admin-select-wrapper">
                     <h2 class="font-bold text-emerald-400 mb-2">اختر الشقة لمراجعة البيانات وتعديلها:</h2>
-                    <select id="apt-select" onchange="onAptSelectChange()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm">
-                        <!-- Options populated by JS -->
-                    </select>
+                    <select id="apt-select" onchange="onAptSelectChange()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm"></select>
                 </div>
                 
                 <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 space-y-4">
@@ -198,7 +211,6 @@
                         </div>
                     </div>
 
-                    <!-- Save button (Admin Only) -->
                     <button id="save-btn" onclick="saveData()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg mt-2">
                         حفظ التعديلات في قاعدة البيانات 💾
                     </button>
@@ -248,10 +260,9 @@
         };
 
         let globalData = structuredClone(defaultData);
-        let currentUser = null; // { role: 'admin' | 'resident', aptId: number | null }
+        let currentUser = null;
         let currentRoleType = 'resident';
 
-        // Set Role Tab in Login
         function setLoginRole(role) {
             currentRoleType = role;
             const resBtn = document.getElementById('role-btn-resident');
@@ -272,41 +283,23 @@
             }
         }
 
-        // Login Handler
         function handleLogin() {
-            const errDiv = document.getElementById('login-error');
-            errDiv.classList.add('hidden');
-
             if (currentRoleType === 'admin') {
-                const pass = document.getElementById('admin-pass').value;
-                if (pass === 'admin123') { // كلمة سر المشرف
-                    currentUser = { role: 'admin', aptId: null };
-                    showDashboard();
-                } else {
-                    errDiv.innerText = "كلمة السر غير صحيحة كلمة سر المشرف الحالية: admin123";
-                    errDiv.classList.remove('hidden');
-                }
+                currentUser = { role: 'admin', aptId: null };
+                showDashboard();
             } else {
                 const aptId = Number(document.getElementById('login-apt-select').value);
-                const pass = document.getElementById('resident-pass').value;
-                if (pass === '1234') { // كلمة سر الساكن
-                    currentUser = { role: 'resident', aptId: aptId };
-                    showDashboard();
-                } else {
-                    errDiv.innerText = "كلمة السر غير صحيحة كلمة السر الافتراضية للساكن: 1234";
-                    errDiv.classList.remove('hidden');
-                }
+                currentUser = { role: 'resident', aptId: aptId };
+                showDashboard();
             }
         }
 
-        // Logout Handler
         function handleLogout() {
             currentUser = null;
             document.getElementById('dashboard-container').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         }
 
-        // Show Dashboard after login
         function showDashboard() {
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('dashboard-container').classList.remove('hidden');
@@ -320,172 +313,4 @@
                 badge.innerText = "وضع المشرف (Admin) 🛠️";
                 saveBtn.classList.remove('hidden');
                 adminSelectWrapper.classList.remove('hidden');
-                document.getElementById('input-owner-name').disabled = false;
-                document.getElementById('input-camera-paid').disabled = false;
-                switchTab('summary');
-            } else {
-                badge.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/30 font-bold mt-1 inline-block";
-                badge.innerText = `حساب شقة رقم ${currentUser.aptId} 🏠`;
-                saveBtn.classList.add('hidden');
-                adminSelectWrapper.classList.add('hidden');
-                document.getElementById('input-owner-name').disabled = true;
-                document.getElementById('input-camera-paid').disabled = true;
-                
-                // في وضع الساكن نفتح له شقته مباشرة
-                document.getElementById('apt-select').value = currentUser.aptId;
-                switchTab('myApt');
-            }
-
-            renderApp();
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800";
-            });
-
-            document.getElementById('content-' + tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab-' + tabId);
-            activeBtn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg";
-        }
-
-        async function loadData() {
-            try {
-                const res = await fetch(DB_URL);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && Object.keys(data).length > 0) {
-                        globalData = data;
-                    }
-                }
-            } catch (err) {
-                console.warn("تعذر الاتصال بقاعدة البيانات، جاري استخدام البيانات المحلية:", err);
-            }
-            populateAptOptions();
-        }
-
-        function populateAptOptions() {
-            const loginSelect = document.getElementById('login-apt-select');
-            const aptSelect = document.getElementById('apt-select');
-            loginSelect.innerHTML = '';
-            aptSelect.innerHTML = '';
-
-            if (globalData.apartments) {
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    loginSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-                    aptSelect.innerHTML += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-                });
-            }
-        }
-
-        function renderApp() {
-            if (!globalData) return;
-
-            // 1. Months History
-            const monthsBody = document.getElementById('months-history-rows');
-            monthsBody.innerHTML = '';
-            if (globalData.monthsHistory) {
-                globalData.monthsHistory.forEach(m => {
-                    monthsBody.innerHTML += `
-                        <tr class="hover:bg-slate-800/50">
-                            <td class="p-3 font-medium">${m.name}</td>
-                            <td class="p-3 text-emerald-400">${m.collected} ج</td>
-                            <td class="p-3 text-amber-400">${m.expenses} ج</td>
-                            <td class="p-3 font-bold ${m.balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${m.balance} ج</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            // 2. Cameras
-            const camerasBody = document.getElementById('cameras-table-rows');
-            camerasBody.innerHTML = '';
-            const target = globalData.projects?.cameras?.perApartmentShare || 1430;
-
-            if (globalData.apartments) {
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    const aptId = Number(id);
-                    const paid = globalData.projects?.cameras?.payments?.[aptId]?.paid || 0;
-                    const rem = target - paid;
-
-                    camerasBody.innerHTML += `
-                        <tr class="hover:bg-slate-800/50">
-                            <td class="p-3 font-bold text-emerald-400">${aptId}</td>
-                            <td class="p-3">${apt.ownerName}</td>
-                            <td class="p-3 text-emerald-400">${paid} ج</td>
-                            <td class="p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem} ج</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            onAptSelectChange();
-        }
-
-        function onAptSelectChange() {
-            if (!globalData) return;
-            let selectedId = Number(document.getElementById('apt-select').value || 1);
-            if (currentUser && currentUser.role === 'resident') {
-                selectedId = currentUser.aptId;
-            }
-
-            const apt = globalData.apartments?.[selectedId];
-            const paid = globalData.projects?.cameras?.payments?.[selectedId]?.paid || 0;
-            const target = globalData.projects?.cameras?.perApartmentShare || 1430;
-
-            document.getElementById('edit-title').innerText = `بيانات شقة رقم ${selectedId}`;
-            document.getElementById('input-owner-name').value = apt?.ownerName || "";
-            document.getElementById('input-camera-paid').value = paid;
-            
-            const rem = target - paid;
-            document.getElementById('rem-camera-display').innerText = `المتبقي: ${rem} ج`;
-        }
-
-        async function saveData() {
-            if (!globalData || (currentUser && currentUser.role !== 'admin')) return;
-            const selectedId = Number(document.getElementById('apt-select').value || 1);
-            const newName = document.getElementById('input-owner-name').value;
-            const newPaid = Number(document.getElementById('input-camera-paid').value);
-            const saveBtn = document.getElementById('save-btn');
-
-            saveBtn.innerText = "جاري الحفظ...";
-            saveBtn.disabled = true;
-
-            try {
-                if (!globalData.apartments) globalData.apartments = {};
-                if (!globalData.apartments[selectedId]) globalData.apartments[selectedId] = {};
-                globalData.apartments[selectedId].ownerName = newName;
-
-                if (!globalData.projects) globalData.projects = {};
-                if (!globalData.projects.cameras) globalData.projects.cameras = {};
-                if (!globalData.projects.cameras.payments) globalData.projects.cameras.payments = {};
-                if (!globalData.projects.cameras.payments[selectedId]) globalData.projects.cameras.payments[selectedId] = {};
-                
-                globalData.projects.cameras.payments[selectedId].paid = newPaid;
-
-                const res = await fetch(DB_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(globalData)
-                });
-
-                if (res.ok) {
-                    alert("تم حفظ التعديلات بنجاح في قاعدة البيانات! 🟢");
-                    renderApp();
-                } else {
-                    alert("تعذر الحفظ في السيرفر.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("تعذر الاتصال بالسيرفر.");
-            }
-
-            saveBtn.innerText = "حفظ التعديلات في قاعدة البيانات 💾";
-            saveBtn.disabled = false;
-        }
-
-        loadData();
-    </script>
-</body>
-</html>
+                document.getElementById('input
