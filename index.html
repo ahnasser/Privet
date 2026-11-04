@@ -64,7 +64,7 @@
                 <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر</div>
                 <table class="w-full text-right text-sm">
                     <thead class="bg-slate-900/50 text-slate-400 text-xs">
-                        <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th className="p-3">الرصيد</th></tr>
+                        <tr><th class="p-3">الشهر</th><th class="p-3">المحصّل</th><th class="p-3">المصروف</th><th class="p-3">الرصيد</th></tr>
                     </thead>
                     <tbody id="months-history-rows" class="divide-y divide-slate-800">
                         <!-- Filled by JS -->
@@ -77,7 +77,7 @@
         <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
             <div class="flex justify-between items-center">
                 <h2 class="font-bold text-emerald-400">تفاصيل الشهر</h2>
-                <select id="month-select" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
+                <select id="month-select" onchange="document.getElementById('selected-month-label').innerText = this.value" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
                     <option value="يوليو">يوليو</option>
                     <option value="أغسطس">أغسطس</option>
                     <option value="سبتمبر">سبتمبر</option>
@@ -138,9 +138,46 @@
 
     <script>
         const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
-        let globalData = null;
+        
+        // بيانات أولية متكاملة لضمان فتح الموقع فوراً حتى في حالة مشاكل الشبكة
+        const defaultData = {
+            buildingName: "عمارة 60 - ساوث هيلز 2",
+            monthsHistory: [
+                { name: "يوليو", collected: 1600, expenses: 1600, balance: 0 },
+                { name: "أغسطس", collected: 1780, expenses: 600, balance: 1180 },
+                { name: "سبتمبر", collected: 1980, expenses: 2480, balance: -500 },
+                { name: "أكتوبر", collected: 1980, expenses: 1900, balance: 80 },
+                { name: "نوفمبر", collected: 1620, expenses: 500, balance: 1120 }
+            ],
+            apartments: {
+                1: { ownerName: "السيد كرم الدين" }, 2: { ownerName: "(فارغ)" },
+                3: { ownerName: "أحمد محمد عبدالرحمن" }, 4: { ownerName: "هاني محمود حسين" },
+                5: { ownerName: "أسماء صلاح حسن" }, 6: { ownerName: "إيمان إبراهيم محمود" },
+                7: { ownerName: "أحمد يوسف حسن" }, 8: { ownerName: "أحمد ناصر" },
+                9: { ownerName: "أميرة محمد فاروق" }, 10: { ownerName: "شريف صلاح الدين" },
+                11: { ownerName: "منى محمود نجيب" }, 12: { ownerName: "لبيب أنور" },
+                13: { ownerName: "أحمد فتحي محمد" }, 14: { ownerName: "إسلام عماد الدين" },
+                15: { ownerName: "نهى حسين حافظ أمين" }, 16: { ownerName: "مصطفى أمدين" },
+                17: { ownerName: "(فارغ)" }, 18: { ownerName: "أحمد ربيع شوقي" },
+                19: { ownerName: "محمد أحمد عبد الفتاح" }, 20: { ownerName: "أماني محمد مصطفى" },
+                21: { ownerName: "أحمد سمير" }, 22: { ownerName: "(فارغ)" },
+                23: { ownerName: "عادل عبد الرازق" }, 24: { ownerName: "عاطف محمد صادق" }
+            },
+            projects: {
+                cameras: {
+                    perApartmentShare: 1430,
+                    totalRemaining: 15730,
+                    payments: {
+                        1: { paid: 1430 }, 3: { paid: 1430 }, 4: { paid: 1430 }, 5: { paid: 1430 },
+                        6: { paid: 1430 }, 7: { paid: 1430 }, 8: { paid: 1430 }, 9: { paid: 1430 },
+                        11: { paid: 1430 }, 13: { paid: 1430 }, 18: { paid: 1430 }, 20: { paid: 1430 }, 23: { paid: 1430 }
+                    }
+                }
+            }
+        };
 
-        // Switch Tabs
+        let globalData = structuredClone(defaultData);
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -152,25 +189,44 @@
             activeBtn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg";
         }
 
-        // Fetch Data
         async function loadData() {
             try {
                 const res = await fetch(DB_URL);
-                const data = await res.json();
-                if (data) {
-                    globalData = data;
-                    document.getElementById('status-badge').className = "text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20";
-                    document.getElementById('status-badge').innerText = "متصل بقاعدة البيانات 🟢";
-                    renderApp();
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && Object.keys(data).length > 0) {
+                        globalData = data;
+                        document.getElementById('status-badge').className = "text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20";
+                        document.getElementById('status-badge').innerText = "متصل بقاعدة البيانات 🟢";
+                    } else {
+                        // لو الداتابيز فاضية نرفع البيانات الأساسية لأول مرة
+                        await saveInitialData();
+                    }
+                } else {
+                    throw new Error("الاتصال أرجع خطأ");
                 }
             } catch (err) {
-                console.error("Error loading data:", err);
-                document.getElementById('status-badge').className = "text-xs bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-full border border-rose-500/20";
-                document.getElementById('status-badge').innerText = "خطأ في الاتصال 🔴";
+                console.warn("استخدام البيانات المحلية بسبب تعذر الاتصال الشبكي:", err);
+                document.getElementById('status-badge').className = "text-xs bg-amber-500/10 text-amber-400 px-3 py-1.5 rounded-full border border-amber-500/20";
+                document.getElementById('status-badge').innerText = "وضع محلي (أوفلاين) 🟡";
+            }
+            renderApp();
+        }
+
+        async function saveInitialData() {
+            try {
+                await fetch(DB_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(defaultData)
+                });
+                document.getElementById('status-badge').className = "text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20";
+                document.getElementById('status-badge').innerText = "تم إنشاء قاعدة البيانات 🟢";
+            } catch (e) {
+                console.error("تعذر تهيئة قاعدة البيانات:", e);
             }
         }
 
-        // Render Data into DOM
         function renderApp() {
             if (!globalData) return;
 
@@ -190,7 +246,7 @@
                 });
             }
 
-            // 2. Cameras & Apartment Dropdown
+            // 2. Cameras & Dropdown
             const aptSelect = document.getElementById('apt-select');
             const camerasBody = document.getElementById('cameras-table-rows');
             camerasBody.innerHTML = '';
@@ -204,7 +260,6 @@
                     const paid = globalData.projects?.cameras?.payments?.[aptId]?.paid || 0;
                     const rem = target - paid;
 
-                    // Cameras table row
                     camerasBody.innerHTML += `
                         <tr class="hover:bg-slate-800/50">
                             <td class="p-3 font-bold text-emerald-400">${aptId}</td>
@@ -214,16 +269,13 @@
                         </tr>
                     `;
 
-                    // Dropdown option
                     aptSelect.innerHTML += `<option value="${aptId}">شقة ${aptId} - ${apt.ownerName}</option>`;
                 });
             }
 
-            // Init Edit Form for Apt 1
             onAptSelectChange();
         }
 
-        // Handle Apt Selection Change
         function onAptSelectChange() {
             if (!globalData) return;
             const selectedId = Number(document.getElementById('apt-select').value || 1);
@@ -235,7 +287,6 @@
             document.getElementById('input-camera-paid').value = paid;
         }
 
-        // Save Data to Firebase
         async function saveData() {
             if (!globalData) return;
             const selectedId = Number(document.getElementById('apt-select').value || 1);
@@ -247,7 +298,6 @@
             saveBtn.disabled = true;
 
             try {
-                // Mutate local data
                 if (!globalData.apartments) globalData.apartments = {};
                 if (!globalData.apartments[selectedId]) globalData.apartments[selectedId] = {};
                 globalData.apartments[selectedId].ownerName = newName;
@@ -259,7 +309,6 @@
                 
                 globalData.projects.cameras.payments[selectedId].paid = newPaid;
 
-                // PUT to Firebase
                 const res = await fetch(DB_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -267,21 +316,22 @@
                 });
 
                 if (res.ok) {
-                    alert("تم حفظ التعديلات بنجاح في قاعدة البيانات! 🟢");
+                    alert("تم حفظ التعديلات بنجاح! 🟢");
                     renderApp();
                 } else {
-                    alert("حدث خطأ أثناء الحفظ.");
+                    alert("تعذر الحفظ في السيرفر، تم التعديل محلياً.");
+                    renderApp();
                 }
             } catch (err) {
                 console.error(err);
-                alert("تعذر الاتصال بقاعدة البيانات.");
+                alert("تعذر الاتصال بالسيرفر. تم تحديث البيانات أوفلاين.");
+                renderApp();
             }
 
             saveBtn.innerText = "حفظ التعديلات في قاعدة البيانات 💾";
             saveBtn.disabled = false;
         }
 
-        // Run on load
         loadData();
     </script>
 </body>
