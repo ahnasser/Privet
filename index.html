@@ -18,32 +18,102 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
+        const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
+
         function BuildingApp() {
             const [buildingData, setBuildingData] = React.useState(null);
             const [loading, setLoading] = React.useState(true);
             const [activeTab, setActiveTab] = React.useState("summary");
             const [selectedApt, setSelectedApt] = React.useState(1);
             const [selectedMonth, setSelectedMonth] = React.useState("يوليو");
+            const [saving, setSaving] = React.useState(false);
 
-            React.useEffect(() => {
-                fetch("https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json")
+            // حالة التعديل للشقة المحددة
+            const [editOwnerName, setEditOwnerName] = React.useState("");
+            const [editCameraPaid, setEditCameraPaid] = React.useState(0);
+
+            // جلب البيانات من فايربيز
+            const fetchData = () => {
+                fetch(DB_URL)
                     .then(res => res.json())
                     .then(data => {
-                        setBuildingData(data);
+                        if (data) {
+                            setBuildingData(data);
+                            // تحديث قيم الحقول المؤقتة للشقة المختارة
+                            const apt = data.apartments?.[selectedApt];
+                            const camPaid = data.projects?.cameras?.payments?.[selectedApt]?.paid || 0;
+                            setEditOwnerName(apt?.ownerName || "");
+                            setEditCameraPaid(camPaid);
+                        }
                         setLoading(false);
                     })
                     .catch(err => {
                         console.error("خطأ في جلب البيانات:", err);
                         setLoading(false);
                     });
+            };
+
+            React.useEffect(() => {
+                fetchData();
             }, []);
 
+            // عند تغيير الشقة المختارة، تحديث المدخلات الخاصة بها
+            React.useEffect(() => {
+                if (buildingData) {
+                    const apt = buildingData.apartments?.[selectedApt];
+                    const camPaid = buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0;
+                    setEditOwnerName(apt?.ownerName || "");
+                    setEditCameraPaid(camPaid);
+                }
+            }, [selectedApt, buildingData]);
+
+            // حفظ التعديلات في قاعدة البيانات
+            const handleSaveChanges = async () => {
+                if (!buildingData) return;
+                setSaving(true);
+                try {
+                    // تحديث بيانات الشقة محلياً في الـ state
+                    const updatedData = { ...buildingData };
+                    if (!updatedData.apartments[selectedApt]) {
+                        updatedData.apartments[selectedApt] = {};
+                    }
+                    updatedData.apartments[selectedApt].ownerName = editOwnerName;
+
+                    if (!updatedData.projects) updatedData.projects = {};
+                    if (!updatedData.projects.cameras) updatedData.projects.cameras = {};
+                    if (!updatedData.projects.cameras.payments) updatedData.projects.cameras.payments = {};
+                    
+                    if (!updatedData.projects.cameras.payments[selectedApt]) {
+                        updatedData.projects.cameras.payments[selectedApt] = {};
+                    }
+                    updatedData.projects.cameras.payments[selectedApt].paid = Number(editCameraPaid);
+
+                    // إرسال البيانات المحدثة بالكامل إلى قاعدة بيانات فايربيز
+                    const response = await fetch(DB_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        setBuildingData(updatedData);
+                        alert("تم حفظ التعديلات بنجاح في قاعدة البيانات! 🟢");
+                    } else {
+                        alert("حدث خطأ أثناء الحفظ.");
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert("تعذر الاتصال بقاعدة البيانات.");
+                }
+                setSaving(false);
+            };
+
             if (loading) {
-                return <div className="text-center py-20 text-emerald-400 text-lg font-bold">جاري تحميل بيانات العمارة من قاعدة البيانات...</div>;
+                return <div className="text-center py-20 text-emerald-400 text-lg font-bold">جاري تحميل بيانات العمارة...</div>;
             }
 
             if (!buildingData) {
-                return <div className="text-center py-20 text-rose-400 text-lg font-bold">تعذّر تحميل البيانات. تأكد من اتصال الإنترنت.</div>;
+                return <div className="text-center py-20 text-rose-400 text-lg font-bold">تعذّر تحميل البيانات.</div>;
             }
 
             return (
@@ -58,8 +128,8 @@
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['summary', 'months', 'cameras', 'myApt'].map((tab, idx) => {
-                      const labels = { summary: "الملخص", months: "الشهر", cameras: "الكاميرات", myApt: "شقتي (حسابي)" };
+                    {['summary', 'months', 'cameras', 'myApt'].map((tab) => {
+                      const labels = { summary: "الملخص", months: "الشهر", cameras: "الكاميرات", myApt: "شقتي (تعديل)" };
                       return (
                         <button key={tab} onClick={() => setActiveTab(tab)}
                           className={`p-3 rounded-xl font-medium transition text-center ${activeTab === tab ? "bg-emerald-500 text-slate-950 font-bold shadow-lg" : "bg-[#1e293b] text-slate-300 hover:bg-slate-800"}`}>
@@ -167,31 +237,27 @@
 
                   {activeTab === "myApt" && (
                     <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                      <h2 className="font-bold text-emerald-400">اختر شقتك لعرض كشف الحساب:</h2>
+                      <h2 className="font-bold text-emerald-400">اختر الشقة للتعديل وتحديث البيانات:</h2>
                       <select value={selectedApt} onChange={(e) => setSelectedApt(Number(e.target.value))} className="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm">
                         {buildingData.apartments && Object.entries(buildingData.apartments).map(([id, apt]) => <option key={id} value={Number(id)}>شقة {id} - {apt.ownerName}</option>)}
                       </select>
+                      
                       <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-                        <div className="text-lg font-bold text-emerald-400">شقة رقم {selectedApt}: {buildingData.apartments?.[selectedApt]?.ownerName}</div>
-                        <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="bg-slate-800/60 p-3 rounded-lg text-xs">
-                            <span className="text-slate-400 block mb-1">موقف الكاميرات</span>
-                            المدفوع: {buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0} ج
-                            <span className="block text-rose-400 mt-1">المتبقي: {(buildingData.projects?.cameras?.perApartmentShare || 1430) - (buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0)} ج</span>
-                          </div>
-                          <div className="bg-slate-800/60 p-3 rounded-lg text-xs">
-                            <span className="text-slate-400 block mb-1">اشتراك العمارة</span>
-                            <span className="text-sm font-bold text-emerald-400">{buildingData.monthlyDues?.monthlyAmount || 180} ج / شهرياً</span>
-                          </div>
+                        <div className="text-lg font-bold text-emerald-400">تعديل بيانات شقة رقم {selectedApt}</div>
+                        
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">اسم المالك / الحالة:</label>
+                          <input 
+                            type="text" 
+                            value={editOwnerName} 
+                            onChange={(e) => setEditOwnerName(e.target.value)} 
+                            className="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm"
+                          />
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            }
 
-        ReactDOM.render(<BuildingApp />, document.getElementById('app'));
-    </script>
-</body>
-</html>
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">المَدْفُوع لمشروع الكاميرات (ج):</label>
+                          <input 
+                            type="number" 
+                            value={editCameraPaid} 
+                            onChange={(
