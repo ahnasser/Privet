@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عمارة 60 - سكن مصر ساوث هيلز 2</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; text-align: center; }
+        .section { margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #2c3e50; color: white; }
+        .loading { text-align: center; font-size: 18px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>عمارة 60 - سكن مصر ساوث هيلز 2</h1>
+    <div id="loading" class="loading">جاري تحميل البيانات من قاعدة البيانات...</div>
+
+    <div id="content" style="display: none;">
+        <div class="section">
+            <h2>موقف الشقق والملاك</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الشقة</th>
+                        <th>اسم المالك / الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="apartments-table">
+                    <!-- سيتم تعبئتها تلقائياً -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>المشاريع (مشروع الكاميرات)</h2>
+            <div id="projects-container">
+                <!-- سيتم تعبئتها تلقائياً -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dbUrl = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
+
+    async function loadData() {
+        try {
+            const response = await fetch(dbUrl);
+            const data = await response.json();
+            
+            if (data) {
+                // إخفاء رسالة التحميل وإظهار المحتوى
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // تعبئة جدول الشقق
+                const aptTable = document.getElementById('apartments-table');
+                aptTable.innerHTML = '';
+                if (data.apartments) {
+                    for (const [num, apt] of Object.entries(data.apartments)) {
+                        aptTable.innerHTML += `<tr><td>شقة ${num}</td><td>${apt.ownerName}</td></tr>`;
+                    }
+                }
+
+                // تعبئة المشاريع
+                const projContainer = document.getElementById('projects-container');
+                projContainer.innerHTML = '';
+                if (data.projects && data.projects.cameras) {
+                    const cam = data.projects.cameras;
+                    projContainer.innerHTML = `
+                        <p><strong>اسم المشروع:</strong> ${cam.name}</p>
+                        <p><strong>المستهدف:</strong> ${cam.targetBudget} ج.م | <strong>المحصور:</strong> ${cam.totalCollected} ج.م | <strong>المتبقي:</strong> ${cam.totalRemaining} ج.م</p>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error("خطأ في جلب البيانات:", error);
+            document.getElementById('loading').innerText = "حدث خطأ أثناء تحميل البيانات.";
+        }
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
