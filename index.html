@@ -3,90 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عمارة 60 - سكن مصر ساوث هيلز 2</title>
+    <title>مصاريف عمارة 60 - ساوث هيلز 2</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Tahoma, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { color: #2c3e50; text-align: center; }
-        .section { margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background-color: #2c3e50; color: white; }
-        .loading { text-align: center; font-size: 18px; color: #666; }
+        body { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 sm:p-6">
+    <div id="app" class="max-w-4xl mx-auto space-y-6"></div>
 
-<div class="container">
-    <h1>عمارة 60 - سكن مصر ساوث هيلز 2</h1>
-    <div id="loading" class="loading">جاري تحميل البيانات من قاعدة البيانات...</div>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <div id="content" style="display: none;">
-        <div class="section">
-            <h2>موقف الشقق والملاك</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>رقم الشقة</th>
-                        <th>اسم المالك / الحالة</th>
-                    </tr>
-                </thead>
-                <tbody id="apartments-table">
-                    <!-- سيتم تعبئتها تلقائياً -->
-                </tbody>
-            </table>
-        </div>
+    <script type="text/babel">
+        function BuildingApp() {
+            const [buildingData, setBuildingData] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+            const [activeTab, setActiveTab] = React.useState("summary");
+            const [selectedApt, setSelectedApt] = React.useState(1);
+            const [selectedMonth, setSelectedMonth] = React.useState("يوليو");
 
-        <div class="section">
-            <h2>المشاريع (مشروع الكاميرات)</h2>
-            <div id="projects-container">
-                <!-- سيتم تعبئتها تلقائياً -->
-            </div>
-        </div>
-    </div>
-</div>
+            React.useEffect(() => {
+                fetch("https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json")
+                    .then(res => res.json())
+                    .then(data => {
+                        setBuildingData(data);
+                        setLoading(false);
+                    })
+                    .catch(err => {
+                        console.error("خطأ في جلب البيانات:", err);
+                        setLoading(false);
+                    });
+            }, []);
 
-<script>
-    const dbUrl = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
-
-    async function loadData() {
-        try {
-            const response = await fetch(dbUrl);
-            const data = await response.json();
-            
-            if (data) {
-                // إخفاء رسالة التحميل وإظهار المحتوى
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-
-                // تعبئة جدول الشقق
-                const aptTable = document.getElementById('apartments-table');
-                aptTable.innerHTML = '';
-                if (data.apartments) {
-                    for (const [num, apt] of Object.entries(data.apartments)) {
-                        aptTable.innerHTML += `<tr><td>شقة ${num}</td><td>${apt.ownerName}</td></tr>`;
-                    }
-                }
-
-                // تعبئة المشاريع
-                const projContainer = document.getElementById('projects-container');
-                projContainer.innerHTML = '';
-                if (data.projects && data.projects.cameras) {
-                    const cam = data.projects.cameras;
-                    projContainer.innerHTML = `
-                        <p><strong>اسم المشروع:</strong> ${cam.name}</p>
-                        <p><strong>المستهدف:</strong> ${cam.targetBudget} ج.م | <strong>المحصور:</strong> ${cam.totalCollected} ج.م | <strong>المتبقي:</strong> ${cam.totalRemaining} ج.م</p>
-                    `;
-                }
+            if (loading) {
+                return <div className="text-center py-20 text-emerald-400 text-lg font-bold">جاري تحميل بيانات العمارة من قاعدة البيانات...</div>;
             }
-        } catch (error) {
-            console.error("خطأ في جلب البيانات:", error);
-            document.getElementById('loading').innerText = "حدث خطأ أثناء تحميل البيانات.";
-        }
-    }
 
-    loadData();
-</script>
+            if (!buildingData) {
+                return <div className="text-center py-20 text-rose-400 text-lg font-bold">تعذّر تحميل البيانات. تأكد من اتصال الإنترنت.</div>;
+            }
 
+            return (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center bg-[#1e293b] p-4 rounded-2xl shadow-lg border border-slate-800">
+                    <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-emerald-400">
+                      🏢 {buildingData.buildingName || "عمارة 60 - ساوث هيلز 2"}
+                    </h1>
+                    <span className="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                      متصل بقاعدة البيانات 🟢
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {['summary', 'months', 'cameras', 'myApt'].map((tab, idx) => {
+                      const labels = { summary: "الملخص", months: "الشهر", cameras: "الكاميرات", myApt: "شقتي (حسابي)" };
+                      return (
+                        <button key={tab} onClick={() => setActiveTab(tab)}
+                          className={`p-3 rounded-xl font-medium transition text-center ${activeTab === tab ? "bg-emerald-500 text-slate-950 font-bold shadow-lg" : "bg-[#1e293b] text-slate-300 hover:bg-slate-800"}`}>
+                          {labels[tab]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {activeTab === "summary" && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                          <div className="text-slate-400 text-xs mb-1">الرصيد الحالي بالصندوق</div>
+                          <div className="text-xl font-bold text-emerald-400">1,880 ج</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                          <div className="text-slate-400 text-xs mb-1">إجمالي المحصّل</div>
+                          <div className="text-xl font-bold text-emerald-400">8,960 ج</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                          <div className="text-slate-400 text-xs mb-1">إجمالي المصروفات</div>
+                          <div className="text-xl font-bold text-amber-400">7,080 ج</div>
+                        </div>
+                        <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
+                          <div className="text-slate-400 text-xs mb-1">متأخرات المصاريف</div>
+                          <div className="text-xl font-bold text-rose-400">12,640 ج</div>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+                        <div>
+                          <div className="text-slate-400 text-xs">متبقي الكاميرات (لم يتم تحصيله)</div>
+                          <div className="text-lg font-bold text-rose-400">{buildingData.projects?.cameras?.totalRemaining || 15730} ج</div>
+                        </div>
+                        <button onClick={() => setActiveTab("cameras")} className="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-lg">عرض الكاميرات</button>
+                      </div>
+
+                      <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
+                        <div className="p-4 border-b border-slate-800 font-bold text-emerald-400">حركة كل شهر</div>
+                        <table className="w-full text-right text-sm">
+                          <thead className="bg-slate-900/50 text-slate-400 text-xs">
+                            <tr><th className="p-3">الشهر</th><th className="p-3">المحصّل</th><th className="p-3">المصروف</th><th className="p-3">الرصيد</th></tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800">
+                            {buildingData.monthsHistory && buildingData.monthsHistory.map((m, idx) => (
+                              <tr key={idx} className="hover:bg-slate-800/50">
+                                <td className="p-3 font-medium">{m.name}</td>
+                                <td className="p-3 text-emerald-400">{m.collected} ج</td>
+                                <td className="p-3 text-amber-400">{m.expenses} ج</td>
+                                <td className={`p-3 font-bold ${m.balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{m.balance} ج</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "months" && (
+                    <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h2 className="font-bold text-emerald-400">تفاصيل الشهر</h2>
+                        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
+                          {buildingData.monthsHistory && buildingData.monthsHistory.map((m, i) => <option key={i} value={m.name}>{m.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="p-4 bg-slate-900/60 rounded-xl text-sm">
+                        تتابع الآن بيانات شهر: <span className="font-bold text-emerald-400">{selectedMonth}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "cameras" && (
+                    <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
+                      <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+                        <span className="font-bold text-emerald-400">مشروع الكاميرات (المطلوب {buildingData.projects?.cameras?.perApartmentShare || 1430} ج)</span>
+                        <span className="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded-full">المتبقي: {buildingData.projects?.cameras?.totalRemaining || 15730} ج</span>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        <table className="w-full text-right text-sm">
+                          <thead className="bg-slate-900/50 text-slate-400 text-xs sticky top-0">
+                            <tr><th className="p-3">شقة</th><th className="p-3">المالك</th><th className="p-3">المدفوع</th><th className="p-3">المتبقي</th></tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800">
+                            {buildingData.apartments && Object.entries(buildingData.apartments).map(([id, apt]) => {
+                              const aptId = Number(id);
+                              const paid = buildingData.projects?.cameras?.payments?.[aptId]?.paid || 0;
+                              const target = buildingData.projects?.cameras?.perApartmentShare || 1430;
+                              const rem = target - paid;
+                              return (
+                                <tr key={aptId} className="hover:bg-slate-800/50">
+                                  <td className="p-3 font-bold text-emerald-400">{aptId}</td>
+                                  <td className="p-3">{apt.ownerName}</td>
+                                  <td className="p-3 text-emerald-400">{paid} ج</td>
+                                  <td className={`p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}`}>{rem} ج</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "myApt" && (
+                    <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
+                      <h2 className="font-bold text-emerald-400">اختر شقتك لعرض كشف الحساب:</h2>
+                      <select value={selectedApt} onChange={(e) => setSelectedApt(Number(e.target.value))} className="w-full bg-slate-900 text-slate-200 border border-slate-700 p-3 rounded-xl text-sm">
+                        {buildingData.apartments && Object.entries(buildingData.apartments).map(([id, apt]) => <option key={id} value={Number(id)}>شقة {id} - {apt.ownerName}</option>)}
+                      </select>
+                      <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <div className="text-lg font-bold text-emerald-400">شقة رقم {selectedApt}: {buildingData.apartments?.[selectedApt]?.ownerName}</div>
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                          <div className="bg-slate-800/60 p-3 rounded-lg text-xs">
+                            <span className="text-slate-400 block mb-1">موقف الكاميرات</span>
+                            المدفوع: {buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0} ج
+                            <span className="block text-rose-400 mt-1">المتبقي: {(buildingData.projects?.cameras?.perApartmentShare || 1430) - (buildingData.projects?.cameras?.payments?.[selectedApt]?.paid || 0)} ج</span>
+                          </div>
+                          <div className="bg-slate-800/60 p-3 rounded-lg text-xs">
+                            <span className="text-slate-400 block mb-1">اشتراك العمارة</span>
+                            <span className="text-sm font-bold text-emerald-400">{buildingData.monthlyDues?.monthlyAmount || 180} ج / شهرياً</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+        ReactDOM.render(<BuildingApp />, document.getElementById('app'));
+    </script>
 </body>
 </html>
