@@ -331,7 +331,9 @@
             },
             years: {
                 "2026": {
-                    monthlyPayments: {},
+                    monthlyPayments: {
+                        8: { "أغسطس": 180 }
+                    },
                     expenses: [
                         { month: "يوليو", desc: "مصاريف وتشغيل يوليو", amount: 1600, date: "2026/07/01" },
                         { month: "أغسطس", desc: "صيانة عامة وطوارئ", amount: 600, date: "2026/08/01" },
@@ -631,7 +633,6 @@
         function renderSummaryAndApp() {
             const yearObj = globalData.years[selectedYear] || { monthlyPayments: {}, expenses: [] };
             
-            // Calc Total Monthly Collected ONLY for selected filter months
             let totalFilteredCollected = 0;
             Object.values(yearObj.monthlyPayments || {}).forEach(aptPays => {
                 selectedFilterMonths.forEach(m => {
@@ -639,7 +640,6 @@
                 });
             });
 
-            // Calc Expenses ONLY for selected filter months
             let totalFilteredExpenses = 0;
             (yearObj.expenses || []).forEach(e => {
                 if (selectedFilterMonths.includes(e.month)) {
