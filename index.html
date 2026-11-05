@@ -84,34 +84,49 @@
 
             <!-- TAB 1: SUMMARY -->
             <div id="content-summary" class="tab-content space-y-6">
+                
+                <!-- FILTER MONTHS CHECKBOXES -->
+                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span class="text-xs font-bold text-emerald-400">🗓️ حدد الشهور المطلوبة لعرض ملخصها الفعلي:</span>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="window.toggleAllMonthsFilter(true)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">تحديد الكل</button>
+                            <button type="button" onclick="window.toggleAllMonthsFilter(false)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">إلغاء الكل</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="summary-months-checkboxes"></div>
+                </div>
+
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">الرصيد الجاري بالصندوق (<span class="current-year-txt">2026</span>)</div>
+                        <div class="text-slate-400 text-xs mb-1">الرصيد الجاري (الفترة المحددة)</div>
                         <div id="summary-balance" class="text-xl font-bold text-emerald-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل الشهري</div>
+                        <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل بالفترة</div>
                         <div id="summary-collected" class="text-xl font-bold text-emerald-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">إجمالي المصروفات</div>
+                        <div class="text-slate-400 text-xs mb-1">مصروفات الفترة المحددة</div>
                         <div id="summary-expenses" class="text-xl font-bold text-amber-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">صندوق مشروع الكاميرات</div>
+                        <div class="text-slate-400 text-xs mb-1">صندوق الكاميرات (مستقل)</div>
                         <div id="summary-cameras-fund" class="text-xl font-bold text-blue-400">0 ج</div>
                     </div>
                 </div>
 
                 <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">موقف التحصيل العام للشقق لسنة <span class="current-year-txt">2026</span></div>
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400 flex justify-between items-center">
+                        <span>موقف التحصيل العام للشقق لسنة <span class="current-year-txt">2026</span> (للمدة المحددة)</span>
+                    </div>
                     <div class="max-h-96 overflow-y-auto">
                         <table class="w-full text-right text-sm">
                             <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
                                 <tr>
                                     <th class="p-3">شقة</th>
                                     <th class="p-3">اسم المالك / الساكن</th>
-                                    <th class="p-3">إجمالي المدفوع شهرياً</th>
+                                    <th class="p-3">المدفوع للشهور المحددة</th>
                                     <th class="p-3">موقف الكاميرات (مستقل)</th>
                                 </tr>
                             </thead>
@@ -139,7 +154,7 @@
                     <p class="text-xs text-slate-400">هذا المشروع تكلفته إجمالية ومستقلة تماماً عن الاشتراكات الشهرية للصندوق، وتم سداده لمرة واحدة.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-                            <div class="text-xs text-slate-400 mb-1">إجمالي التكلفة المطلوبة للمشروع (قابلة للتعديل للأدمن)</div>
+                            <div class="text-xs text-slate-400 mb-1">إجمالي التكلفة المطلوبة للمشروع</div>
                             <div id="cam-box-target-container"></div>
                         </div>
                         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
@@ -154,9 +169,7 @@
                 </div>
 
                 <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400 flex justify-between items-center">
-                        <span>تفاصيل دفعات الكاميرات لكل شقة (يمكن للأدمن التعديل مباشرة)</span>
-                    </div>
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">تفاصيل دفعات الكاميرات لكل شقة</div>
                     <div class="max-h-96 overflow-y-auto">
                         <table class="w-full text-right text-sm">
                             <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
@@ -286,6 +299,7 @@
         const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
         let currentUser = null;
         let selectedYear = "2026";
+        let selectedFilterMonths = ["يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر"];
         
         const allMonths = [
             "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
@@ -327,6 +341,43 @@
                     ]
                 }
             }
+        };
+
+        function renderMonthFilterCheckboxes() {
+            const container = document.getElementById('summary-months-checkboxes');
+            if (!container) return;
+            container.innerHTML = '';
+
+            allMonths.forEach(m => {
+                const isChecked = selectedFilterMonths.includes(m);
+                container.innerHTML += `
+                    <label class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs cursor-pointer select-none">
+                        <input type="checkbox" value="${m}" ${isChecked ? 'checked' : ''} onchange="window.onMonthFilterChange(this)" class="accent-emerald-500 rounded cursor-pointer">
+                        <span class="${isChecked ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${m}</span>
+                    </label>
+                `;
+            });
+        }
+
+        window.onMonthFilterChange = function(chk) {
+            const m = chk.value;
+            if (chk.checked) {
+                if (!selectedFilterMonths.includes(m)) selectedFilterMonths.push(m);
+            } else {
+                selectedFilterMonths = selectedFilterMonths.filter(x => x !== m);
+            }
+            renderSummaryAndApp();
+            renderMonthFilterCheckboxes();
+        };
+
+        window.toggleAllMonthsFilter = function(selectAll) {
+            if (selectAll) {
+                selectedFilterMonths = [...allMonths];
+            } else {
+                selectedFilterMonths = [];
+            }
+            renderMonthFilterCheckboxes();
+            renderSummaryAndApp();
         };
 
         function changeYear() {
@@ -516,7 +567,6 @@
             await syncData(`تم تحديث دفعة الكاميرات لشقة ${aptId}! 📷`);
         };
 
-        // تحديث قيمة المدفوع لشقة مباشرة من جدول الكاميرات
         window.updateCameraPaymentInline = async function(aptId) {
             const inputVal = Number(document.getElementById(`inline-cam-${aptId}`).value);
             globalData.cameras.payments[aptId] = inputVal;
@@ -581,18 +631,26 @@
         function renderSummaryAndApp() {
             const yearObj = globalData.years[selectedYear] || { monthlyPayments: {}, expenses: [] };
             
-            let totalMonthlyCollected = 0;
+            // Calc Total Monthly Collected ONLY for selected filter months
+            let totalFilteredCollected = 0;
             Object.values(yearObj.monthlyPayments || {}).forEach(aptPays => {
-                Object.values(aptPays || {}).forEach(v => totalMonthlyCollected += Number(v || 0));
+                selectedFilterMonths.forEach(m => {
+                    totalFilteredCollected += Number(aptPays?.[m] || 0);
+                });
             });
 
-            let totalExpenses = 0;
-            (yearObj.expenses || []).forEach(e => totalExpenses += Number(e.amount || 0));
+            // Calc Expenses ONLY for selected filter months
+            let totalFilteredExpenses = 0;
+            (yearObj.expenses || []).forEach(e => {
+                if (selectedFilterMonths.includes(e.month)) {
+                    totalFilteredExpenses += Number(e.amount || 0);
+                }
+            });
 
-            const balance = totalMonthlyCollected - totalExpenses;
+            const balance = totalFilteredCollected - totalFilteredExpenses;
             
-            document.getElementById('summary-collected').innerText = totalMonthlyCollected.toLocaleString() + ' ج';
-            document.getElementById('summary-expenses').innerText = totalExpenses.toLocaleString() + ' ج';
+            document.getElementById('summary-collected').innerText = totalFilteredCollected.toLocaleString() + ' ج';
+            document.getElementById('summary-expenses').innerText = totalFilteredExpenses.toLocaleString() + ' ج';
             document.getElementById('summary-balance').innerText = balance.toLocaleString() + ' ج';
 
             let totalCamCollected = 0;
@@ -603,12 +661,15 @@
             if (summaryTable) {
                 summaryTable.innerHTML = '';
                 const aptShareTarget = Math.round((globalData.cameras.totalProjectCost || 34300) / 24);
-                
+
                 Object.entries(globalData.apartments).forEach(([id, apt]) => {
                     const aptId = Number(id);
                     const aptPays = yearObj.monthlyPayments?.[aptId] || {};
-                    let aptPaidSum = 0;
-                    Object.values(aptPays).forEach(v => aptPaidSum += Number(v || 0));
+                    
+                    let aptFilteredPaid = 0;
+                    selectedFilterMonths.forEach(m => {
+                        aptFilteredPaid += Number(aptPays[m] || 0);
+                    });
 
                     const camPaid = globalData.cameras.payments[aptId] || 0;
 
@@ -616,7 +677,7 @@
                         <tr class="hover:bg-slate-800/50">
                             <td class="p-3 font-bold text-emerald-400">${aptId}</td>
                             <td class="p-3 font-medium">${apt.ownerName}</td>
-                            <td class="p-3 text-emerald-400 font-bold">${aptPaidSum.toLocaleString()} ج</td>
+                            <td class="p-3 text-emerald-400 font-bold">${aptFilteredPaid.toLocaleString()} ج</td>
                             <td class="p-3"><span class="text-xs px-2 py-1 rounded ${camPaid >= aptShareTarget ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${camPaid} / ${aptShareTarget} ج</span></td>
                         </tr>
                     `;
@@ -765,6 +826,7 @@
 
         function renderApp() {
             populateStaticDropdowns();
+            renderMonthFilterCheckboxes();
             renderSummaryAndApp();
             renderExpensesList();
             renderCamerasTable();
