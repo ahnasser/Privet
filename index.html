@@ -66,7 +66,6 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <!-- Year Selector -->
                     <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700">
                         <label class="text-xs text-slate-400 font-bold">السنة المالية:</label>
                         <select id="selected-year" onchange="window.changeYear()" class="bg-transparent text-emerald-400 font-bold text-sm outline-none cursor-pointer">
@@ -83,15 +82,15 @@
             <!-- Dynamic Navigation Tabs -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="nav-tabs-container"></div>
 
-            <!-- TAB 1: SUMMARY (الملخص العام) -->
+            <!-- TAB 1: SUMMARY -->
             <div id="content-summary" class="tab-content space-y-6">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">صافي الصندوق (<span class="current-year-txt">2026</span>)</div>
+                        <div class="text-slate-400 text-xs mb-1">الرصيد الجاري بالصندوق (<span class="current-year-txt">2026</span>)</div>
                         <div id="summary-balance" class="text-xl font-bold text-emerald-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل</div>
+                        <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل الشهري</div>
                         <div id="summary-collected" class="text-xl font-bold text-emerald-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
@@ -99,17 +98,13 @@
                         <div id="summary-expenses" class="text-xl font-bold text-amber-400">0 ج</div>
                     </div>
                     <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">متأخرات اشتراكات الشقق</div>
-                        <div id="summary-arrears" class="text-xl font-bold text-rose-400">0 ج</div>
+                        <div class="text-slate-400 text-xs mb-1">صندوق مشروع الكاميرات</div>
+                        <div id="summary-cameras-fund" class="text-xl font-bold text-blue-400">0 ج</div>
                     </div>
                 </div>
 
-                <!-- جدول موقف تحصيل الشقق للسنة المحددة -->
                 <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400 flex justify-between items-center">
-                        <span>موقف التحصيل العام للشقق لسنة <span class="current-year-txt">2026</span></span>
-                        <span class="text-xs text-slate-400 font-normal">عرض مدفوعات كل شقة</span>
-                    </div>
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">موقف التحصيل العام للشقق لسنة <span class="current-year-txt">2026</span></div>
                     <div class="max-h-96 overflow-y-auto">
                         <table class="w-full text-right text-sm">
                             <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
@@ -117,8 +112,7 @@
                                     <th class="p-3">شقة</th>
                                     <th class="p-3">اسم المالك / الساكن</th>
                                     <th class="p-3">إجمالي المدفوع شهرياً</th>
-                                    <th class="p-3">دفعة الكاميرات</th>
-                                    <th class="p-3">الموقف النهائي</th>
+                                    <th class="p-3">موقف الكاميرات (مستقل)</th>
                                 </tr>
                             </thead>
                             <tbody id="summary-apartments-rows" class="divide-y divide-slate-800"></tbody>
@@ -127,9 +121,9 @@
                 </div>
             </div>
 
-            <!-- TAB 2: MONTHS & EXPENSES (المصروفات والسجلات) -->
+            <!-- TAB 2: MONTHS & EXPENSES -->
             <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex flex-col sm:flex-row justify-between items-center border-b border-slate-800 pb-3 gap-3">
                     <h2 class="font-bold text-emerald-400 text-lg">سجل المصروفات والتكاليف لسنة <span class="current-year-txt">2026</span></h2>
                     <select id="expense-filter-month" onchange="window.renderExpensesList()" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
                         <option value="ALL">كل الشهور</option>
@@ -138,28 +132,45 @@
                 <div id="expenses-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- TAB 3: CAMERAS (مشروع الكاميرات) -->
-            <div id="content-cameras" class="tab-content hidden bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
-                    <span class="font-bold text-emerald-400">مشروع الكاميرات (المطلوب 1,430 ج لكل شقة)</span>
-                    <span id="cameras-total-remaining" class="text-xs bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded-full font-bold">المتبقي: 0 ج</span>
+            <!-- TAB 3: CAMERAS (مشروع الكاميرات الاستثنائي) -->
+            <div id="content-cameras" class="tab-content hidden space-y-4">
+                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 shadow space-y-3">
+                    <h2 class="font-bold text-blue-400 text-lg">📷 صندوق مشروع الكاميرات (مستقل عن المصروفات الشهرية)</h2>
+                    <p class="text-xs text-slate-400">هذا المشروع تكلفته إجمالية ومستقلة تماماً عن الاشتراكات الشهرية للصندوق، وتم سداده لمرة واحدة.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <div class="text-xs text-slate-400 mb-1">إجمالي التكلفة المطلوبة للمشروع</div>
+                            <div id="cam-box-target" class="text-lg font-bold text-amber-400">0 ج</div>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <div class="text-xs text-slate-400 mb-1">إجمالي المحصّل للمشروع</div>
+                            <div id="cam-box-collected" class="text-lg font-bold text-emerald-400">0 ج</div>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <div class="text-xs text-slate-400 mb-1">المتبقي على العمارة</div>
+                            <div id="cam-box-remaining" class="text-lg font-bold text-rose-400">0 ج</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="max-h-96 overflow-y-auto">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
-                            <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع</th><th class="p-3">المتبقي</th></tr>
-                        </thead>
-                        <tbody id="cameras-table-rows" class="divide-y divide-slate-800"></tbody>
-                    </table>
+
+                <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">تفاصيل دفعات الكاميرات لكل شقة</div>
+                    <div class="max-h-96 overflow-y-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
+                                <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع</th><th class="p-3">المتبقي</th></tr>
+                            </thead>
+                            <tbody id="cameras-table-rows" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- TAB 4 FOR ADMIN: ADMIN CONTROL PANEL (تحصيل الدفعات وإدارة الملاك) -->
+            <!-- TAB 4 FOR ADMIN: ADMIN CONTROL PANEL -->
             <div id="content-adminCtrl" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-6">
                 <h2 class="font-bold text-amber-400 text-lg border-b border-slate-800 pb-2">🛠️ لوحة تحصيل الاشتراكات وإدارة بيانات الملاك</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Section A: Select Apt & Owner Name -->
                     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
                         <h3 class="font-bold text-emerald-400 text-sm">1. بيانات الشقة والمالك</h3>
                         <div>
@@ -175,7 +186,6 @@
                         </button>
                     </div>
 
-                    <!-- Section B: Collect Monthly Payment for selected Apt -->
                     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
                         <h3 class="font-bold text-emerald-400 text-sm">2. تسجيل دفعة شريحة شهرية لشقة (<span id="selected-apt-label">1</span>)</h3>
                         <div class="grid grid-cols-2 gap-2">
@@ -194,7 +204,6 @@
                     </div>
                 </div>
 
-                <!-- Section C: Camera Payment Collection -->
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">3. تحصيل دفعة مشروع الكاميرات لشقة (<span class="selected-apt-num-txt">1</span>)</h3>
                     <div class="flex gap-3 items-center">
@@ -208,7 +217,6 @@
 
             <!-- TAB 5 FOR ADMIN: PASSWORDS & EXPENSES ADDITION -->
             <div id="content-passwords" class="tab-content hidden space-y-6">
-                <!-- Add New Expense -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف / تكلفة جديدة على الصندوق (<span class="current-year-txt">2026</span>)</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -230,7 +238,6 @@
                     </button>
                 </div>
 
-                <!-- Admin Password Change -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">تغيير كلمة سر الأدمن الرئيسي</h3>
                     <div class="flex gap-2">
@@ -239,14 +246,13 @@
                     </div>
                 </div>
 
-                <!-- Passwords Table -->
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
                     <h3 class="font-bold text-emerald-400 text-base">🔑 كلمات سر حسابات الشقق</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1" id="passwords-list-container"></div>
                 </div>
             </div>
 
-            <!-- TAB FOR RESIDENT: MY APT (حساب الشقة للساكن فقط) -->
+            <!-- TAB FOR RESIDENT: MY APT -->
             <div id="content-myApt" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
                 <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 space-y-4">
                     <div id="res-apt-title" class="text-lg font-bold text-emerald-400">كشف حساب شقتي</div>
@@ -310,7 +316,13 @@
             years: {
                 "2026": {
                     monthlyPayments: {},
-                    expenses: [{ month: "نوفمبر", desc: "صيانة اسانسير", amount: 500, date: "2026/11/01" }]
+                    expenses: [
+                        { month: "يوليو", desc: "مصاريف وتشغيل يوليو", amount: 1600, date: "2026/07/01" },
+                        { month: "أغسطس", desc: "صيانة عامة وطوارئ", amount: 600, date: "2026/08/01" },
+                        { month: "سبتمبر", desc: "أعمال صيانة وتشغيل", amount: 2480, date: "2026/09/01" },
+                        { month: "أكتوبر", desc: "مصاريف صيانة وتشغيل أكتوبر", amount: 1900, date: "2026/10/01" },
+                        { month: "نوفمبر", desc: "صيانة اسانسير وتشغيل", amount: 500, date: "2026/11/01" }
+                    ]
                 }
             }
         };
@@ -453,7 +465,6 @@
             }
         };
 
-        // Admin Actions
         window.onAdminAptChange = function() {
             const aptId = Number(document.getElementById('admin-apt-select').value || 1);
             document.querySelectorAll('.selected-apt-num-txt').forEach(e => e.innerText = aptId);
@@ -552,17 +563,14 @@
             renderApp();
         }
 
-        // Render Functions
         function renderSummaryAndApp() {
             const yearObj = globalData.years[selectedYear] || { monthlyPayments: {}, expenses: [] };
             
-            // Calc Total Monthly Collected in this year
             let totalMonthlyCollected = 0;
             Object.values(yearObj.monthlyPayments || {}).forEach(aptPays => {
                 Object.values(aptPays || {}).forEach(v => totalMonthlyCollected += Number(v || 0));
             });
 
-            // Calc Total Expenses in this year
             let totalExpenses = 0;
             (yearObj.expenses || []).forEach(e => totalExpenses += Number(e.amount || 0));
 
@@ -572,12 +580,14 @@
             document.getElementById('summary-expenses').innerText = totalExpenses.toLocaleString() + ' ج';
             document.getElementById('summary-balance').innerText = balance.toLocaleString() + ' ج';
 
-            // Render Apartments Summary Table
+            // Calc Total Cameras Fund Collected
+            let totalCamCollected = 0;
+            Object.values(globalData.cameras.payments || {}).forEach(v => totalCamCollected += Number(v || 0));
+            document.getElementById('summary-cameras-fund').innerText = totalCamCollected.toLocaleString() + ' ج';
+
             const summaryTable = document.getElementById('summary-apartments-rows');
             if (summaryTable) {
                 summaryTable.innerHTML = '';
-                let arrears = 0;
-
                 Object.entries(globalData.apartments).forEach(([id, apt]) => {
                     const aptId = Number(id);
                     const aptPays = yearObj.monthlyPayments?.[aptId] || {};
@@ -585,20 +595,19 @@
                     Object.values(aptPays).forEach(v => aptPaidSum += Number(v || 0));
 
                     const camPaid = globalData.cameras.payments[aptId] || 0;
+                    const camTarget = globalData.cameras.targetPerApt;
 
                     summaryTable.innerHTML += `
                         <tr class="hover:bg-slate-800/50">
                             <td class="p-3 font-bold text-emerald-400">${aptId}</td>
                             <td class="p-3 font-medium">${apt.ownerName}</td>
                             <td class="p-3 text-emerald-400 font-bold">${aptPaidSum.toLocaleString()} ج</td>
-                            <td class="p-3 text-emerald-400">${camPaid.toLocaleString()} ج</td>
-                            <td class="p-3"><span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300">مُسجل</span></td>
+                            <td class="p-3"><span class="text-xs px-2 py-1 rounded ${camPaid >= camTarget ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${camPaid} / ${camTarget} ج</span></td>
                         </tr>
                     `;
                 });
             }
 
-            // Render Resident Screen if logged in
             if (currentUser && currentUser.role === 'resident') {
                 const aptId = currentUser.aptId;
                 const apt = globalData.apartments[aptId] || { ownerName: '' };
@@ -668,12 +677,17 @@
             container.innerHTML = '';
             
             const target = globalData.cameras.targetPerApt;
+            let totalTarget = 0;
+            let totalCollected = 0;
             let totalRem = 0;
 
             Object.entries(globalData.apartments).forEach(([id, apt]) => {
                 const aptId = Number(id);
                 const paid = globalData.cameras.payments[aptId] || 0;
                 const rem = target - paid;
+                
+                totalTarget += target;
+                totalCollected += paid;
                 totalRem += rem;
 
                 container.innerHTML += `
@@ -686,7 +700,9 @@
                 `;
             });
 
-            document.getElementById('cameras-total-remaining').innerText = `المتبقي الكلي: ${totalRem.toLocaleString()} ج`;
+            document.getElementById('cam-box-target').innerText = totalTarget.toLocaleString() + ' ج';
+            document.getElementById('cam-box-collected').innerText = totalCollected.toLocaleString() + ' ج';
+            document.getElementById('cam-box-remaining').innerText = totalRem.toLocaleString() + ' ج';
         }
 
         function renderPasswordsList() {
