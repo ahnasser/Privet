@@ -132,7 +132,7 @@
                 <div id="expenses-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- TAB 3: CAMERAS (مشروع الكاميرات الاستثنائي) -->
+            <!-- TAB 3: CAMERAS -->
             <div id="content-cameras" class="tab-content hidden space-y-4">
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 shadow space-y-3">
                     <h2 class="font-bold text-blue-400 text-lg">📷 صندوق مشروع الكاميرات (مستقل عن المصروفات الشهرية)</h2>
@@ -140,9 +140,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
                             <div class="text-xs text-slate-400 mb-1">إجمالي التكلفة المطلوبة للمشروع (قابلة للتعديل للأدمن)</div>
-                            <div id="cam-box-target-container">
-                                <!-- Filled by JS based on role -->
-                            </div>
+                            <div id="cam-box-target-container"></div>
                         </div>
                         <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
                             <div class="text-xs text-slate-400 mb-1">إجمالي المحصّل للمشروع</div>
@@ -156,11 +154,13 @@
                 </div>
 
                 <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">تفاصيل دفعات الكاميرات لكل شقة</div>
+                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400 flex justify-between items-center">
+                        <span>تفاصيل دفعات الكاميرات لكل شقة (يمكن للأدمن التعديل مباشرة)</span>
+                    </div>
                     <div class="max-h-96 overflow-y-auto">
                         <table class="w-full text-right text-sm">
                             <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
-                                <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع</th><th class="p-3">المتبقي للشقة</th></tr>
+                                <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع (قابل للتعديل)</th><th class="p-3">المتبقي للشقة</th></tr>
                             </thead>
                             <tbody id="cameras-table-rows" class="divide-y divide-slate-800"></tbody>
                         </table>
@@ -217,7 +217,7 @@
                 </div>
             </div>
 
-            <!-- TAB 5 FOR ADMIN: PASSWORDS & EXPENSES ADDITION -->
+            <!-- TAB 5 FOR ADMIN: PASSWORDS & EXPENSES -->
             <div id="content-passwords" class="tab-content hidden space-y-6">
                 <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
                     <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف / تكلفة جديدة على الصندوق (<span class="current-year-txt">2026</span>)</h3>
@@ -312,7 +312,7 @@
             passwords: {}, 
             apartments: initialApartments,
             cameras: {
-                totalProjectCost: 34300, // قابلة للتعديل
+                totalProjectCost: 34300,
                 payments: { 1: 1430, 3: 1430, 4: 1430, 5: 1430, 6: 1430, 7: 1430, 8: 1430, 9: 1430, 11: 1430, 13: 1430, 18: 1430, 20: 1430, 23: 1430 }
             },
             years: {
@@ -516,7 +516,13 @@
             await syncData(`تم تحديث دفعة الكاميرات لشقة ${aptId}! 📷`);
         };
 
-        // تحديث إجمالي تكلفة مشروع الكاميرات عند تعديلها من الأدمن
+        // تحديث قيمة المدفوع لشقة مباشرة من جدول الكاميرات
+        window.updateCameraPaymentInline = async function(aptId) {
+            const inputVal = Number(document.getElementById(`inline-cam-${aptId}`).value);
+            globalData.cameras.payments[aptId] = inputVal;
+            await syncData(`تم تحديث دفعة كاميرات شقة ${aptId} بنجاح! 📷`);
+        };
+
         window.updateTotalCamerasCost = async function() {
             const val = Number(document.getElementById('input-total-cameras-cost').value);
             globalData.cameras.totalProjectCost = val;
@@ -596,6 +602,8 @@
             const summaryTable = document.getElementById('summary-apartments-rows');
             if (summaryTable) {
                 summaryTable.innerHTML = '';
+                const aptShareTarget = Math.round((globalData.cameras.totalProjectCost || 34300) / 24);
+                
                 Object.entries(globalData.apartments).forEach(([id, apt]) => {
                     const aptId = Number(id);
                     const aptPays = yearObj.monthlyPayments?.[aptId] || {};
@@ -603,7 +611,6 @@
                     Object.values(aptPays).forEach(v => aptPaidSum += Number(v || 0));
 
                     const camPaid = globalData.cameras.payments[aptId] || 0;
-                    const aptShareTarget = Math.round(globalData.cameras.totalProjectCost / 24);
 
                     summaryTable.innerHTML += `
                         <tr class="hover:bg-slate-800/50">
@@ -622,8 +629,8 @@
                 document.getElementById('res-apt-title').innerText = `كشف حساب شقة رقم ${aptId} (${apt.ownerName})`;
                 
                 const camPaid = globalData.cameras.payments[aptId] || 0;
-                const aptShareTarget = Math.round(globalData.cameras.totalProjectCost / 24);
-                const camRem = aptShareTarget - camPaid;
+                const aptShareTarget = Math.round((globalData.cameras.totalProjectCost || 34300) / 24);
+                const camRem = Math.max(0, aptShareTarget - camPaid);
                 document.getElementById('res-camera-paid').innerText = camPaid.toLocaleString() + ' ج';
                 document.getElementById('res-camera-rem').innerText = `المتبقي: ${camRem.toLocaleString()} ج`;
 
@@ -691,27 +698,40 @@
             let totalCollected = 0;
             let totalRem = 0;
 
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
             Object.entries(globalData.apartments).forEach(([id, apt]) => {
                 const aptId = Number(id);
                 const paid = globalData.cameras.payments[aptId] || 0;
-                const rem = aptShareTarget - paid;
+                const rem = Math.max(0, aptShareTarget - paid);
                 
                 totalCollected += paid;
                 totalRem += rem;
+
+                let paidColumnHTML = '';
+                if (isAdmin) {
+                    paidColumnHTML = `
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="inline-cam-${aptId}" value="${paid}" class="bg-slate-800 text-emerald-400 font-bold p-1.5 rounded border border-slate-700 w-28 text-center text-xs">
+                            <button type="button" onclick="window.updateCameraPaymentInline(${aptId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2.5 py-1.5 rounded text-[10px] transition">حفظ</button>
+                        </div>
+                    `;
+                } else {
+                    paidColumnHTML = `<span class="text-emerald-400 font-bold">${paid.toLocaleString()} ج</span>`;
+                }
 
                 container.innerHTML += `
                     <tr class="hover:bg-slate-800/50">
                         <td class="p-3 font-bold text-emerald-400">${aptId}</td>
                         <td class="p-3">${apt.ownerName}</td>
-                        <td class="p-3 text-emerald-400">${paid.toLocaleString()} ج</td>
-                        <td class="p-3 ${rem <= 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem.toLocaleString()} ج</td>
+                        <td class="p-3">${paidColumnHTML}</td>
+                        <td class="p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem.toLocaleString()} ج</td>
                     </tr>
                 `;
             });
 
-            // جعل التكلفة قابلة للتعديل للأدمن فقط
             const targetContainer = document.getElementById('cam-box-target-container');
-            if (currentUser && currentUser.role === 'admin') {
+            if (isAdmin) {
                 targetContainer.innerHTML = `
                     <div class="flex gap-2 mt-1">
                         <input type="number" id="input-total-cameras-cost" value="${totalCost}" class="w-full bg-slate-800 text-amber-400 font-bold p-1.5 rounded border border-slate-700 text-sm">
@@ -719,7 +739,7 @@
                     </div>
                 `;
             } else {
-                targetContainer.innerHTML = `<div class="text-lg font-bold text-amber-400">${totalCost.toLocaleString()} ج</div>`;
+                targetContainer.innerHTML = `<div class="text-lg font-bold text-amber-400">${totalCost.toLocaleString()} ج (نصيب الشقة: ${aptShareTarget} ج)</div>`;
             }
 
             document.getElementById('cam-box-collected').innerText = totalCollected.toLocaleString() + ' ج';
