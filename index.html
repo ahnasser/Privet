@@ -42,9 +42,17 @@ td{padding:7px 8px;border-bottom:1px solid #26334a;white-space:nowrap}
 .mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .mg div{background:var(--in);border:1px solid var(--ln);border-radius:12px;padding:8px 10px}
 [hidden]{display:none!important}
+#th{position:fixed;top:10px;left:10px;z-index:9;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:17px}
+:root{color-scheme:dark}
+[data-t=light]{color-scheme:light;--bg:#f1f5f9;--card:#fff;--in:#f8fafc;--ln:#cbd5e1;--tx:#0f172a;--mu:#64748b;--ac:#059669;--am:#b45309;--rd:#dc2626;--bl:#2563eb}
+[data-t=light] .ok{background:#d1fae5}[data-t=light] .wa{background:#fef3c7}[data-t=light] .no{background:#ffe4e6}
+[data-t=light] td{border-color:#e2e8f0}
+[data-t=light] .btn,[data-t=light] nav button.on,[data-t=light] .chip.on,[data-t=light] .tabs button.on{color:#fff}
+[data-t=light] .btn.gh{color:var(--rd)}
 </style>
 </head>
 <body>
+<button id="th" title="فاتح / داكن" onclick="theme(document.documentElement.dataset.t==='light'?'dark':'light')">☀️</button>
 <div class="w">
 
 <div id="login" class="card">
@@ -107,7 +115,7 @@ function makeSeed(){
     E("نوفمبر","سقي الزرع",500,"2026-11-02")];
   const expenses={};list.forEach((e,i)=>expenses["e"+String(i+1).padStart(3,"0")]=e);
   return {adminPassword:"admin123",monthlyDue:180,passwords:{},apartments,
-    cameras:{perApt:1430,payments:cp,dates:cd},
+    projects:{cam:{name:"الكاميرات",perApt:1430,payments:cp,dates:cd}},
     years:{"2026":{monthlyPayments:mp,payDates:pd,expenses}}};
 }
 
@@ -119,11 +127,13 @@ const num=v=>Number(v||0).toLocaleString("en-US");
 const fd=d=>d?d.slice(8,10)+"/"+d.slice(5,7)+"/"+d.slice(0,4):"—";
 const today=()=>new Date().toISOString().slice(0,10);
 const isA=()=>U&&U.role==="admin";
+function theme(t){document.documentElement.dataset.t=t;localStorage.setItem("b60t",t);$("#th").textContent=t==="light"?"🌙":"☀️"}
+theme(localStorage.getItem("b60t")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"));
 
 /* ---------- الوصول لـ Firebase ---------- */
 const url=p=>DB+"/"+p.split("/").filter(Boolean).map(encodeURIComponent).join("/")+".json";
-async function api(p,method="GET",body){
-  const r=await fetch(url(p),{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
+async function api(p,method="GET",body,q=""){
+  const r=await fetch(url(p)+q,{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return r.json();
 }
@@ -134,23 +144,27 @@ function setLocal(path,v){
 }
 /* كتابة آمنة: تعديل مسارات محددة فقط (لا نكتب فوق القاعدة كلها) */
 async function upd(o,msg){
-  try{await api("","PATCH",o);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
+  try{const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?"المشرف":"شقة "+U.apt,msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
   catch(e){toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1)}
   render();
 }
 async function load(){
-  let d=await api("");
-  if(!d){d=makeSeed();await api("","PUT",d)}
-  G=d;G.apartments??={};G.passwords??={};G.cameras??={};G.cameras.payments??={};G.cameras.dates??={};G.years??={};
+  const ks=await api("","GET",undefined,"?shallow=true");
+  if(!ks){G=makeSeed();await api("","PUT",G);return}
+  const o={};
+  await Promise.all(Object.keys(ks).filter(k=>k!=="files"&&k!=="log").map(async k=>o[k]=await api(k)));
+  G=o;G.apartments??={};G.passwords??={};G.years??={};
+  if(!G.projects&&G.cameras){G.projects={cam:{name:"الكاميرات",perApt:G.cameras.perApt||1430,payments:G.cameras.payments||{},dates:G.cameras.dates||{}}};await api("projects","PUT",G.projects)}
+  G.projects??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
 /* ---------- قراءة البيانات ---------- */
-const due=()=>Number(G.monthlyDue||180), share=()=>Number(G.cameras?.perApt||1430);
+const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.perApt||0),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0);
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
 const pay=(i,m)=>Number(G.years?.[Y]?.monthlyPayments?.[i]?.[m]||0);
 const pdate=(i,m)=>G.years?.[Y]?.payDates?.[i]?.[m]||"";
-const camPaid=i=>Number(G.cameras?.payments?.[i]||0);
+const pfile=(i,m)=>G.years?.[Y]?.payFiles?.[i]?.[m]||"";
 const exps=()=>Object.entries(G.years?.[Y]?.expenses||{}).filter(([,e])=>e).map(([id,e])=>({id,...e}))
   .sort((a,b)=>MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month)||(a.date||"").localeCompare(b.date||""));
 function initFlt(){
@@ -191,108 +205,131 @@ function logout(){U=null;sessionStorage.removeItem("b60u");$("#app").hidden=true
 function go(k){tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
-  const T=isA()?[["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","الكاميرات"],["adm","الإدارة ⚙️"]]
-              :[["me","شقتي 🏠"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","الكاميرات"]];
+  const T=isA()?[["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["adm","الإدارة ⚙️"]]
+              :[["me","شقتي 🏠"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${l}</button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
   $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe})[tab]();
+  if(tab==="adm")loadLog();
 }
 
 /* --- الملخص --- */
 function togM(m){flt.has(m)?flt.delete(m):flt.add(m);render()}
 function allM(on){flt=on?new Set(MONTHS):new Set();render()}
 function vSum(){
-  const ms=MONTHS.filter(m=>flt.has(m)),d=due();let c=0,rows="";
+  const ms=MONTHS.filter(m=>flt.has(m)),d=due(),AP=prj().filter(q=>!q.closed);let c=0,rows="";
   for(let i=1;i<=N;i++){
-    const p=ms.reduce((s,m)=>s+pay(i,m),0),need=d*ms.length,cp=camPaid(i);c+=p;
-    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp>=share()?'<b class="bd ok">مدفوع</b>':`<b class="bd no">${num(cp)} / ${num(share())}</b>`}</td></tr>`;
+    const p=ms.reduce((s,m)=>s+pay(i,m),0),need=d*ms.length,cp=AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;
+    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp<=0?'<b class="bd ok">مسدّد</b>':`<b class="bd no">متبقي ${num(cp)}</b>`}</td></tr>`;
   }
   const x=exps().filter(e=>flt.has(e.month)).reduce((s,e)=>s+Number(e.amount||0),0);
-  const cam=Array.from({length:N},(_,k)=>camPaid(k+1)).reduce((a,b)=>a+b,0);
+  const cam=AP.reduce((s,q)=>s+Object.values(q.payments||{}).reduce((a,b)=>a+Number(b||0),0),0);
   return `<div class="card"><div class="top"><h3>🗓️ الشهور المحسوبة</h3><div class="row"><button class="chip" onclick="allM(true)">الكل</button><button class="chip" onclick="allM(false)">لا شيء</button></div></div>
     <div class="chips">${MONTHS.map(m=>`<button class="chip ${flt.has(m)?"on":""}" onclick="togM('${m}')">${m}</button>`).join("")}</div></div>
   <div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(c)} ج</b></div>
     <div class="card"><span class="mu">المصروفات</span><b style="color:var(--am)">${num(x)} ج</b></div>
-    <div class="card"><span class="mu">صندوق الكاميرات (مستقل)</span><b style="color:var(--bl)">${num(cam)} ج</b></div></div>
-  <div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>الكاميرات</th></tr>${rows}</table></div></div>`;
+    <div class="card"><span class="mu">المشاريع الخاصة (مستقلة)</span><b style="color:var(--bl)">${num(cam)} ج</b></div></div>
+  <div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>المشاريع</th></tr>${rows}</table></div></div>`;
 }
 
-/* --- التحصيل الشهري (مع تاريخ الدفع) --- */
+/* --- التحصيل الشهري (تاريخ + صورة التحويل) --- */
+const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}<input type="file" accept="image/*" id="${id}" hidden onchange="this.parentNode.firstChild.textContent='✅'"></label>`;
 function vMonth(){
   const A=isA(),d=due();let c=0,rows="";
   for(let i=1;i<=N;i++){
-    const p=pay(i,selM),dt=pdate(i,selM);c+=p;
+    const p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);c+=p;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
       <td>${A?`<input type="number" min="0" id="pa-${i}" value="${p||""}" placeholder="0">`:num(p)}</td>
       <td>${A?`<input type="date" id="pd-${i}" value="${dt}">`:fd(dt)}</td><td>${badge(p,d)}</td>
-      ${A?`<td><button class="btn" onclick="savePay(${i})">حفظ</button></td>`:""}</tr>`;
+      <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${A?attBtn("pf-"+i)+` <button class="btn" onclick="savePay(${i})">حفظ</button>`:""}</td></tr>`;
   }
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*N)} ج</span></div>
-  ${A?'<div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ ثم اضغط حفظ. لو التاريخ فاضي بيتسجل تاريخ اليوم. مسح المبلغ = إلغاء الدفعة.</div>':""}
-  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th>${A?"<th></th>":""}</tr>${rows}</table></div></div>`;
+  ${A?'<div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ وأرفق صورة التحويل (📎) ثم حفظ. مسح المبلغ = إلغاء الدفعة.</div>':""}
+  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>الإيصال</th></tr>${rows}</table></div></div>`;
 }
-function savePay(i){
-  const v=Math.max(0,Number($("#pa-"+i).value)||0),dt=$("#pd-"+i).value||today(),b=`years/${Y}/`;
-  const pa=`${b}monthlyPayments/${i}/${selM}`,pd=`${b}payDates/${i}/${selM}`;
-  upd(v?{[pa]:v,[pd]:dt}:{[pa]:null,[pd]:null},v?`تم تسجيل دفعة شقة ${i} ✓`:`تم إلغاء دفعة شقة ${i}`);
+async function savePay(i){
+  const v=Math.max(0,Number($("#pa-"+i).value)||0),dt=$("#pd-"+i).value||today(),b=`years/${Y}/`,f=$("#pf-"+i).files[0];
+  const pa=`${b}monthlyPayments/${i}/${selM}`,pd=`${b}payDates/${i}/${selM}`,pf=`${b}payFiles/${i}/${selM}`;
+  let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f)}catch(e){return toast("تعذر رفع الصورة",1)}}
+  const o=v?{[pa]:v,[pd]:dt}:{[pa]:null,[pd]:null,[pf]:null};if(fid&&v)o[pf]=fid;
+  upd(o,v?`دفعة شقة ${i} - ${selM}: ${num(v)} ج ✓`:`إلغاء دفعة شقة ${i} - ${selM}`);
 }
 
-/* --- المصروفات --- */
+/* --- المصروفات (مع الفواتير) --- */
 function vExp(){
   const A=isA(),list=exps().filter(e=>expF==="ALL"||e.month===expF),tot=list.reduce((s,e)=>s+Number(e.amount||0),0);
-  const rows=list.map(e=>`<tr><td>${esc(e.month)}</td><td style="white-space:normal">${esc(e.desc)}</td><td class="neg">${num(e.amount)} ج</td><td>${fd(e.date)}</td>${A?`<td><button class="btn gh" onclick="delExp('${e.id}')">حذف</button></td>`:""}</tr>`).join("")
+  const rows=list.map(e=>`<tr><td>${esc(e.month)}</td><td style="white-space:normal">${esc(e.desc)}</td><td class="neg">${num(e.amount)} ج</td><td>${fd(e.date)}</td><td>${e.file?`<button class="btn gh" onclick="showF('${e.file}')">🧾</button> `:""}${A?`<button class="btn gh" onclick="delExp('${e.id}')">حذف</button>`:""}</td></tr>`).join("")
     ||`<tr><td colspan="5" class="mu" style="text-align:center;padding:16px">لا توجد مصروفات</td></tr>`;
   const form=A?`<div class="card"><h3>➕ تسجيل مصروف جديد</h3><div class="row">
     <select id="xm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
     <input id="xd" placeholder="وصف المصروف" style="flex:1;min-width:160px"><input id="xa" type="number" min="0" placeholder="المبلغ" style="width:110px"><input id="xt" type="date" value="${today()}">
-    <button class="btn am" onclick="addExp()">إضافة</button></div></div>`:"";
+    ${attBtn("xf"," فاتورة")}<button class="btn am" onclick="addExp()">إضافة</button></div></div>`:"";
   return form+`<div class="card"><div class="top"><h3>سجل مصروفات ${Y}</h3>
     <select onchange="expF=this.value;render()"><option value="ALL">كل الشهور</option>${MONTHS.map(m=>`<option ${m===expF?"selected":""}>${m}</option>`).join("")}</select></div>
-    <div class="tw"><table><tr><th>الشهر</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th>${A?"<th></th>":""}</tr>${rows}</table></div>
+    <div class="tw"><table><tr><th>الشهر</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>الفاتورة</th></tr>${rows}</table></div>
     <div style="margin-top:8px">الإجمالي: <b class="neg">${num(tot)} ج</b></div></div>`;
 }
-function addExp(){
-  const desc=$("#xd").value.trim(),amount=Number($("#xa").value);
+async function addExp(){
+  const desc=$("#xd").value.trim(),amount=Number($("#xa").value),f=$("#xf").files[0];
   if(!desc||!(amount>0))return toast("اكتب وصف المصروف والمبلغ",1);
-  const id="e"+Date.now().toString(36);
-  upd({[`years/${Y}/expenses/${id}`]:{month:$("#xm").value,desc,amount,date:$("#xt").value||today()}},"تم تسجيل المصروف ✓");
+  let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f)}catch(e){return toast("تعذر رفع الصورة",1)}}
+  const e={month:$("#xm").value,desc,amount,date:$("#xt").value||today()};if(fid)e.file=fid;
+  upd({[`years/${Y}/expenses/e${Date.now().toString(36)}`]:e},`مصروف: ${desc} - ${num(amount)} ج ✓`);
 }
-function delExp(id){if(confirm("تأكيد حذف المصروف؟"))upd({[`years/${Y}/expenses/${id}`]:null},"تم حذف المصروف")}
+function delExp(id){
+  const e=G.years?.[Y]?.expenses?.[id]||{};
+  if(confirm("تأكيد حذف المصروف؟")){const o={[`years/${Y}/expenses/${id}`]:null};if(e.file)o[`files/${e.file}`]=null;upd(o,`حذف مصروف: ${e.desc||""}`)}
+}
 
-/* --- الكاميرات --- */
+/* --- المشاريع والتحصيلات الخاصة (الكاميرات وغيرها) --- */
+let selP=null;
 function vCam(){
-  const A=isA(),s=share();let col=0,rows="";
-  for(let i=1;i<=N;i++){
-    const p=camPaid(i),dt=G.cameras?.dates?.[i]||"";col+=p;
+  const A=isA(),L=prj();
+  if(!L.some(x=>x.id===selP))selP=(L.find(x=>!x.closed)||L[0])?.id;
+  const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed;let col=0,rows="";
+  if(p)for(let i=1;i<=N;i++){
+    const v=pp(p,i),dt=p.dates?.[i]||"",f=p.files?.[i];col+=v;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
-      <td>${A?`<input type="number" min="0" id="ca-${i}" value="${p||""}" placeholder="0">`:num(p)+" ج"}</td>
-      <td>${A?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
-      <td class="${p>=s?"":"neg"}">${num(Math.max(0,s-p))} ج</td>${A?`<td><button class="btn" onclick="saveCam(${i})">حفظ</button></td>`:""}</tr>`;
+      <td>${ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
+      <td>${ed?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
+      <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
+      <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
   }
-  return `<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
+  const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="0" placeholder="نصيب الشقة" style="width:120px"><button class="btn am" onclick="addPrj()">إنشاء</button></div></div>`:"";
+  const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
+  const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
     <div class="card"><span class="mu">إجمالي المطلوب</span><b>${num(s*N)} ج</b></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
     <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,s*N-col))} ج</b></div></div>
-  <div class="card"><h3>📷 دفعات مشروع الكاميرات (مستقلة عن الصندوق الشهري)</h3>
-  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th>${A?"<th></th>":""}</tr>${rows}</table></div></div>`;
+    <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
+    <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
+  return chips+body+add;
 }
-function saveCam(i){
-  const v=Math.max(0,Number($("#ca-"+i).value)||0),dt=$("#cd-"+i).value||today();
-  upd(v?{[`cameras/payments/${i}`]:v,[`cameras/dates/${i}`]:dt}:{[`cameras/payments/${i}`]:null,[`cameras/dates/${i}`]:null},`تم تحديث كاميرات شقة ${i} ✓`);
+async function savePrj(i){
+  const v=Math.max(0,Number($("#ca-"+i).value)||0),dt=$("#cd-"+i).value||today(),f=$("#cf-"+i).files[0],b=`projects/${selP}/`;
+  let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f)}catch(e){return toast("تعذر رفع الصورة",1)}}
+  const nm=G.projects[selP].name,o=v?{[b+`payments/${i}`]:v,[b+`dates/${i}`]:dt}:{[b+`payments/${i}`]:null,[b+`dates/${i}`]:null,[b+`files/${i}`]:null};
+  if(fid&&v)o[b+`files/${i}`]=fid;
+  upd(o,`${nm}: شقة ${i} - ${num(v)} ج ✓`);
 }
+function addPrj(){
+  const name=$("#pn").value.trim(),perApt=Number($("#ps").value);
+  if(!name||!(perApt>0))return toast("اكتب اسم المشروع ونصيب الشقة",1);
+  const id="p"+Date.now().toString(36);selP=id;upd({[`projects/${id}`]:{name,perApt}},`مشروع جديد: ${name} ✓`);
+}
+function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
 /* --- كشف حساب الساكن --- */
 function vMe(){
   const i=U.apt,d=due();let tot=0;
   const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
     return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div></div>`}).join("");
-  const cp=camPaid(i),cdt=G.cameras?.dates?.[i]||"";
   return `<div class="card"><h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
   <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
-  <div class="card"><span class="mu">الكاميرات</span><b class="${cp>=share()?"pos":"neg"}">${num(cp)} / ${num(share())} ج</b><span class="mu">${cp?"آخر دفعة: "+fd(cdt):"لم يتم الدفع"}</span></div></div>
+  ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${pp(q,i)>=share(q)?"pos":"neg"}">${num(pp(q,i))} / ${num(share(q))} ج</b></div>`).join("")}</div>
   <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
 }
 
@@ -304,23 +341,46 @@ function vAdm(){
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
   return `<div class="card"><h3>⚙️ الإعدادات العامة</h3><div class="row">
     <label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label>
-    <label>نصيب الشقة في الكاميرات <input id="s-cam" type="number" value="${share()}" style="width:100px"></label>
     <label>كلمة سر المشرف <input id="s-ap" placeholder="اتركها فارغة لو مش هتغيّرها" style="width:230px"></label>
     <button class="btn am" onclick="saveSet()">حفظ الإعدادات</button></div></div>
   <div class="card"><h3>👥 أسماء الملاك وكلمات سر الشقق</h3><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>كلمة السر</th><th></th></tr>${rows}</table></div></div>
-  <div class="card"><h3>🧰 صيانة البيانات</h3><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
+  <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
+  <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" style="margin-bottom:10px" onclick="exportCsv()">تصدير Excel (CSV) 📥</button><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
 }
 function saveApt(i){upd({[`apartments/${i}/ownerName`]:$("#on-"+i).value.trim(),[`passwords/${i}`]:$("#pw-"+i).value.trim()||null},`تم حفظ شقة ${i} ✓`)}
 function saveSet(){
-  const o={monthlyDue:Number($("#s-due").value)||180,"cameras/perApt":Number($("#s-cam").value)||1430};
+  const o={monthlyDue:Number($("#s-due").value)||180};
   const p=$("#s-ap").value.trim();if(p)o.adminPassword=p;
   upd(o,"تم حفظ الإعدادات ✓");
 }
 async function reseed(){
   if(!confirm("هيتم استبدال كل بيانات قاعدة البيانات ببيانات الشيت الأصلية. متأكد؟"))return;
-  try{G=makeSeed();await api("","PUT",G);initFlt();render();toast("تمت استعادة البيانات ✓")}
+  try{G=makeSeed();await api("","PATCH",G);initFlt();render();toast("تمت استعادة البيانات ✓")}
   catch(e){toast("تعذر الاستعادة",1)}
+}
+
+/* ---------- الصور / السجل / التصدير ---------- */
+function shrink(file,max=1100,q=.7){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",q))};im.onerror=no;im.src=r.result};r.onerror=no;r.readAsDataURL(file)})}
+async function attach(file){const d=await shrink(file),id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);await api("files/"+id,"PUT",d);return id}
+async function showF(id){
+  const w=window.open("","_blank");
+  try{const d=await api("files/"+id);w.document.write(`<title>إيصال</title><body style="margin:0;background:#000"><img src="${d}" style="max-width:100%;display:block;margin:auto">`)}
+  catch(e){if(w)w.close();toast("تعذر تحميل الصورة",1)}
+}
+async function loadLog(){
+  try{
+    const d=await api("log","GET",undefined,"?orderBy=%22%24key%22&limitToLast=40"),el=$("#logbox");if(!el)return;
+    const L=Object.values(d||{}).sort((a,b)=>b.t-a.t);
+    el.innerHTML=L.length?`<table>${L.map(l=>`<tr><td>${new Date(l.t).toLocaleString("ar-EG",{dateStyle:"short",timeStyle:"short"})}</td><td>${esc(l.who)}</td><td style="white-space:normal">${esc(l.msg)}</td></tr>`).join("")}</table>`:"لا توجد تعديلات مسجلة بعد";
+  }catch(e){const el=$("#logbox");if(el)el.textContent="تعذر تحميل السجل"}
+}
+function exportCsv(){
+  const r=[["شقة","المالك",...MONTHS,"الإجمالي"]];
+  for(let i=1;i<=N;i++){const v=MONTHS.map(m=>pay(i,m));r.push([i,apt(i),...v,v.reduce((a,b)=>a+b,0)])}
+  r.push([],["المصروفات"],["الشهر","البيان","المبلغ","التاريخ"]);exps().forEach(e=>r.push([e.month,e.desc,e.amount,e.date||""]));
+  const csv="\ufeff"+r.map(x=>x.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`building60-${Y}.csv`;a.click();
 }
 
 /* ---------- التشغيل ---------- */
