@@ -55,20 +55,12 @@ td{padding:7px 8px;border-bottom:1px solid #26334a;white-space:nowrap}
 <button id="th" title="فاتح / داكن" onclick="theme(document.documentElement.dataset.t==='light'?'dark':'light')">☀️</button>
 <div class="w">
 
-<div id="login" class="card">
-  <div style="text-align:center;margin-bottom:12px"><h1>🏢 عمارة 60 - ساوث هيلز 2</h1><div class="mu">نظام إدارة التحصيلات والمصروفات</div></div>
-  <div class="tabs"><button id="lt-r" class="on" onclick="loginTab('r')">دخول ساكن</button><button id="lt-a" onclick="loginTab('a')">دخول مشرف</button></div>
-  <div id="lf-r">
-    <label class="mu">اختر شقتك</label><select id="ls"></select>
-    <label class="mu">كلمة سر الشقة</label><input type="password" id="rp" autocomplete="current-password" onkeydown="if(event.key==='Enter')login('resident')">
-    <button class="btn" style="width:100%" onclick="login('resident')">دخول 🔑</button>
-  </div>
-  <div id="lf-a" hidden>
-    <label class="mu">كلمة سر المشرف</label><input type="password" id="ap" autocomplete="current-password" onkeydown="if(event.key==='Enter')login('admin')">
-    <button class="btn am" style="width:100%" onclick="login('admin')">دخول المشرف 🛠️</button>
-  </div>
-  <div id="err"></div>
-  <div id="ld" class="mu" style="text-align:center">جارٍ تحميل البيانات…</div>
+<div id="login" class="card" style="text-align:center">
+  <h1>🏢 عمارة 60 - ساوث هيلز 2</h1><div class="mu" style="margin:4px 0 16px">نظام إدارة التحصيلات والمصروفات</div>
+  <button class="btn" style="width:100%;padding:12px" onclick="googleLogin()">الدخول بحساب Google 🔑</button>
+  <div id="err" style="margin-top:10px"></div>
+  <div id="ld" class="mu">جارٍ التحميل…</div>
+  <div class="mu" style="margin-top:12px">لو ظهر خطأ في الدخول افتح الرابط من Chrome أو Safari مباشرة (مش من جوّه واتساب أو فيسبوك).</div>
 </div>
 
 <div id="app" hidden>
@@ -87,7 +79,11 @@ td{padding:7px 8px;border-bottom:1px solid #26334a;white-space:nowrap}
 </div>
 <div id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script>
+firebase.initializeApp({apiKey:"AIzaSyAQf5ZHFIgR1RqJiZAnc4_xk6Sa4kUZbjs",authDomain:"sh2-bu60.firebaseapp.com",projectId:"sh2-bu60",appId:"1:398417900233:web:d3ea5648000139f30d5318"});
+const auth=firebase.auth();
 const DB = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app";
 const N = 24;
 const MONTHS = ["يناير","فبراير","مارس","إبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
@@ -114,7 +110,7 @@ function makeSeed(){
     E("أكتوبر","نظافة السلم وتنظيف حوالين العمارة",600,"2026-10-01"),E("أكتوبر","سقي الزرع",500,"2026-10-08"),E("أكتوبر","نظافة السلم",400,"2026-10-13"),E("أكتوبر","نظافة السلم (كاش)",400,"2026-10-23"),
     E("نوفمبر","سقي الزرع",500,"2026-11-02")];
   const expenses={};list.forEach((e,i)=>expenses["e"+String(i+1).padStart(3,"0")]=e);
-  return {adminPassword:"admin123",monthlyDue:180,passwords:{},apartments,
+  return {monthlyDue:180,apartments,
     projects:{cam:{name:"الكاميرات",perApt:1430,payments:cp,dates:cd}},
     years:{"2026":{monthlyPayments:mp,payDates:pd,expenses}}};
 }
@@ -133,7 +129,7 @@ theme(localStorage.getItem("b60t")||(matchMedia("(prefers-color-scheme: light)")
 /* ---------- الوصول لـ Firebase ---------- */
 const url=p=>DB+"/"+p.split("/").filter(Boolean).map(encodeURIComponent).join("/")+".json";
 async function api(p,method="GET",body,q=""){
-  const r=await fetch(url(p)+q,{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
+  const t=await tok(),r=await fetch(url(p)+(q?q+"&":"?")+"auth="+t,{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return r.json();
 }
@@ -149,13 +145,9 @@ async function upd(o,msg){
   render();
 }
 async function load(){
-  const ks=await api("","GET",undefined,"?shallow=true");
-  if(!ks){G=makeSeed();await api("","PUT",G);return}
-  const o={};
-  await Promise.all(Object.keys(ks).filter(k=>k!=="files"&&k!=="log").map(async k=>o[k]=await api(k)));
-  G=o;G.apartments??={};G.passwords??={};G.years??={};
-  if(!G.projects&&G.cameras){G.projects={cam:{name:"الكاميرات",perApt:G.cameras.perApt||1430,payments:G.cameras.payments||{},dates:G.cameras.dates||{}}};await api("projects","PUT",G.projects)}
-  G.projects??={};
+  const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending"]:[]),o={};
+  await Promise.all(names.map(async k=>o[k]=await api(k)));
+  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
@@ -177,40 +169,48 @@ function initFlt(){
 const badge=(p,d)=>p>=d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
 function toast(t,bad){const e=$("#toast");e.textContent=t;e.className="show"+(bad?" bad":"");clearTimeout(toast.t);toast.t=setTimeout(()=>e.className="",2600)}
 
-/* ---------- الدخول والخروج ---------- */
-function loginTab(t){
-  $("#lt-r").className=t==="r"?"on":"";$("#lt-a").className=t==="a"?"on":"";
-  $("#lf-r").hidden=t!=="r";$("#lf-a").hidden=t!=="a";$("#err").textContent="";
+/* ---------- الدخول بحساب Google ---------- */
+const tok=()=>auth.currentUser.getIdToken();
+function googleLogin(){
+  $("#err").textContent="";
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{
+    $("#err").textContent=({"auth/unauthorized-domain":"الدومين غير مضاف في Authorized domains","auth/popup-blocked":"المتصفح منع النافذة، اسمح بها أو افتح من Chrome/Safari","auth/popup-closed-by-user":"تم إغلاق نافذة الدخول"})[e.code]||("تعذر الدخول: "+e.code);
+  });
 }
-function login(role){
-  const e=$("#err");e.textContent="";
-  if(role==="admin"){
-    if($("#ap").value!==(G.adminPassword||"admin123"))return e.textContent="كلمة سر المشرف غير صحيحة";
-    U={role:"admin"};
-  }else{
-    const i=Number($("#ls").value);
-    if($("#rp").value!==(G.passwords?.[i]||"1234"))return e.textContent="كلمة السر غير صحيحة";
-    U={role:"resident",apt:i};
+function logout(){auth.signOut()}
+function showLogin(){U=null;G=null;$("#app").hidden=true;$("#login").hidden=false;$("#ld").hidden=true}
+const emailsOf=i=>Object.entries(G.residents||{}).filter(([,v])=>Number(v)===i).map(([k])=>k.replace(/,/g,"."));
+async function start(u){
+  $("#err").textContent="";$("#ld").hidden=false;
+  const email=(u.email||"").toLowerCase(),key=email.replace(/\./g,",");
+  let admin=false;try{await api("residents");admin=true}catch(e){}
+  U={role:admin?"admin":"resident",email,apt:0};
+  if(!admin){
+    let a=null;try{a=await api("residents/"+key)}catch(e){}
+    if(a==null){await auth.signOut();$("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;return}
+    U.apt=Number(a);
   }
-  sessionStorage.setItem("b60u",JSON.stringify(U));
-  enter();
+  await load();
+  if(admin){
+    U.apt=Number(G.residents[key])||0;
+    const ks=await api("","GET",undefined,"?shallow=true");
+    if(ks&&("adminPassword" in ks||"passwords" in ks))await api("","PATCH",{adminPassword:null,passwords:null});
+  }
+  $("#ld").hidden=true;enter();
 }
-function enter(){
-  $("#login").hidden=true;$("#app").hidden=false;
-  tab=isA()?"sum":"me";initFlt();render();
-}
-function logout(){U=null;sessionStorage.removeItem("b60u");$("#app").hidden=true;$("#login").hidden=false;$("#ap").value=$("#rp").value=""}
+function enter(){$("#login").hidden=true;$("#app").hidden=false;tab=isA()?"sum":"me";initFlt();render()}
 
 /* ---------- العرض ---------- */
 function go(k){tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
-  const T=isA()?[["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["adm","الإدارة ⚙️"]]
-              :[["me","شقتي 🏠"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
+  const np=Object.keys(G.pending||{}).length,
+    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],...(U.apt?[["me","شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
+            :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${l}</button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
-  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe})[tab]();
+  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend})[tab]();
   if(tab==="adm")loadLog();
 }
 
@@ -333,30 +333,60 @@ function vMe(){
   <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
 }
 
+/* --- رفع تحويل (الساكن) + اعتماد (الأدمن) --- */
+function vSend(){
+  return `<div class="card"><h3>📤 رفع صورة تحويل (شقة ${U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
+  <div class="row"><select id="sm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
+  <input id="sa" type="number" min="1" value="${due()}" style="width:110px"><input id="sd" type="date" value="${today()}">
+  ${attBtn("sf"," صورة التحويل")}<button class="btn am" onclick="sendReq()">إرسال</button></div></div>`;
+}
+async function sendReq(){
+  const f=$("#sf").files[0],amount=Number($("#sa").value);
+  if(!f||!(amount>0))return toast("اختار صورة التحويل واكتب المبلغ",1);
+  try{
+    toast("جارٍ الرفع…");const file=await attach(f);
+    await api("pending/p"+Date.now().toString(36)+Math.random().toString(36).slice(2,4),"PUT",{email:U.email,apt:U.apt,year:Y,month:$("#sm").value,amount,date:$("#sd").value||today(),file,status:"pending",t:Date.now()});
+    toast("تم إرسال الطلب للأدمن ✓");render();
+  }catch(e){toast("تعذر الإرسال، حاول تاني",1)}
+}
+function vReq(){
+  const L=Object.entries(G.pending||{}).filter(([,r])=>r).map(([id,r])=>({id,...r})).sort((a,b)=>a.t-b.t);
+  const rows=L.map(r=>`<tr><td>${r.apt}</td><td>${esc(apt(r.apt))}</td><td>${esc(r.month)} ${esc(r.year||"")}</td><td>${num(r.amount)} ج</td><td>${fd(r.date)}</td>
+    <td><button class="btn gh" onclick="showF('${r.file}')">🧾 عرض</button> <button class="btn" onclick="okReq('${r.id}')">اعتماد</button> <button class="btn gh" onclick="noReq('${r.id}')">رفض</button></td></tr>`).join("")
+    ||`<tr><td colspan="6" class="mu" style="text-align:center;padding:16px">لا توجد طلبات بانتظار الاعتماد</td></tr>`;
+  return `<div class="card"><h3>📥 طلبات تحويل بانتظار الاعتماد</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>الشهر</th><th>المبلغ</th><th>التاريخ</th><th></th></tr>${rows}</table></div></div>`;
+}
+function okReq(id){
+  const r=G.pending[id],y=r.year||Y,b=`years/${y}/`,cur=Number(G.years?.[y]?.monthlyPayments?.[r.apt]?.[r.month]||0);
+  upd({[`${b}monthlyPayments/${r.apt}/${r.month}`]:cur+Number(r.amount),[`${b}payDates/${r.apt}/${r.month}`]:r.date,[`${b}payFiles/${r.apt}/${r.month}`]:r.file,[`pending/${id}`]:null},`اعتماد تحويل شقة ${r.apt} - ${r.month}: ${num(r.amount)} ج ✓`);
+}
+function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة ${r.apt} - ${r.month}`)}
+
 /* --- الإدارة --- */
 function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>`<tr><td>${i}</td>
-    <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}" style="width:190px"></td>
-    <td><input id="pw-${i}" value="${esc(G.passwords?.[i]||"")}" placeholder="1234" style="width:100px"></td>
+    <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}" style="width:170px"></td>
+    <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر" style="width:270px"></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
-  return `<div class="card"><h3>⚙️ الإعدادات العامة</h3><div class="row">
-    <label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label>
-    <label>كلمة سر المشرف <input id="s-ap" placeholder="اتركها فارغة لو مش هتغيّرها" style="width:230px"></label>
-    <button class="btn am" onclick="saveSet()">حفظ الإعدادات</button></div></div>
-  <div class="card"><h3>👥 أسماء الملاك وكلمات سر الشقق</h3><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>كلمة السر</th><th></th></tr>${rows}</table></div></div>
+  return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا.</div><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>إيميل الدخول</th><th></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" style="margin-bottom:10px" onclick="exportCsv()">تصدير Excel (CSV) 📥</button><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
 }
-function saveApt(i){upd({[`apartments/${i}/ownerName`]:$("#on-"+i).value.trim(),[`passwords/${i}`]:$("#pw-"+i).value.trim()||null},`تم حفظ شقة ${i} ✓`)}
-function saveSet(){
-  const o={monthlyDue:Number($("#s-due").value)||180};
-  const p=$("#s-ap").value.trim();if(p)o.adminPassword=p;
-  upd(o,"تم حفظ الإعدادات ✓");
+function saveApt(i){
+  const em=$("#em-"+i).value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean),old=emailsOf(i),o={},k=e=>"residents/"+e.replace(/\./g,",");
+  if(em.some(e=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)))return toast("إيميل غير صحيح",1);
+  const c=em.find(e=>{const a=G.residents[e.replace(/\./g,",")];return a&&Number(a)!==i});
+  if(c)return toast(`${c} مسجل في شقة تانية`,1);
+  old.forEach(e=>{if(!em.includes(e))o[k(e)]=null});em.forEach(e=>o[k(e)]=i);
+  o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
+  upd(o,`تحديث بيانات شقة ${i} ✓`);
 }
+function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
 async function reseed(){
   if(!confirm("هيتم استبدال كل بيانات قاعدة البيانات ببيانات الشيت الأصلية. متأكد؟"))return;
-  try{G=makeSeed();await api("","PATCH",G);initFlt();render();toast("تمت استعادة البيانات ✓")}
+  try{await api("","PATCH",makeSeed());await load();initFlt();render();toast("تمت استعادة البيانات ✓")}
   catch(e){toast("تعذر الاستعادة",1)}
 }
 
@@ -384,16 +414,10 @@ function exportCsv(){
 }
 
 /* ---------- التشغيل ---------- */
-(async()=>{
-  try{
-    await load();
-    $("#ls").innerHTML=Array.from({length:N},(_,k)=>`<option value="${k+1}">شقة ${k+1} - ${esc(apt(k+1))}</option>`).join("");
-    $("#ld").hidden=true;
-    const s=sessionStorage.getItem("b60u");if(s){try{U=JSON.parse(s);enter()}catch(e){}}
-  }catch(e){
-    $("#ld").innerHTML='<span style="color:var(--rd)">تعذر الاتصال بقاعدة البيانات. تأكد من الإنترنت وقواعد Firebase ثم حدّث الصفحة.</span>';
-  }
-})();
+auth.onAuthStateChanged(u=>{
+  if(!u){showLogin();return}
+  start(u).catch(e=>{$("#ld").hidden=true;$("#err").textContent="تعذر تحميل البيانات: "+e.message});
+});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&U&&!document.activeElement?.matches("input"))reload()});
 </script>
 </body>
