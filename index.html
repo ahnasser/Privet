@@ -50,6 +50,9 @@ td{padding:7px 8px;border-bottom:1px solid #26334a;white-space:nowrap}
 [data-t=light] .btn,[data-t=light] nav button.on,[data-t=light] .chip.on,[data-t=light] .tabs button.on{color:#fff}
 [data-t=light] .btn.gh{color:var(--rd)}
 .em{opacity:.5}
+table.adm{table-layout:fixed}
+table.adm td,table.adm th{padding:6px 4px}
+table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px}
 @media(max-width:640px){
  body{padding:8px}
  input,select{font-size:16px}
@@ -411,14 +414,14 @@ function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({
 /* --- الإدارة --- */
 function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>`<tr><td>${i}</td>
-    <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}" style="width:170px"></td>
-    <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر" style="width:270px"></td>
-    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="01001234567" style="width:140px"></td>
-    <td><select id="st-${i}" style="width:170px"><option value="occ" ${isEmpty(i)?"":"selected"}>مقيمة</option><option value="vac" ${isEmpty(i)?"selected":""}>غير مقيمة (خارج الحسبة)</option></select></td>
-    <td><input id="sn-${i}" type="month" value="${sinceOf(i)}" style="width:150px"></td>
+    <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
+    <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
+    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="01001234567"></td>
+    <td><select id="st-${i}"><option value="occ" ${isEmpty(i)?"":"selected"}>مقيمة</option><option value="vac" ${isEmpty(i)?"selected":""}>غير مقيمة</option></select></td>
+    <td><input id="sn-${i}" type="month" value="${sinceOf(i)}"></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من كل الحسابات (الشهري والمشاريع). "تُحسب من شهر" اختياري للشقة اللي بدأت تدفع من شهر معين. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا. رقم الواتساب (للتذكير) بيظهر للأدمن بس.</div><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>إيميل الدخول</th><th>واتساب</th><th>الحالة</th><th>تُحسب من شهر</th><th></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من كل الحسابات (الشهري والمشاريع). "تُحسب من شهر" اختياري للشقة اللي بدأت تدفع من شهر معين. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا. رقم الواتساب (للتذكير) بيظهر للأدمن بس.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:17%">الاسم</th><th>إيميل الدخول</th><th style="width:15%">واتساب</th><th style="width:12%">الحالة</th><th style="width:14%">تُحسب من</th><th style="width:58px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" style="margin-bottom:10px" onclick="exportCsv()">تصدير Excel (CSV) 📥</button><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
