@@ -173,8 +173,11 @@ async function reload(){try{await load();initFlt();render();toast("تم التح
 /* ---------- قراءة البيانات ---------- */
 const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.perApt||0),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0);
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
-const isEmpty=i=>{const n=(G.apartments?.[i]?.ownerName||"").trim();return !n||n==="(فارغ)"};
+const isEmpty=i=>{const a=G.apartments?.[i]||{},n=(a.ownerName||"").trim();return a.vacant===true||!n||n==="(فارغ)"};
 const nAct=()=>Array.from({length:N},(_,k)=>k+1).filter(i=>!isEmpty(i)).length;
+const sinceOf=i=>G.apartments?.[i]?.since||"";
+const actM=(i,m,y=Y)=>!isEmpty(i)&&(!sinceOf(i)||`${y}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}`>=sinceOf(i));
+const nActM=m=>Array.from({length:N},(_,k)=>k+1).filter(i=>actM(i,m)).length;
 const pay=(i,m)=>Number(G.years?.[Y]?.monthlyPayments?.[i]?.[m]||0);
 const pdate=(i,m)=>G.years?.[Y]?.payDates?.[i]?.[m]||"";
 const pfile=(i,m)=>G.years?.[Y]?.payFiles?.[i]?.[m]||"";
@@ -255,7 +258,7 @@ function vSum(){
   const ms=MONTHS.filter(m=>flt.has(m)),d=due(),AP=prj().filter(q=>!q.closed);let c=0,rows="";
   for(let i=1;i<=N;i++){
     if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td></tr>`;continue}
-    const p=ms.reduce((s,m)=>s+pay(i,m),0),need=d*ms.length,cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;
+    const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=d*am.length,cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp<=0?'<b class="bd ok">مسدّد</b>':`<b class="bd no">متبقي ${num(cp)}</b>`}</td></tr>`;
   }
   const x=exps().filter(e=>flt.has(e.month)).reduce((s,e)=>s+Number(e.amount||0),0);
@@ -274,7 +277,7 @@ const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}
 function vMonth(){
   const A=isA(),d=due();let c=0,rows="";
   for(let i=1;i<=N;i++){
-    if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td><b class="bd" style="background:var(--in);color:var(--mu)">فارغ</b></td><td></td></tr>`;continue}
+    if(!actM(i,selM)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td><b class="bd" style="background:var(--in);color:var(--mu)">غير مقيمة</b></td><td></td></tr>`;continue}
     const p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);c+=p;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
       <td>${A?`<input type="number" min="0" id="pa-${i}" value="${p||""}" placeholder="0">`:num(p)}</td>
@@ -282,7 +285,7 @@ function vMonth(){
       <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${A?attBtn("pf-"+i)+` <button class="btn" onclick="savePay(${i})">حفظ</button>`:""}${A&&p<d&&!isEmpty(i)?` <button class="btn gh" style="color:var(--tx)" onclick="remind(${i})">💬 تذكير</button>`:""}</td></tr>`;
   }
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
-  <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*nAct())} ج</span></div>
+  <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*nActM(selM))} ج</span></div>
   ${A?'<div class="row" style="margin-bottom:8px"><button class="btn am" onclick="groupMsg()">📋 نسخ رسالة المتأخرين للجروب</button><button class="btn gh" style="color:var(--tx)" onclick="waGroup()">إرسال في واتساب 💬</button></div><div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ وأرفق صورة التحويل (📎) ثم حفظ. مسح المبلغ = إلغاء الدفعة.</div>':""}
   <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>الإيصال</th></tr>${rows}</table></div></div>`;
 }
@@ -411,9 +414,11 @@ function vAdm(){
     <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}" style="width:170px"></td>
     <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر" style="width:270px"></td>
     <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="01001234567" style="width:140px"></td>
+    <td><select id="st-${i}" style="width:170px"><option value="occ" ${isEmpty(i)?"":"selected"}>مقيمة</option><option value="vac" ${isEmpty(i)?"selected":""}>غير مقيمة (خارج الحسبة)</option></select></td>
+    <td><input id="sn-${i}" type="month" value="${sinceOf(i)}" style="width:150px"></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا. رقم الواتساب (للتذكير) بيظهر للأدمن بس.</div><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>إيميل الدخول</th><th>واتساب</th><th></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من كل الحسابات (الشهري والمشاريع). "تُحسب من شهر" اختياري للشقة اللي بدأت تدفع من شهر معين. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا. رقم الواتساب (للتذكير) بيظهر للأدمن بس.</div><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>إيميل الدخول</th><th>واتساب</th><th>الحالة</th><th>تُحسب من شهر</th><th></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" style="margin-bottom:10px" onclick="exportCsv()">تصدير Excel (CSV) 📥</button><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
@@ -428,6 +433,8 @@ function saveApt(i){
   if(ph&&(ph.length<11||ph.length>15))return toast("رقم الواتساب غير صحيح (مثال: 01001234567)",1);
   o[`phones/${i}`]=ph||null;
   o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
+  o[`apartments/${i}/vacant`]=$("#st-"+i).value==="vac"?true:null;
+  o[`apartments/${i}/since`]=$("#sn-"+i).value||null;
   upd(o,`تحديث بيانات شقة ${i} ✓`);
 }
 function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
@@ -449,7 +456,7 @@ function remind(i){
 }
 function lateText(){
   const L=[];let tot=0;
-  for(let i=1;i<=N;i++){const n=apt(i);if(n==="(فارغ)"||n==="—")continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
+  for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
   if(!L.length)return "";
   return `السلام عليكم 🌷\nتذكير باشتراك العمارة عن شهر ${selM} ${Y} (${num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
 }
