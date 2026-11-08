@@ -1,853 +1,340 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مصاريف عمارة 60 - ساوث هيلز 2</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عمارة 60 - ساوث هيلز 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--in:#0b1220;--ln:#334155;--tx:#e2e8f0;--mu:#94a3b8;--ac:#34d399;--am:#fbbf24;--rd:#fb7185;--bl:#60a5fa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 Cairo,system-ui,sans-serif;padding:14px}
+.w{max-width:960px;margin:auto}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-bottom:12px}
+h1{margin:0;font-size:19px;color:var(--ac)}h3{margin:0 0 10px;font-size:15px;color:var(--ac)}
+.mu{color:var(--mu);font-size:12px}
+input,select{background:var(--in);color:var(--tx);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;font:inherit;max-width:100%}
+td input{width:96px}td input[type=date]{width:136px}
+.btn{background:var(--ac);color:#04231a;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.btn.am{background:var(--am);color:#2b1d00}.btn.gh{background:transparent;color:var(--rd);border:1px solid var(--ln)}
+.btn:active{transform:scale(.97)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+nav button,.chip{flex:none;background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;font:inherit;cursor:pointer}
+nav button.on,.chip.on{background:var(--ac);color:#04231a;border-color:var(--ac);font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.g .card{margin:0}.g b{font-size:20px;display:block}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}
+th{color:var(--mu);font-size:12px;text-align:right;padding:8px;border-bottom:1px solid var(--ln);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #26334a;white-space:nowrap}
+.bd{font-size:12px;padding:2px 10px;border-radius:99px;font-weight:600}
+.ok{background:#064e3b;color:var(--ac)}.wa{background:#4a3500;color:var(--am)}.no{background:#4c1d24;color:var(--rd)}
+.pos{color:var(--ac)}.neg{color:var(--rd)}
+#login{max-width:400px;margin:40px auto}#login input,#login select{width:100%;margin:4px 0 10px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.tabs button{background:var(--in);color:var(--mu);border:1px solid var(--ln);border-radius:12px;padding:9px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--ac);color:#04231a;font-weight:700}
+#err{color:var(--rd);font-size:13px;min-height:20px;text-align:center}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#065f46;color:#fff;padding:10px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+#toast.show{opacity:1}#toast.bad{background:#9f1239}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mg div{background:var(--in);border:1px solid var(--ln);border-radius:12px;padding:8px 10px}
+[hidden]{display:none!important}
+</style>
 </head>
-<body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 sm:p-6">
-    <div class="max-w-5xl mx-auto space-y-6">
-        
-        <!-- LOGIN CONTAINER -->
-        <div id="login-container" class="max-w-md mx-auto bg-[#1e293b] p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-6 mt-12">
-            <div class="text-center space-y-2">
-                <h1 class="text-2xl font-bold text-emerald-400">🏢 عمارة 60 - ساوث هيلز 2</h1>
-                <p class="text-xs text-slate-400">نظام إدارة التحصيلات والمصروفات</p>
-            </div>
+<body>
+<div class="w">
 
-            <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
-                <button type="button" onclick="window.switchRole('resident')" id="role-btn-resident" class="py-2.5 rounded-xl font-medium transition text-xs bg-emerald-500 text-slate-950 font-bold shadow">دخول ساكن (شقة)</button>
-                <button type="button" onclick="window.switchRole('admin')" id="role-btn-admin" class="py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white">دخول مشرف (Admin)</button>
-            </div>
+<div id="login" class="card">
+  <div style="text-align:center;margin-bottom:12px"><h1>🏢 عمارة 60 - ساوث هيلز 2</h1><div class="mu">نظام إدارة التحصيلات والمصروفات</div></div>
+  <div class="tabs"><button id="lt-r" class="on" onclick="loginTab('r')">دخول ساكن</button><button id="lt-a" onclick="loginTab('a')">دخول مشرف</button></div>
+  <div id="lf-r">
+    <label class="mu">اختر شقتك</label><select id="ls"></select>
+    <label class="mu">كلمة سر الشقة</label><input type="password" id="rp" autocomplete="current-password" onkeydown="if(event.key==='Enter')login('resident')">
+    <button class="btn" style="width:100%" onclick="login('resident')">دخول 🔑</button>
+  </div>
+  <div id="lf-a" hidden>
+    <label class="mu">كلمة سر المشرف</label><input type="password" id="ap" autocomplete="current-password" onkeydown="if(event.key==='Enter')login('admin')">
+    <button class="btn am" style="width:100%" onclick="login('admin')">دخول المشرف 🛠️</button>
+  </div>
+  <div id="err"></div>
+  <div id="ld" class="mu" style="text-align:center">جارٍ تحميل البيانات…</div>
+</div>
 
-            <!-- Resident Login Form -->
-            <div id="form-resident" class="space-y-4">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">اختر شقتك:</label>
-                    <select id="login-apt-select" class="w-full bg-slate-900 text-slate-100 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:border-emerald-500"></select>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">كلمة السر الخاصة بالشقة:</label>
-                    <input type="password" id="resident-pass" placeholder="أدخل كلمة السر" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-emerald-500" value="1234">
-                    <span class="text-[10px] text-slate-500 mt-1 block">الباسورد الافتراضي للساكن: 1234</span>
-                </div>
-                <button type="button" onclick="window.executeLogin('resident')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
-                    الدخول لصفحة الشقة 🔑
-                </button>
-            </div>
-
-            <!-- Admin Login Form -->
-            <div id="form-admin" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">كلمة سر المشرف (Admin Password):</label>
-                    <input type="password" id="admin-pass-input" placeholder="أدخل كلمة سر الأدمن" class="w-full bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-700 text-sm outline-none focus:border-amber-500" value="admin123">
-                </div>
-                <button type="button" onclick="window.executeLogin('admin')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-3.5 rounded-xl transition shadow-lg text-sm">
-                    دخول لوحة تحكم المشرف 🛠️
-                </button>
-            </div>
-
-            <div id="login-error" class="text-center text-xs text-rose-400 font-bold hidden"></div>
-        </div>
-
-        <!-- MAIN DASHBOARD -->
-        <div id="dashboard-container" class="space-y-6 hidden">
-            
-            <!-- Header & Year Selection -->
-            <div class="flex flex-col sm:flex-row justify-between items-center bg-[#1e293b] p-4 rounded-2xl shadow-lg border border-slate-800 gap-4">
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-emerald-400">🏢 عمارة 60 - ساوث هيلز 2</h1>
-                    <span id="user-role-badge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 font-bold mt-1 inline-block">مرحباً بك</span>
-                </div>
-                
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700">
-                        <label class="text-xs text-slate-400 font-bold">السنة المالية:</label>
-                        <select id="selected-year" onchange="window.changeYear()" class="bg-transparent text-emerald-400 font-bold text-sm outline-none cursor-pointer">
-                            <option value="2025" class="bg-slate-900 text-white">2025</option>
-                            <option value="2026" selected class="bg-slate-900 text-white">2026</option>
-                            <option value="2027" class="bg-slate-900 text-white">2027</option>
-                        </select>
-                    </div>
-
-                    <button type="button" onclick="window.handleLogout()" class="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 px-3 py-2 rounded-xl transition border border-rose-500/30 font-bold">خروج 🚪</button>
-                </div>
-            </div>
-
-            <!-- Dynamic Navigation Tabs -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="nav-tabs-container"></div>
-
-            <!-- TAB 1: SUMMARY -->
-            <div id="content-summary" class="tab-content space-y-6">
-                
-                <!-- FILTER MONTHS CHECKBOXES -->
-                <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span class="text-xs font-bold text-emerald-400">🗓️ حدد الشهور المطلوبة لعرض ملخصها الفعلي:</span>
-                        <div class="flex gap-2">
-                            <button type="button" onclick="window.toggleAllMonthsFilter(true)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">تحديد الكل</button>
-                            <button type="button" onclick="window.toggleAllMonthsFilter(false)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700">إلغاء الكل</button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="summary-months-checkboxes"></div>
-                </div>
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">الرصيد الجاري (الفترة المحددة)</div>
-                        <div id="summary-balance" class="text-xl font-bold text-emerald-400">0 ج</div>
-                    </div>
-                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">إجمالي المحصّل بالفترة</div>
-                        <div id="summary-collected" class="text-xl font-bold text-emerald-400">0 ج</div>
-                    </div>
-                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">مصروفات الفترة المحددة</div>
-                        <div id="summary-expenses" class="text-xl font-bold text-amber-400">0 ج</div>
-                    </div>
-                    <div class="bg-[#1e293b] p-4 rounded-2xl border border-slate-800 shadow">
-                        <div class="text-slate-400 text-xs mb-1">صندوق الكاميرات (مستقل)</div>
-                        <div id="summary-cameras-fund" class="text-xl font-bold text-blue-400">0 ج</div>
-                    </div>
-                </div>
-
-                <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400 flex justify-between items-center">
-                        <span>موقف التحصيل العام للشقق لسنة <span class="current-year-txt">2026</span> (للمدة المحددة)</span>
-                    </div>
-                    <div class="max-h-96 overflow-y-auto">
-                        <table class="w-full text-right text-sm">
-                            <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
-                                <tr>
-                                    <th class="p-3">شقة</th>
-                                    <th class="p-3">اسم المالك / الساكن</th>
-                                    <th class="p-3">المدفوع للشهور المحددة</th>
-                                    <th class="p-3">موقف الكاميرات (مستقل)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="summary-apartments-rows" class="divide-y divide-slate-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: MONTHS & EXPENSES -->
-            <div id="content-months" class="tab-content hidden space-y-4 bg-[#1e293b] p-5 rounded-2xl border border-slate-800">
-                <div class="flex flex-col sm:flex-row justify-between items-center border-b border-slate-800 pb-3 gap-3">
-                    <h2 class="font-bold text-emerald-400 text-lg">سجل المصروفات والتكاليف لسنة <span class="current-year-txt">2026</span></h2>
-                    <select id="expense-filter-month" onchange="window.renderExpensesList()" class="bg-slate-900 text-slate-200 border border-slate-700 p-2 rounded-xl text-sm">
-                        <option value="ALL">كل الشهور</option>
-                    </select>
-                </div>
-                <div id="expenses-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
-            </div>
-
-            <!-- TAB 3: CAMERAS -->
-            <div id="content-cameras" class="tab-content hidden space-y-4">
-                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 shadow space-y-3">
-                    <h2 class="font-bold text-blue-400 text-lg">📷 صندوق مشروع الكاميرات (مستقل عن المصروفات الشهرية)</h2>
-                    <p class="text-xs text-slate-400">هذا المشروع تكلفته إجمالية ومستقلة تماماً عن الاشتراكات الشهرية للصندوق، وتم سداده لمرة واحدة.</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-                            <div class="text-xs text-slate-400 mb-1">إجمالي التكلفة المطلوبة للمشروع</div>
-                            <div id="cam-box-target-container"></div>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-                            <div class="text-xs text-slate-400 mb-1">إجمالي المحصّل للمشروع</div>
-                            <div id="cam-box-collected" class="text-lg font-bold text-emerald-400">0 ج</div>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-                            <div class="text-xs text-slate-400 mb-1">المتبقي على العمارة</div>
-                            <div id="cam-box-remaining" class="text-lg font-bold text-rose-400">0 ج</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden shadow">
-                    <div class="p-4 border-b border-slate-800 font-bold text-emerald-400">تفاصيل دفعات الكاميرات لكل شقة</div>
-                    <div class="max-h-96 overflow-y-auto">
-                        <table class="w-full text-right text-sm">
-                            <thead class="bg-slate-900/80 text-slate-400 text-xs sticky top-0">
-                                <tr><th class="p-3">شقة</th><th class="p-3">المالك</th><th class="p-3">المدفوع (قابل للتعديل)</th><th class="p-3">المتبقي للشقة</th></tr>
-                            </thead>
-                            <tbody id="cameras-table-rows" class="divide-y divide-slate-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4 FOR ADMIN: ADMIN CONTROL PANEL -->
-            <div id="content-adminCtrl" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-6">
-                <h2 class="font-bold text-amber-400 text-lg border-b border-slate-800 pb-2">🛠️ لوحة تحصيل الاشتراكات وإدارة بيانات الملاك</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                        <h3 class="font-bold text-emerald-400 text-sm">1. بيانات الشقة والمالك</h3>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">اختر الشقة:</label>
-                            <select id="admin-apt-select" onchange="window.onAdminAptChange()" class="w-full bg-slate-800 text-white p-3 rounded-xl border border-slate-700 text-sm"></select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">اسم المالك / الساكن:</label>
-                            <input type="text" id="admin-owner-name" class="w-full bg-slate-800 text-white p-3 rounded-xl border border-slate-700 text-sm" placeholder="اسم المالك">
-                        </div>
-                        <button type="button" onclick="window.saveOwnerName()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold p-2.5 rounded-xl transition text-xs">
-                            حفظ اسم المالك 💾
-                        </button>
-                    </div>
-
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                        <h3 class="font-bold text-emerald-400 text-sm">2. تسجيل دفعة شريحة شهرية لشقة (<span id="selected-apt-label">1</span>)</h3>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] text-slate-400 mb-1">اختر الشهر:</label>
-                                <select id="admin-pay-month" onchange="window.loadMonthPaymentVal()" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs"></select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] text-slate-400 mb-1">المبلغ المدفوع (ج):</label>
-                                <input type="number" id="admin-pay-amount" class="w-full bg-slate-800 text-emerald-400 font-bold p-2.5 rounded-lg border border-slate-700 text-xs" placeholder="180">
-                            </div>
-                        </div>
-                        <button type="button" onclick="window.saveMonthlyPayment()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-2.5 rounded-xl transition text-xs">
-                            تأكيد وتسجيل الدفعة الشهرية 💵
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-amber-400 text-sm">3. تحصيل دفعة مشروع الكاميرات لشقة (<span class="selected-apt-num-txt">1</span>)</h3>
-                    <div class="flex gap-3 items-center">
-                        <input type="number" id="admin-camera-pay-amount" class="w-full bg-slate-800 text-emerald-400 font-bold p-2.5 rounded-xl border border-slate-700 text-sm" placeholder="المبلغ المدفوع للكاميرات">
-                        <button type="button" onclick="window.saveCameraPayment()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl transition text-xs whitespace-nowrap">
-                            حفظ دفعة الكاميرات 📷
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 5 FOR ADMIN: PASSWORDS & EXPENSES -->
-            <div id="content-passwords" class="tab-content hidden space-y-6">
-                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-amber-400 text-sm">➕ تسجيل مصروف / تكلفة جديدة على الصندوق (<span class="current-year-txt">2026</span>)</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">الشهر:</label>
-                            <select id="expense-month" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs"></select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">وصف المصروف:</label>
-                            <input type="text" id="expense-desc" placeholder="مثال: صيانة اسانسير" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-xs">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">المبلغ (ج):</label>
-                            <input type="number" id="expense-amount" placeholder="0" class="w-full bg-slate-800 text-emerald-400 font-bold p-2.5 rounded-lg border border-slate-700 text-xs">
-                        </div>
-                    </div>
-                    <button type="button" onclick="window.addNewExpense()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold p-2.5 rounded-lg text-xs transition mt-2">
-                        إضافة المصروف للصندوق 💸
-                    </button>
-                </div>
-
-                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-amber-400 text-sm">تغيير كلمة سر الأدمن الرئيسي</h3>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-admin-pass" placeholder="كلمة السر الجديدة للأدمن" class="w-full bg-slate-800 text-white p-2.5 rounded-lg border border-slate-700 text-sm">
-                        <button type="button" onclick="window.saveAdminPass()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition whitespace-nowrap">تحديث كلمة الأدمن</button>
-                    </div>
-                </div>
-
-                <div class="bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <h3 class="font-bold text-emerald-400 text-base">🔑 كلمات سر حسابات الشقق</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1" id="passwords-list-container"></div>
-                </div>
-            </div>
-
-            <!-- TAB FOR RESIDENT: MY APT -->
-            <div id="content-myApt" class="tab-content hidden bg-[#1e293b] p-5 rounded-2xl border border-slate-800 space-y-4">
-                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <div id="res-apt-title" class="text-lg font-bold text-emerald-400">كشف حساب شقتي</div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2">
-                            <span class="text-xs text-slate-400 block font-bold">موقف مشروع الكاميرات</span>
-                            <div id="res-camera-paid" class="text-lg font-bold text-emerald-400">0 ج</div>
-                            <div id="res-camera-rem" class="text-xs text-rose-400 font-bold">المتبقي: 0 ج</div>
-                        </div>
-
-                        <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2">
-                            <span class="text-xs text-slate-400 block font-bold">إجمالي الاشتراكات المدفوعة (<span class="current-year-txt">2026</span>)</span>
-                            <div id="res-year-paid" class="text-lg font-bold text-emerald-400">0 ج</div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2 pt-2">
-                        <h4 class="text-xs font-bold text-slate-300">تفاصيل السداد الشهري لسنة <span class="current-year-txt">2026</span>:</h4>
-                        <div id="res-months-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+<div id="app" hidden>
+  <div class="card top">
+    <div><h1>🏢 عمارة 60 - ساوث هيلز 2</h1><span id="who" class="mu"></span></div>
+    <div class="row">
+      <select id="yr" onchange="Y=this.value;initFlt();render()"><option>2025</option><option selected>2026</option><option>2027</option></select>
+      <button class="btn gh" style="color:var(--tx)" onclick="reload()">تحديث ⟳</button>
+      <button class="btn gh" onclick="logout()">خروج</button>
     </div>
-
-    <script>
-        const DB_URL = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app/.json";
-        let currentUser = null;
-        let selectedYear = "2026";
-        let selectedFilterMonths = ["يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر"];
-        
-        const allMonths = [
-            "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
-            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-        ];
-
-        const initialApartments = {
-            1: { ownerName: "السيد كرم الدين" }, 2: { ownerName: "(فارغ)" },
-            3: { ownerName: "أحمد محمد عبدالرحمن" }, 4: { ownerName: "هاني محمود حسين" },
-            5: { ownerName: "أسماء صلاح حسن" }, 6: { ownerName: "إيمان إبراهيم محمود" },
-            7: { ownerName: "أحمد يوسف حسن" }, 8: { ownerName: "أحمد ناصر" },
-            9: { ownerName: "أميرة محمد فاروق" }, 10: { ownerName: "شريف صلاح الدين" },
-            11: { ownerName: "منى محمود نجيب" }, 12: { ownerName: "لبيب أنور" },
-            13: { ownerName: "أحمد فتحي محمد" }, 14: { ownerName: "إسلام عماد الدين" },
-            15: { ownerName: "نهى حسين حافظ أمين" }, 16: { ownerName: "مصطفى أمدين" },
-            17: { ownerName: "(فارغ)" }, 18: { ownerName: "أحمد ربيع شوقي" },
-            19: { ownerName: "محمد أحمد عبد الفتاح" }, 20: { ownerName: "أماني محمد مصطفى" },
-            21: { ownerName: "أحمد سمير" }, 22: { ownerName: "(فارغ)" },
-            23: { ownerName: "عادل عبد الرازق" }, 24: { ownerName: "عاطف محمد صادق" }
-        };
-
-        let globalData = {
-            adminPassword: "admin123",
-            passwords: {}, 
-            apartments: initialApartments,
-            cameras: {
-                totalProjectCost: 34300,
-                payments: { 1: 1430, 3: 1430, 4: 1430, 5: 1430, 6: 1430, 7: 1430, 8: 1430, 9: 1430, 11: 1430, 13: 1430, 18: 1430, 20: 1430, 23: 1430 }
-            },
-            years: {
-                "2026": {
-                    monthlyPayments: {
-                        8: { "أغسطس": 180 }
-                    },
-                    expenses: [
-                        { month: "يوليو", desc: "مصاريف وتشغيل يوليو", amount: 1600, date: "2026/07/01" },
-                        { month: "أغسطس", desc: "صيانة عامة وطوارئ", amount: 600, date: "2026/08/01" },
-                        { month: "سبتمبر", desc: "أعمال صيانة وتشغيل", amount: 2480, date: "2026/09/01" },
-                        { month: "أكتوبر", desc: "مصاريف صيانة وتشغيل أكتوبر", amount: 1900, date: "2026/10/01" },
-                        { month: "نوفمبر", desc: "صيانة اسانسير وتشغيل", amount: 500, date: "2026/11/01" }
-                    ]
-                }
-            }
-        };
-
-        function renderMonthFilterCheckboxes() {
-            const container = document.getElementById('summary-months-checkboxes');
-            if (!container) return;
-            container.innerHTML = '';
-
-            allMonths.forEach(m => {
-                const isChecked = selectedFilterMonths.includes(m);
-                container.innerHTML += `
-                    <label class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs cursor-pointer select-none">
-                        <input type="checkbox" value="${m}" ${isChecked ? 'checked' : ''} onchange="window.onMonthFilterChange(this)" class="accent-emerald-500 rounded cursor-pointer">
-                        <span class="${isChecked ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${m}</span>
-                    </label>
-                `;
-            });
-        }
-
-        window.onMonthFilterChange = function(chk) {
-            const m = chk.value;
-            if (chk.checked) {
-                if (!selectedFilterMonths.includes(m)) selectedFilterMonths.push(m);
-            } else {
-                selectedFilterMonths = selectedFilterMonths.filter(x => x !== m);
-            }
-            renderSummaryAndApp();
-            renderMonthFilterCheckboxes();
-        };
-
-        window.toggleAllMonthsFilter = function(selectAll) {
-            if (selectAll) {
-                selectedFilterMonths = [...allMonths];
-            } else {
-                selectedFilterMonths = [];
-            }
-            renderMonthFilterCheckboxes();
-            renderSummaryAndApp();
-        };
-
-        function changeYear() {
-            selectedYear = document.getElementById('selected-year').value;
-            document.querySelectorAll('.current-year-txt').forEach(el => el.innerText = selectedYear);
-            if (!globalData.years[selectedYear]) {
-                globalData.years[selectedYear] = { monthlyPayments: {}, expenses: [] };
-            }
-            renderApp();
-        }
-
-        function populateStaticDropdowns() {
-            const loginSelect = document.getElementById('login-apt-select');
-            const adminSelect = document.getElementById('admin-apt-select');
-            
-            let aptOpts = '';
-            Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                aptOpts += `<option value="${id}">شقة ${id} - ${apt.ownerName}</option>`;
-            });
-
-            if (loginSelect) loginSelect.innerHTML = aptOpts;
-            if (adminSelect) adminSelect.innerHTML = aptOpts;
-
-            let monthOpts = '';
-            allMonths.forEach(m => monthOpts += `<option value="${m}">${m}</option>`);
-
-            const expMonth = document.getElementById('expense-month');
-            const adminPayMonth = document.getElementById('admin-pay-month');
-            const expFilter = document.getElementById('expense-filter-month');
-
-            if (expMonth) expMonth.innerHTML = monthOpts;
-            if (adminPayMonth) adminPayMonth.innerHTML = monthOpts;
-            if (expFilter) expFilter.innerHTML = `<option value="ALL">كل الشهور</option>` + monthOpts;
-        }
-
-        window.switchRole = function(role) {
-            const resBtn = document.getElementById('role-btn-resident');
-            const admBtn = document.getElementById('role-btn-admin');
-            const resForm = document.getElementById('form-resident');
-            const admForm = document.getElementById('form-admin');
-
-            if (role === 'resident') {
-                resBtn.className = "py-2.5 rounded-xl font-medium transition text-xs bg-emerald-500 text-slate-950 font-bold shadow";
-                admBtn.className = "py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white";
-                resForm.classList.remove('hidden');
-                admForm.classList.add('hidden');
-            } else {
-                admBtn.className = "py-2.5 rounded-xl font-medium transition text-xs bg-amber-500 text-slate-950 font-bold shadow";
-                resBtn.className = "py-2.5 rounded-xl font-medium transition text-xs text-slate-400 hover:text-white";
-                admForm.classList.remove('hidden');
-                resForm.classList.add('hidden');
-            }
-        };
-
-        window.executeLogin = function(role) {
-            const errDiv = document.getElementById('login-error');
-            errDiv.classList.add('hidden');
-
-            if (role === 'admin') {
-                const passInput = document.getElementById('admin-pass-input').value;
-                if (passInput === (globalData.adminPassword || "admin123")) {
-                    currentUser = { role: 'admin', aptId: null };
-                } else {
-                    errDiv.innerText = "كلمة سر المشرف غير صحيحة!";
-                    errDiv.classList.remove('hidden');
-                    return;
-                }
-            } else {
-                const loginSelect = document.getElementById('login-apt-select');
-                const aptId = Number(loginSelect ? loginSelect.value : 1);
-                const passInput = document.getElementById('resident-pass').value;
-
-                const aptPass = globalData.passwords?.[aptId] || "1234";
-                if (passInput === aptPass) {
-                    currentUser = { role: 'resident', aptId: aptId };
-                } else {
-                    errDiv.innerText = "كلمة السر الخاصة بالشقة غير صحيحة!";
-                    errDiv.classList.remove('hidden');
-                    return;
-                }
-            }
-
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('dashboard-container').classList.remove('hidden');
-
-            setupNavigationTabs();
-            renderApp();
-        };
-
-        function setupNavigationTabs() {
-            const navContainer = document.getElementById('nav-tabs-container');
-            const badge = document.getElementById('user-role-badge');
-
-            if (currentUser.role === 'admin') {
-                badge.className = "text-[10px] bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/30 font-bold mt-1 inline-block";
-                badge.innerText = "وضع المشرف (Admin) 🛠️";
-
-                navContainer.innerHTML = `
-                    <button type="button" onclick="window.switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص العام</button>
-                    <button type="button" onclick="window.switchTab('adminCtrl')" id="tab-adminCtrl" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-amber-400 hover:bg-slate-800 font-bold">لوحة التحصيل والإدارة 🛠️</button>
-                    <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">سجل المصروفات</button>
-                    <button type="button" onclick="window.switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
-                    <button type="button" onclick="window.switchTab('passwords')" id="tab-passwords" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الباسوردات والمصروفات ⚙️</button>
-                `;
-                window.switchTab('summary');
-            } else {
-                badge.className = "text-[10px] bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/30 font-bold mt-1 inline-block";
-                badge.innerText = `حساب شقة رقم ${currentUser.aptId} 🏠`;
-
-                navContainer.innerHTML = `
-                    <button type="button" onclick="window.switchTab('summary')" id="tab-summary" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg">الملخص العام</button>
-                    <button type="button" onclick="window.switchTab('myApt')" id="tab-myApt" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">كشف حساب شقتي 🏠</button>
-                    <button type="button" onclick="window.switchTab('months')" id="tab-months" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">المصروفات</button>
-                    <button type="button" onclick="window.switchTab('cameras')" id="tab-cameras" class="tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800">الكاميرات</button>
-                `;
-                window.switchTab('myApt');
-            }
-        }
-
-        window.handleLogout = function() {
-            currentUser = null;
-            document.getElementById('dashboard-container').classList.add('hidden');
-            document.getElementById('login-container').classList.remove('hidden');
-        };
-
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-[#1e293b] text-slate-300 hover:bg-slate-800";
-            });
-
-            const contentEl = document.getElementById('content-' + tabId);
-            if (contentEl) contentEl.classList.remove('hidden');
-            
-            const activeBtn = document.getElementById('tab-' + tabId);
-            if (activeBtn) {
-                activeBtn.className = "tab-btn p-3 rounded-xl font-medium transition text-center bg-emerald-500 text-slate-950 font-bold shadow-lg";
-            }
-        };
-
-        window.onAdminAptChange = function() {
-            const aptId = Number(document.getElementById('admin-apt-select').value || 1);
-            document.querySelectorAll('.selected-apt-num-txt').forEach(e => e.innerText = aptId);
-            document.getElementById('selected-apt-label').innerText = aptId;
-            
-            const apt = globalData.apartments[aptId] || { ownerName: '' };
-            document.getElementById('admin-owner-name').value = apt.ownerName;
-
-            const camPaid = globalData.cameras.payments[aptId] || 0;
-            document.getElementById('admin-camera-pay-amount').value = camPaid;
-
-            window.loadMonthPaymentVal();
-        };
-
-        window.loadMonthPaymentVal = function() {
-            const aptId = Number(document.getElementById('admin-apt-select').value || 1);
-            const m = document.getElementById('admin-pay-month').value;
-            const yearObj = globalData.years[selectedYear] || { monthlyPayments: {} };
-            const paid = yearObj.monthlyPayments?.[aptId]?.[m] || 0;
-            document.getElementById('admin-pay-amount').value = paid;
-        };
-
-        window.saveOwnerName = async function() {
-            const aptId = Number(document.getElementById('admin-apt-select').value || 1);
-            const name = document.getElementById('admin-owner-name').value;
-            if (!globalData.apartments[aptId]) globalData.apartments[aptId] = {};
-            globalData.apartments[aptId].ownerName = name;
-            await syncData("تم تحديث اسم الساكن بنجاح! 🟢");
-        };
-
-        window.saveMonthlyPayment = async function() {
-            const aptId = Number(document.getElementById('admin-apt-select').value || 1);
-            const m = document.getElementById('admin-pay-month').value;
-            const val = Number(document.getElementById('admin-pay-amount').value);
-
-            if (!globalData.years[selectedYear]) globalData.years[selectedYear] = { monthlyPayments: {}, expenses: [] };
-            if (!globalData.years[selectedYear].monthlyPayments[aptId]) globalData.years[selectedYear].monthlyPayments[aptId] = {};
-
-            globalData.years[selectedYear].monthlyPayments[aptId][m] = val;
-            await syncData(`تم تسجيل الدفعة الشهرية لشقة ${aptId} لشهر ${m}! 💵`);
-        };
-
-        window.saveCameraPayment = async function() {
-            const aptId = Number(document.getElementById('admin-apt-select').value || 1);
-            const val = Number(document.getElementById('admin-camera-pay-amount').value);
-            globalData.cameras.payments[aptId] = val;
-            await syncData(`تم تحديث دفعة الكاميرات لشقة ${aptId}! 📷`);
-        };
-
-        window.updateCameraPaymentInline = async function(aptId) {
-            const inputVal = Number(document.getElementById(`inline-cam-${aptId}`).value);
-            globalData.cameras.payments[aptId] = inputVal;
-            await syncData(`تم تحديث دفعة كاميرات شقة ${aptId} بنجاح! 📷`);
-        };
-
-        window.updateTotalCamerasCost = async function() {
-            const val = Number(document.getElementById('input-total-cameras-cost').value);
-            globalData.cameras.totalProjectCost = val;
-            await syncData("تم تحديث إجمالي تكلفة مشروع الكاميرات بنجاح! 📷");
-        };
-
-        window.addNewExpense = async function() {
-            const month = document.getElementById('expense-month').value;
-            const desc = document.getElementById('expense-desc').value;
-            const amount = Number(document.getElementById('expense-amount').value);
-
-            if (!desc || !amount) {
-                alert("برجاء إدخال بيانات المصروف بوضوح");
-                return;
-            }
-
-            if (!globalData.years[selectedYear]) globalData.years[selectedYear] = { monthlyPayments: {}, expenses: [] };
-            if (!globalData.years[selectedYear].expenses) globalData.years[selectedYear].expenses = [];
-
-            globalData.years[selectedYear].expenses.push({ month, desc, amount, date: new Date().toLocaleDateString('ar-EG') });
-            
-            document.getElementById('expense-desc').value = '';
-            document.getElementById('expense-amount').value = '';
-            await syncData("تم تسجيل المصروف بنجاح 💸");
-        };
-
-        window.saveAdminPass = async function() {
-            const newPass = document.getElementById('new-admin-pass').value;
-            if (!newPass) return;
-            globalData.adminPassword = newPass;
-            await syncData("تم تغيير باسورد الأدمن! 🛠️");
-        };
-
-        window.updateResidentPass = async function(aptId) {
-            const val = document.getElementById(`pass-input-${aptId}`).value;
-            if (!globalData.passwords) globalData.passwords = {};
-            globalData.passwords[aptId] = val;
-            await syncData(`تم تحديث باسورد شقة ${aptId}! 🔑`);
-        };
-
-        async function syncData(msg) {
-            try {
-                localStorage.setItem('sh60_app_v2', JSON.stringify(globalData));
-                await fetch(DB_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(globalData)
-                });
-            } catch (e) {
-                console.log("حفظ محلي");
-            }
-            alert(msg);
-            renderApp();
-        }
-
-        function renderSummaryAndApp() {
-            const yearObj = globalData.years[selectedYear] || { monthlyPayments: {}, expenses: [] };
-            
-            let totalFilteredCollected = 0;
-            Object.values(yearObj.monthlyPayments || {}).forEach(aptPays => {
-                selectedFilterMonths.forEach(m => {
-                    totalFilteredCollected += Number(aptPays?.[m] || 0);
-                });
-            });
-
-            let totalFilteredExpenses = 0;
-            (yearObj.expenses || []).forEach(e => {
-                if (selectedFilterMonths.includes(e.month)) {
-                    totalFilteredExpenses += Number(e.amount || 0);
-                }
-            });
-
-            const balance = totalFilteredCollected - totalFilteredExpenses;
-            
-            document.getElementById('summary-collected').innerText = totalFilteredCollected.toLocaleString() + ' ج';
-            document.getElementById('summary-expenses').innerText = totalFilteredExpenses.toLocaleString() + ' ج';
-            document.getElementById('summary-balance').innerText = balance.toLocaleString() + ' ج';
-
-            let totalCamCollected = 0;
-            Object.values(globalData.cameras.payments || {}).forEach(v => totalCamCollected += Number(v || 0));
-            document.getElementById('summary-cameras-fund').innerText = totalCamCollected.toLocaleString() + ' ج';
-
-            const summaryTable = document.getElementById('summary-apartments-rows');
-            if (summaryTable) {
-                summaryTable.innerHTML = '';
-                const aptShareTarget = Math.round((globalData.cameras.totalProjectCost || 34300) / 24);
-
-                Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                    const aptId = Number(id);
-                    const aptPays = yearObj.monthlyPayments?.[aptId] || {};
-                    
-                    let aptFilteredPaid = 0;
-                    selectedFilterMonths.forEach(m => {
-                        aptFilteredPaid += Number(aptPays[m] || 0);
-                    });
-
-                    const camPaid = globalData.cameras.payments[aptId] || 0;
-
-                    summaryTable.innerHTML += `
-                        <tr class="hover:bg-slate-800/50">
-                            <td class="p-3 font-bold text-emerald-400">${aptId}</td>
-                            <td class="p-3 font-medium">${apt.ownerName}</td>
-                            <td class="p-3 text-emerald-400 font-bold">${aptFilteredPaid.toLocaleString()} ج</td>
-                            <td class="p-3"><span class="text-xs px-2 py-1 rounded ${camPaid >= aptShareTarget ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${camPaid} / ${aptShareTarget} ج</span></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            if (currentUser && currentUser.role === 'resident') {
-                const aptId = currentUser.aptId;
-                const apt = globalData.apartments[aptId] || { ownerName: '' };
-                document.getElementById('res-apt-title').innerText = `كشف حساب شقة رقم ${aptId} (${apt.ownerName})`;
-                
-                const camPaid = globalData.cameras.payments[aptId] || 0;
-                const aptShareTarget = Math.round((globalData.cameras.totalProjectCost || 34300) / 24);
-                const camRem = Math.max(0, aptShareTarget - camPaid);
-                document.getElementById('res-camera-paid').innerText = camPaid.toLocaleString() + ' ج';
-                document.getElementById('res-camera-rem').innerText = `المتبقي: ${camRem.toLocaleString()} ج`;
-
-                const aptPays = yearObj.monthlyPayments?.[aptId] || {};
-                let yearSum = 0;
-                Object.values(aptPays).forEach(v => yearSum += Number(v || 0));
-                document.getElementById('res-year-paid').innerText = yearSum.toLocaleString() + ' ج';
-
-                const grid = document.getElementById('res-months-grid');
-                grid.innerHTML = '';
-                allMonths.forEach(m => {
-                    const paidVal = aptPays[m] || 0;
-                    grid.innerHTML += `
-                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <span class="text-slate-400">${m}:</span>
-                            <span class="${paidVal > 0 ? 'text-emerald-400 font-bold' : 'text-slate-600'}">${paidVal} ج</span>
-                        </div>
-                    `;
-                });
-            }
-        }
-
-        window.renderExpensesList = function() {
-            const container = document.getElementById('expenses-list');
-            if(!container) return;
-            
-            const filterMonth = document.getElementById('expense-filter-month')?.value || 'ALL';
-            const yearObj = globalData.years[selectedYear] || { expenses: [] };
-            const expList = yearObj.expenses || [];
-
-            container.innerHTML = '';
-            let filtered = expList;
-            if (filterMonth !== 'ALL') {
-                filtered = expList.filter(e => e.month === filterMonth);
-            }
-
-            if (filtered.length > 0) {
-                filtered.forEach(exp => {
-                    container.innerHTML += `
-                        <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800 text-sm">
-                            <div>
-                                <span class="text-xs text-amber-400 font-bold block">${exp.month}</span>
-                                <span class="text-slate-200 font-medium">${exp.desc}</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-rose-400 font-bold block">${exp.amount.toLocaleString()} ج</span>
-                                <span class="text-[10px] text-slate-500">${exp.date || ''}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                container.innerHTML = `<div class="text-xs text-slate-500 text-center p-4">لا توجد مصروفات مسجلة لـ ${filterMonth === 'ALL' ? 'هذه السنة' : filterMonth}</div>`;
-            }
-        };
-
-        function renderCamerasTable() {
-            const container = document.getElementById('cameras-table-rows');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            const totalCost = globalData.cameras.totalProjectCost || 34300;
-            const aptShareTarget = Math.round(totalCost / 24);
-            
-            let totalCollected = 0;
-            let totalRem = 0;
-
-            const isAdmin = currentUser && currentUser.role === 'admin';
-
-            Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                const aptId = Number(id);
-                const paid = globalData.cameras.payments[aptId] || 0;
-                const rem = Math.max(0, aptShareTarget - paid);
-                
-                totalCollected += paid;
-                totalRem += rem;
-
-                let paidColumnHTML = '';
-                if (isAdmin) {
-                    paidColumnHTML = `
-                        <div class="flex gap-2 items-center">
-                            <input type="number" id="inline-cam-${aptId}" value="${paid}" class="bg-slate-800 text-emerald-400 font-bold p-1.5 rounded border border-slate-700 w-28 text-center text-xs">
-                            <button type="button" onclick="window.updateCameraPaymentInline(${aptId})" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2.5 py-1.5 rounded text-[10px] transition">حفظ</button>
-                        </div>
-                    `;
-                } else {
-                    paidColumnHTML = `<span class="text-emerald-400 font-bold">${paid.toLocaleString()} ج</span>`;
-                }
-
-                container.innerHTML += `
-                    <tr class="hover:bg-slate-800/50">
-                        <td class="p-3 font-bold text-emerald-400">${aptId}</td>
-                        <td class="p-3">${apt.ownerName}</td>
-                        <td class="p-3">${paidColumnHTML}</td>
-                        <td class="p-3 ${rem === 0 ? 'text-slate-500' : 'text-rose-400 font-bold'}">${rem.toLocaleString()} ج</td>
-                    </tr>
-                `;
-            });
-
-            const targetContainer = document.getElementById('cam-box-target-container');
-            if (isAdmin) {
-                targetContainer.innerHTML = `
-                    <div class="flex gap-2 mt-1">
-                        <input type="number" id="input-total-cameras-cost" value="${totalCost}" class="w-full bg-slate-800 text-amber-400 font-bold p-1.5 rounded border border-slate-700 text-sm">
-                        <button type="button" onclick="window.updateTotalCamerasCost()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded text-xs transition whitespace-nowrap">حفظ</button>
-                    </div>
-                `;
-            } else {
-                targetContainer.innerHTML = `<div class="text-lg font-bold text-amber-400">${totalCost.toLocaleString()} ج (نصيب الشقة: ${aptShareTarget} ج)</div>`;
-            }
-
-            document.getElementById('cam-box-collected').innerText = totalCollected.toLocaleString() + ' ج';
-            document.getElementById('cam-box-remaining').innerText = totalRem.toLocaleString() + ' ج';
-        }
-
-        function renderPasswordsList() {
-            const container = document.getElementById('passwords-list-container');
-            if(!container) return;
-            container.innerHTML = '';
-
-            Object.entries(globalData.apartments).forEach(([id, apt]) => {
-                const pass = globalData.passwords?.[id] || "1234";
-                container.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl text-xs gap-2 border border-slate-800">
-                        <span class="font-bold text-emerald-400 w-36">شقة ${id} (${apt.ownerName})</span>
-                        <input type="text" id="pass-input-${id}" value="${pass}" class="bg-slate-800 text-white p-2 rounded border border-slate-700 w-24 text-center font-bold">
-                        <button type="button" onclick="window.updateResidentPass(${id})" class="bg-emerald-500 text-slate-950 font-bold px-3 py-2 rounded-lg transition">تحديث</button>
-                    </div>
-                `;
-            });
-        }
-
-        function renderApp() {
-            populateStaticDropdowns();
-            renderMonthFilterCheckboxes();
-            renderSummaryAndApp();
-            renderExpensesList();
-            renderCamerasTable();
-            renderPasswordsList();
-            if (currentUser && currentUser.role === 'admin') {
-                window.onAdminAptChange();
-            }
-        }
-
-        async function loadInitialData() {
-            populateStaticDropdowns();
-            const local = localStorage.getItem('sh60_app_v2');
-            if (local) {
-                try { globalData = JSON.parse(local); } catch (e) {}
-            }
-            renderApp();
-        }
-
-        window.onload = function() {
-            loadInitialData();
-        };
-    </script>
+  </div>
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const DB = "https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app";
+const N = 24;
+const MONTHS = ["يناير","فبراير","مارس","إبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+/* ---------- بيانات الشيت الأصلية (تُستخدم لو القاعدة فاضية أو عند الاستعادة) ---------- */
+function makeSeed(){
+  const names=["السيد كرم الدين","(فارغ)","أحمد محمد عبدالرحمن","هاني محمود حسين","أسماء صلاح حسن","إيمان إبراهيم محمود","أحمد يوسف حسن","أحمد ناصر","أميرة محمد فاروق","شريف صلاح الدين","منى محمود نجيب","لبيب أنور","أحمد فتحي محمد","إسلام عماد الدين","نهى حسين حافظ أمين","مصطفى أمدين","(فارغ)","أحمد ربيع شوقي","محمد أحمد عبد الفتاح","أماني محمد مصطفى","أحمد سمير","(فارغ)","عادل عبد الرازق","عاطف محمد صادق"];
+  const apartments={};names.forEach((n,i)=>apartments[i+1]={ownerName:n});
+  const mp={},pd={};
+  const add=(m,i,v,d)=>{(mp[i]??={})[m]=v;if(d)(pd[i]??={})[m]=d};
+  [3,5,6,8,10,11,16,18,19,23].forEach(i=>add("يوليو",i,160));
+  [3,5,8,10,11,16,18,19,23].forEach(i=>add("أغسطس",i,180));add("أغسطس",6,160);
+  [3,5,6,8,10,11,14,16,18,19,23].forEach(i=>{add("سبتمبر",i,180);add("أكتوبر",i,180)});
+  [3,5,6,8,11,14,18,20,23].forEach(i=>add("نوفمبر",i,180));
+  const D=(m,i,d)=>(pd[i]??={})[m]=d;
+  D("أكتوبر",5,"2026-10-05");D("أكتوبر",8,"2026-10-04");D("أكتوبر",14,"2026-10-15");D("أكتوبر",16,"2026-10-10");
+  [3,5,8,11,18,20].forEach(i=>D("نوفمبر",i,"2026-11-01"));D("نوفمبر",6,"2026-10-22");D("نوفمبر",14,"2026-10-15");D("نوفمبر",23,"2026-09-30");
+  const cp={},cd={},cdates={1:"2026-09-21",3:"2026-10-01",4:"2026-10-02",5:"2026-10-15",6:"2026-09-24",7:"2026-10-09",8:"2026-10-04",9:"2026-09-30",11:"2026-10-01",13:"2026-11-03",18:"2026-09-19",20:"2026-11-01",23:"2026-10-01"};
+  Object.keys(cdates).forEach(i=>{cp[i]=1430;cd[i]=cdates[i]});
+  const E=(month,desc,amount,date)=>({month,desc,amount,date});
+  const list=[E("يوليو","نظافة السلم",1400,""),E("يوليو","صيانة كهرباء الانتركم",200,"2026-07-29"),
+    E("أغسطس","نظافة السلم وتنظيف حوالين العمارة",600,"2026-08-29"),
+    E("سبتمبر","نظافة السلم وتنظيف حوالين العمارة",400,"2026-09-10"),E("سبتمبر","نباتات لمدخل العمارة",1100,"2026-09-14"),E("سبتمبر","5 شجيرات",680,"2026-09-20"),E("سبتمبر","تكلفة زرع الشجيرات",300,"2026-09-20"),
+    E("أكتوبر","نظافة السلم وتنظيف حوالين العمارة",600,"2026-10-01"),E("أكتوبر","سقي الزرع",500,"2026-10-08"),E("أكتوبر","نظافة السلم",400,"2026-10-13"),E("أكتوبر","نظافة السلم (كاش)",400,"2026-10-23"),
+    E("نوفمبر","سقي الزرع",500,"2026-11-02")];
+  const expenses={};list.forEach((e,i)=>expenses["e"+String(i+1).padStart(3,"0")]=e);
+  return {adminPassword:"admin123",monthlyDue:180,passwords:{},apartments,
+    cameras:{perApt:1430,payments:cp,dates:cd},
+    years:{"2026":{monthlyPayments:mp,payDates:pd,expenses}}};
+}
+
+/* ---------- حالة التطبيق ---------- */
+let G=null,U=null,Y="2026",tab="sum",selM=MONTHS[new Date().getMonth()],expF="ALL",flt=new Set();
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>Number(v||0).toLocaleString("en-US");
+const fd=d=>d?d.slice(8,10)+"/"+d.slice(5,7)+"/"+d.slice(0,4):"—";
+const today=()=>new Date().toISOString().slice(0,10);
+const isA=()=>U&&U.role==="admin";
+
+/* ---------- الوصول لـ Firebase ---------- */
+const url=p=>DB+"/"+p.split("/").filter(Boolean).map(encodeURIComponent).join("/")+".json";
+async function api(p,method="GET",body){
+  const r=await fetch(url(p),{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.json();
+}
+function setLocal(path,v){
+  const k=path.split("/");let o=G;
+  k.slice(0,-1).forEach(s=>o=o[s]??(o[s]={}));
+  if(v===null)delete o[k[k.length-1]];else o[k[k.length-1]]=v;
+}
+/* كتابة آمنة: تعديل مسارات محددة فقط (لا نكتب فوق القاعدة كلها) */
+async function upd(o,msg){
+  try{await api("","PATCH",o);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
+  catch(e){toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1)}
+  render();
+}
+async function load(){
+  let d=await api("");
+  if(!d){d=makeSeed();await api("","PUT",d)}
+  G=d;G.apartments??={};G.passwords??={};G.cameras??={};G.cameras.payments??={};G.cameras.dates??={};G.years??={};
+}
+async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){toast("تعذر الاتصال بقاعدة البيانات",1)}}
+
+/* ---------- قراءة البيانات ---------- */
+const due=()=>Number(G.monthlyDue||180), share=()=>Number(G.cameras?.perApt||1430);
+const apt=i=>G.apartments?.[i]?.ownerName||"—";
+const pay=(i,m)=>Number(G.years?.[Y]?.monthlyPayments?.[i]?.[m]||0);
+const pdate=(i,m)=>G.years?.[Y]?.payDates?.[i]?.[m]||"";
+const camPaid=i=>Number(G.cameras?.payments?.[i]||0);
+const exps=()=>Object.entries(G.years?.[Y]?.expenses||{}).filter(([,e])=>e).map(([id,e])=>({id,...e}))
+  .sort((a,b)=>MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month)||(a.date||"").localeCompare(b.date||""));
+function initFlt(){
+  flt=new Set();
+  MONTHS.forEach(m=>{
+    const hasPay=Object.values(G.years?.[Y]?.monthlyPayments||{}).some(a=>a&&a[m]);
+    if(hasPay||exps().some(e=>e.month===m))flt.add(m);
+  });
+}
+const badge=(p,d)=>p>=d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
+function toast(t,bad){const e=$("#toast");e.textContent=t;e.className="show"+(bad?" bad":"");clearTimeout(toast.t);toast.t=setTimeout(()=>e.className="",2600)}
+
+/* ---------- الدخول والخروج ---------- */
+function loginTab(t){
+  $("#lt-r").className=t==="r"?"on":"";$("#lt-a").className=t==="a"?"on":"";
+  $("#lf-r").hidden=t!=="r";$("#lf-a").hidden=t!=="a";$("#err").textContent="";
+}
+function login(role){
+  const e=$("#err");e.textContent="";
+  if(role==="admin"){
+    if($("#ap").value!==(G.adminPassword||"admin123"))return e.textContent="كلمة سر المشرف غير صحيحة";
+    U={role:"admin"};
+  }else{
+    const i=Number($("#ls").value);
+    if($("#rp").value!==(G.passwords?.[i]||"1234"))return e.textContent="كلمة السر غير صحيحة";
+    U={role:"resident",apt:i};
+  }
+  sessionStorage.setItem("b60u",JSON.stringify(U));
+  enter();
+}
+function enter(){
+  $("#login").hidden=true;$("#app").hidden=false;
+  tab=isA()?"sum":"me";initFlt();render();
+}
+function logout(){U=null;sessionStorage.removeItem("b60u");$("#app").hidden=true;$("#login").hidden=false;$("#ap").value=$("#rp").value=""}
+
+/* ---------- العرض ---------- */
+function go(k){tab=k;render();scrollTo(0,0)}
+function render(){
+  if(!G||!U)return;
+  const T=isA()?[["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","الكاميرات"],["adm","الإدارة ⚙️"]]
+              :[["me","شقتي 🏠"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","الكاميرات"]];
+  if(!T.some(t=>t[0]===tab))tab=T[0][0];
+  $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${l}</button>`).join("");
+  $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
+  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe})[tab]();
+}
+
+/* --- الملخص --- */
+function togM(m){flt.has(m)?flt.delete(m):flt.add(m);render()}
+function allM(on){flt=on?new Set(MONTHS):new Set();render()}
+function vSum(){
+  const ms=MONTHS.filter(m=>flt.has(m)),d=due();let c=0,rows="";
+  for(let i=1;i<=N;i++){
+    const p=ms.reduce((s,m)=>s+pay(i,m),0),need=d*ms.length,cp=camPaid(i);c+=p;
+    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp>=share()?'<b class="bd ok">مدفوع</b>':`<b class="bd no">${num(cp)} / ${num(share())}</b>`}</td></tr>`;
+  }
+  const x=exps().filter(e=>flt.has(e.month)).reduce((s,e)=>s+Number(e.amount||0),0);
+  const cam=Array.from({length:N},(_,k)=>camPaid(k+1)).reduce((a,b)=>a+b,0);
+  return `<div class="card"><div class="top"><h3>🗓️ الشهور المحسوبة</h3><div class="row"><button class="chip" onclick="allM(true)">الكل</button><button class="chip" onclick="allM(false)">لا شيء</button></div></div>
+    <div class="chips">${MONTHS.map(m=>`<button class="chip ${flt.has(m)?"on":""}" onclick="togM('${m}')">${m}</button>`).join("")}</div></div>
+  <div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b></div>
+    <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(c)} ج</b></div>
+    <div class="card"><span class="mu">المصروفات</span><b style="color:var(--am)">${num(x)} ج</b></div>
+    <div class="card"><span class="mu">صندوق الكاميرات (مستقل)</span><b style="color:var(--bl)">${num(cam)} ج</b></div></div>
+  <div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>الكاميرات</th></tr>${rows}</table></div></div>`;
+}
+
+/* --- التحصيل الشهري (مع تاريخ الدفع) --- */
+function vMonth(){
+  const A=isA(),d=due();let c=0,rows="";
+  for(let i=1;i<=N;i++){
+    const p=pay(i,selM),dt=pdate(i,selM);c+=p;
+    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
+      <td>${A?`<input type="number" min="0" id="pa-${i}" value="${p||""}" placeholder="0">`:num(p)}</td>
+      <td>${A?`<input type="date" id="pd-${i}" value="${dt}">`:fd(dt)}</td><td>${badge(p,d)}</td>
+      ${A?`<td><button class="btn" onclick="savePay(${i})">حفظ</button></td>`:""}</tr>`;
+  }
+  return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
+  <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*N)} ج</span></div>
+  ${A?'<div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ ثم اضغط حفظ. لو التاريخ فاضي بيتسجل تاريخ اليوم. مسح المبلغ = إلغاء الدفعة.</div>':""}
+  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th>${A?"<th></th>":""}</tr>${rows}</table></div></div>`;
+}
+function savePay(i){
+  const v=Math.max(0,Number($("#pa-"+i).value)||0),dt=$("#pd-"+i).value||today(),b=`years/${Y}/`;
+  const pa=`${b}monthlyPayments/${i}/${selM}`,pd=`${b}payDates/${i}/${selM}`;
+  upd(v?{[pa]:v,[pd]:dt}:{[pa]:null,[pd]:null},v?`تم تسجيل دفعة شقة ${i} ✓`:`تم إلغاء دفعة شقة ${i}`);
+}
+
+/* --- المصروفات --- */
+function vExp(){
+  const A=isA(),list=exps().filter(e=>expF==="ALL"||e.month===expF),tot=list.reduce((s,e)=>s+Number(e.amount||0),0);
+  const rows=list.map(e=>`<tr><td>${esc(e.month)}</td><td style="white-space:normal">${esc(e.desc)}</td><td class="neg">${num(e.amount)} ج</td><td>${fd(e.date)}</td>${A?`<td><button class="btn gh" onclick="delExp('${e.id}')">حذف</button></td>`:""}</tr>`).join("")
+    ||`<tr><td colspan="5" class="mu" style="text-align:center;padding:16px">لا توجد مصروفات</td></tr>`;
+  const form=A?`<div class="card"><h3>➕ تسجيل مصروف جديد</h3><div class="row">
+    <select id="xm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
+    <input id="xd" placeholder="وصف المصروف" style="flex:1;min-width:160px"><input id="xa" type="number" min="0" placeholder="المبلغ" style="width:110px"><input id="xt" type="date" value="${today()}">
+    <button class="btn am" onclick="addExp()">إضافة</button></div></div>`:"";
+  return form+`<div class="card"><div class="top"><h3>سجل مصروفات ${Y}</h3>
+    <select onchange="expF=this.value;render()"><option value="ALL">كل الشهور</option>${MONTHS.map(m=>`<option ${m===expF?"selected":""}>${m}</option>`).join("")}</select></div>
+    <div class="tw"><table><tr><th>الشهر</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th>${A?"<th></th>":""}</tr>${rows}</table></div>
+    <div style="margin-top:8px">الإجمالي: <b class="neg">${num(tot)} ج</b></div></div>`;
+}
+function addExp(){
+  const desc=$("#xd").value.trim(),amount=Number($("#xa").value);
+  if(!desc||!(amount>0))return toast("اكتب وصف المصروف والمبلغ",1);
+  const id="e"+Date.now().toString(36);
+  upd({[`years/${Y}/expenses/${id}`]:{month:$("#xm").value,desc,amount,date:$("#xt").value||today()}},"تم تسجيل المصروف ✓");
+}
+function delExp(id){if(confirm("تأكيد حذف المصروف؟"))upd({[`years/${Y}/expenses/${id}`]:null},"تم حذف المصروف")}
+
+/* --- الكاميرات --- */
+function vCam(){
+  const A=isA(),s=share();let col=0,rows="";
+  for(let i=1;i<=N;i++){
+    const p=camPaid(i),dt=G.cameras?.dates?.[i]||"";col+=p;
+    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
+      <td>${A?`<input type="number" min="0" id="ca-${i}" value="${p||""}" placeholder="0">`:num(p)+" ج"}</td>
+      <td>${A?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
+      <td class="${p>=s?"":"neg"}">${num(Math.max(0,s-p))} ج</td>${A?`<td><button class="btn" onclick="saveCam(${i})">حفظ</button></td>`:""}</tr>`;
+  }
+  return `<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
+    <div class="card"><span class="mu">إجمالي المطلوب</span><b>${num(s*N)} ج</b></div>
+    <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
+    <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,s*N-col))} ج</b></div></div>
+  <div class="card"><h3>📷 دفعات مشروع الكاميرات (مستقلة عن الصندوق الشهري)</h3>
+  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th>${A?"<th></th>":""}</tr>${rows}</table></div></div>`;
+}
+function saveCam(i){
+  const v=Math.max(0,Number($("#ca-"+i).value)||0),dt=$("#cd-"+i).value||today();
+  upd(v?{[`cameras/payments/${i}`]:v,[`cameras/dates/${i}`]:dt}:{[`cameras/payments/${i}`]:null,[`cameras/dates/${i}`]:null},`تم تحديث كاميرات شقة ${i} ✓`);
+}
+
+/* --- كشف حساب الساكن --- */
+function vMe(){
+  const i=U.apt,d=due();let tot=0;
+  const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
+    return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div></div>`}).join("");
+  const cp=camPaid(i),cdt=G.cameras?.dates?.[i]||"";
+  return `<div class="card"><h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
+  <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
+  <div class="card"><span class="mu">الكاميرات</span><b class="${cp>=share()?"pos":"neg"}">${num(cp)} / ${num(share())} ج</b><span class="mu">${cp?"آخر دفعة: "+fd(cdt):"لم يتم الدفع"}</span></div></div>
+  <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
+}
+
+/* --- الإدارة --- */
+function vAdm(){
+  const rows=Array.from({length:N},(_,k)=>k+1).map(i=>`<tr><td>${i}</td>
+    <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}" style="width:190px"></td>
+    <td><input id="pw-${i}" value="${esc(G.passwords?.[i]||"")}" placeholder="1234" style="width:100px"></td>
+    <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
+  return `<div class="card"><h3>⚙️ الإعدادات العامة</h3><div class="row">
+    <label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label>
+    <label>نصيب الشقة في الكاميرات <input id="s-cam" type="number" value="${share()}" style="width:100px"></label>
+    <label>كلمة سر المشرف <input id="s-ap" placeholder="اتركها فارغة لو مش هتغيّرها" style="width:230px"></label>
+    <button class="btn am" onclick="saveSet()">حفظ الإعدادات</button></div></div>
+  <div class="card"><h3>👥 أسماء الملاك وكلمات سر الشقق</h3><div class="tw"><table><tr><th>شقة</th><th>الاسم</th><th>كلمة السر</th><th></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>🧰 صيانة البيانات</h3><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
+  <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
+}
+function saveApt(i){upd({[`apartments/${i}/ownerName`]:$("#on-"+i).value.trim(),[`passwords/${i}`]:$("#pw-"+i).value.trim()||null},`تم حفظ شقة ${i} ✓`)}
+function saveSet(){
+  const o={monthlyDue:Number($("#s-due").value)||180,"cameras/perApt":Number($("#s-cam").value)||1430};
+  const p=$("#s-ap").value.trim();if(p)o.adminPassword=p;
+  upd(o,"تم حفظ الإعدادات ✓");
+}
+async function reseed(){
+  if(!confirm("هيتم استبدال كل بيانات قاعدة البيانات ببيانات الشيت الأصلية. متأكد؟"))return;
+  try{G=makeSeed();await api("","PUT",G);initFlt();render();toast("تمت استعادة البيانات ✓")}
+  catch(e){toast("تعذر الاستعادة",1)}
+}
+
+/* ---------- التشغيل ---------- */
+(async()=>{
+  try{
+    await load();
+    $("#ls").innerHTML=Array.from({length:N},(_,k)=>`<option value="${k+1}">شقة ${k+1} - ${esc(apt(k+1))}</option>`).join("");
+    $("#ld").hidden=true;
+    const s=sessionStorage.getItem("b60u");if(s){try{U=JSON.parse(s);enter()}catch(e){}}
+  }catch(e){
+    $("#ld").innerHTML='<span style="color:var(--rd)">تعذر الاتصال بقاعدة البيانات. تأكد من الإنترنت وقواعد Firebase ثم حدّث الصفحة.</span>';
+  }
+})();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&U&&!document.activeElement?.matches("input"))reload()});
+</script>
 </body>
 </html>
