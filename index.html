@@ -220,7 +220,7 @@ async function load(){
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
 /* ---------- قراءة البيانات ---------- */
-const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.perApt||0),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0);
+const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
 const isEmpty=i=>{const a=G.apartments?.[i]||{},n=(a.ownerName||"").trim();return a.vacant===true||!n||n==="(فارغ)"};
 const nAct=()=>Array.from({length:N},(_,k)=>k+1).filter(i=>!isEmpty(i)).length;
@@ -434,9 +434,9 @@ let selP=null;
 function vCam(){
   const A=isA(),L=prj();
   if(!L.some(x=>x.id===selP))selP=(L.find(x=>!x.closed)||L[0])?.id;
-  const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed,na=nAct();let col=0,rows="";
+  const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed,na=p?(Array.isArray(p.eligibleApts)?p.eligibleApts.length:nAct()):0;let col=0,rows="";
   if(p)for(let i=1;i<=N;i++){
-    if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td><td></td></tr>`;continue}
+    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>غير مستحق</td><td>—</td><td>—</td><td></td></tr>`;continue}
     const v=pp(p,i),dt=p.dates?.[i]||"",f=p.files?.[i];col+=v;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td>
       <td>${ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
@@ -444,14 +444,14 @@ function vCam(){
       <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
       <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
   }
-  const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="0" placeholder="نصيب الشقة" style="width:120px"><button class="btn am" onclick="addPrj()">إنشاء</button></div></div>`:"";
+  const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
   const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
   const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
-    <div class="card"><span class="mu">إجمالي المطلوب (${na} شقة)</span><b>${num(s*na)} ج</b></div>
+    <div class="card"><span class="mu">إجمالي المطلوب (${na} شقة)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
-    <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,s*na-col))} ج</b></div></div>
+    <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
     <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
-    ${ed?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:""}
+    ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">تم تثبيت الشقق المستحقة وقت إنشاء المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه (قد يظهر فرق قروش بسبب التقسيم).</div>`:""}
     <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
@@ -463,9 +463,12 @@ async function savePrj(i){
   upd(o,`${nm}: شقة ${i} - ${num(v)} ج ✓`);
 }
 function addPrj(){
-  const name=$("#pn").value.trim(),perApt=Number($("#ps").value);
-  if(!name||!(perApt>0))return toast("اكتب اسم المشروع ونصيب الشقة",1);
-  const id="p"+Date.now().toString(36);selP=id;upd({[`projects/${id}`]:{name,perApt}},`مشروع جديد: ${name} ✓`);
+  const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
+  if(!name||!(totalCost>0)||!Number.isFinite(totalCost))return toast("اكتب اسم المشروع وتكلفة صحيحة",1);
+  const eligibleApts=Array.from({length:N},(_,k)=>k+1).filter(i=>!isEmpty(i));
+  if(!eligibleApts.length)return toast("مفيش شقق مقيمة لتوزيع التكلفة عليها",1);
+  const perApt=totalCost/eligibleApts.length,id="p"+Date.now().toString(36);
+  selP=id;upd({[`projects/${id}`]:{name,totalCost,eligibleApts,perApt,createdAt:today(),closed:false}},`مشروع جديد: ${name} - نصيب الشقة ${num(perApt)} ج ✓`);
 }
 function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
@@ -476,11 +479,12 @@ function vMe(){
     return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div></div>`}).join("");
   return `<div class="card"><h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
   <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
-  ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${pp(q,i)>=share(q)?"pos":"neg"}">${num(pp(q,i))} / ${num(share(q))} ج</b></div>`).join("")}</div>
+  ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${!eligible(q,i)?"mu":pp(q,i)>=share(q)?"pos":"neg"}">${eligible(q,i)?`${num(pp(q,i))} / ${num(share(q))} ج`:"غير مستحق"}</b></div>`).join("")}</div>
   <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
 }
 
 function savePrjShare(){
+  const p=G.projects[selP];if(Array.isArray(p?.eligibleApts))return toast("نصيب المشروع مثبت ولا يمكن تغييره",1);
   const v=Number($("#psh").value);if(!(v>0))return toast("اكتب نصيب صحيح",1);
   upd({[`projects/${selP}/perApt`]:v},`نصيب ${G.projects[selP].name}: ${num(v)} ج ✓`);
 }
