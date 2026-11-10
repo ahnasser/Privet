@@ -58,9 +58,12 @@ tbody tr:hover td{background:color-mix(in srgb,var(--ac) 4%,transparent)}
 [data-t=light] .btn,[data-t=light] nav button.on,[data-t=light] .chip.on,[data-t=light] .tabs button.on{color:#fff}
 [data-t=light] .btn.gh{color:var(--rd)}
 .em{opacity:.5}
-table.adm{table-layout:fixed}
-table.adm td,table.adm th{padding:6px 4px}
-table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px}
+table.adm{table-layout:fixed;min-width:0;width:100%}
+table.adm td,table.adm th{padding:5px 3px;overflow:hidden}
+table.adm input,table.adm select{width:100%!important;min-width:0;padding:6px 5px;font-size:12px}
+table.adm .admin-actions{display:grid;gap:5px;min-width:0}
+table.adm .admin-actions .btn{width:100%;padding:5px 4px;font-size:11px;line-height:1.35;white-space:normal;box-shadow:none}
+table.adm th:last-child{width:112px}
 @media(max-width:640px){
  body{padding:8px}
  .card{border-radius:16px;padding:13px}
@@ -235,7 +238,7 @@ theme(localStorage.getItem("b60t")||(matchMedia("(prefers-color-scheme: light)")
 const url=p=>DB+"/"+p.split("/").filter(Boolean).map(encodeURIComponent).join("/")+".json";
 async function apiRaw(p,method="GET",body,q=""){
   const t=await tok(),r=await fetch(url(p)+(q?q+"&":"?")+"auth="+t+(EMU?"&ns=demo-bu60-default-rtdb":""),{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
-  if(!r.ok)throw new Error("HTTP "+r.status);
+  if(!r.ok){let detail="";try{const j=await r.json();detail=j?.error||""}catch(_){}throw new Error("HTTP "+r.status+(detail?": "+detail:""))}
   return r.json();
 }
 function setLocal(path,v){
@@ -606,10 +609,9 @@ function vAdm(){
     <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
     <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="المالك 01001234567"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="المستأجر (اختياري)" style="margin-top:4px"></td>
     <td><select id="st-${i}"><option value="occ" ${isEmpty(i)?"":"selected"}>مقيمة</option><option value="vac" ${isEmpty(i)?"selected":""}>غير مقيمة</option></select></td>
-    <td><input id="sn-${i}" type="month" value="${sinceOf(i)}"></td>
-    <td><button class="btn" onclick="saveApt(${i})">حفظ</button><button class="btn gh" style="color:var(--tx);margin-top:5px" onclick="createApartmentPassword(${i})">إنشاء/إعادة كلمة مرور</button></td></tr>`).join("");
+    <td><div class="admin-actions"><button class="btn" onclick="saveApt(${i})">حفظ</button><button class="btn gh" style="color:var(--tx)" onclick="createApartmentPassword(${i})">إنشاء / إعادة كلمة المرور</button></div></td></tr>`).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من الحسابات. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). زر «إنشاء/إعادة كلمة مرور» ينشئ كلمة مرور مؤقتة ويعرضها مرة واحدة؛ سلّمها للساكن بأمان، وسيُطلب منه تغييرها أول دخول. رقم الواتساب يظهر للمشرف فقط.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:17%">الاسم</th><th>إيميل الدخول</th><th style="width:15%">واتساب</th><th style="width:12%">الحالة</th><th style="width:14%">تُحسب من</th><th style="width:150px">حساب الدخول</th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من الحسابات. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). زر «إنشاء/إعادة كلمة مرور» ينشئ كلمة مرور مؤقتة ويعرضها مرة واحدة؛ سلّمها للساكن بأمان، وسيُطلب منه تغييرها أول دخول. رقم الواتساب يظهر للمشرف فقط.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:17%">الاسم</th><th>إيميل الدخول</th><th style="width:15%">واتساب</th><th style="width:12%">الحالة</th><th style="width:112px">كلمة المرور</th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
@@ -626,7 +628,6 @@ function saveApt(i){
   o[`phones/${i}`]=ph||null;o[`tenantPhones/${i}`]=pt||null;
   o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
   o[`apartments/${i}/vacant`]=$("#st-"+i).value==="vac"?true:null;
-  o[`apartments/${i}/since`]=$("#sn-"+i).value||null;
   upd(o,`تحديث بيانات شقة ${i} ✓`);
 }
 async function createApartmentPassword(i){
@@ -638,7 +639,12 @@ async function createApartmentPassword(i){
     const password=r.data?.temporaryPassword;
     if(!password)throw new Error("لم تصل كلمة المرور من الخادم");
     openMo(`<h3>تم إنشاء كلمة مرور مؤقتة للشقة ${i}</h3><p class="mu">انسخها وسلّمها للساكن عبر قناة آمنة. لن تظهر مرة أخرى بعد إغلاق النافذة.</p><div style="direction:ltr;text-align:center;font-size:22px;font-weight:700;letter-spacing:2px;background:var(--in);padding:14px;border-radius:12px;user-select:all">${esc(password)}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="navigator.clipboard.writeText('${password}').then(()=>toast('تم نسخ كلمة المرور'))">نسخ كلمة المرور</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إغلاق</button></div>`);
-  }catch(e){console.error(e);toast("تعذر إنشاء كلمة المرور: "+(e.message||e),1)}
+  }catch(e){
+    console.error("setApartmentTemporaryPassword failed",{code:e.code,message:e.message,details:e.details});
+    const code=String(e.code||"").replace(/^functions\//,"");
+    const friendly={"unauthenticated":"جلسة المشرف انتهت؛ سجّل الدخول مرة أخرى","permission-denied":"الحساب الحالي ليس ضمن قائمة المشرفين المسموح لهم","not-found":"دالة إنشاء كلمة المرور غير منشورة في Firebase","failed-precondition":"الشقة غير مقيمة أو بياناتها غير مكتملة","unavailable":"خدمة Functions غير متاحة حاليًا"};
+    toast("تعذر إنشاء كلمة المرور: "+(friendly[code]||e.message||code||"خطأ غير معروف"),1);
+  }
 }
 function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
 async function reseed(){
@@ -764,7 +770,7 @@ async function rulesTest(){
 
 /* ---------- حالة الاتصال + النوافذ المنبثقة + إيصال الاستلام + النسخ الاحتياطي ---------- */
 function setNet(ok){const e=$("#net");if(e){e.textContent=ok?"● قاعدة البيانات متصلة":"● غير متصل";e.className="bd "+(ok?"ok":"no")}}
-async function api(...a){try{const r=await apiRaw(...a);setNet(true);return r}catch(e){setNet(!(e instanceof TypeError));throw e}}
+async function api(...a){try{const r=await apiRaw(...a);setNet(true);return r}catch(e){setNet(false);throw e}}
 function openMo(html){$("#mb").innerHTML=html;$("#mo").hidden=false}
 function closeMo(){$("#mo").hidden=true;$("#mb").innerHTML=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMo()});
