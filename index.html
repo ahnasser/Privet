@@ -389,6 +389,7 @@ function donutChart(title,subtitle,paid,total){
 
 function vSum(){
   const ms=MONTHS.filter(m=>flt.has(m)),d=due(),AP=prj().filter(q=>!q.closed);let c=0,rows="",okN=0,lateN=0;
+    const rented=ALLN().filter(i=>statusOf(i)==="rent").length,vacant=ALLN().filter(i=>statusOf(i)==="vac").length,occupied=ALLN().filter(i=>statusOf(i)==="occ").length;
   for(let i=1;i<=N&&isA();i++){
     if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td></tr>`;continue}
     const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=d*am.length,cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;if(need>0){if(need-p<=0)okN++;else lateN++}
@@ -413,7 +414,7 @@ function vSum(){
   </div>`;
   return `<div class="card"><div class="top"><h3>🗓️ الشهور المحسوبة</h3><div class="row"><button class="chip" onclick="allM(true)">الكل</button><button class="chip" onclick="allM(false)">لا شيء</button></div></div>
     <div class="chips">${MONTHS.map(m=>`<button class="chip ${flt.has(m)?"on":""}" onclick="togM('${m}')">${m}</button>`).join("")}</div></div>
-  <div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b><span class="cap">صافي التحصيلات بعد المصروفات</span></div>
+  <div class="g"><div class="card"><span class="mu">🏠 إجمالي الشقق</span><b>24</b></div><div class="card"><span class="mu">🟢 مقيمة</span><b>${occupied}</b></div><div class="card"><span class="mu">🟠 مستأجرة</span><b>${rented}</b></div><div class="card"><span class="mu">⚫ غير مقيمة</span><b>${vacant}</b></div></div><div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b><span class="cap">صافي التحصيلات بعد المصروفات</span></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(c)} ج</b><span class="cap">من مستهدف ${num(tg)} ج (${tg?Math.round(c/tg*100):0}%)</span></div>
     <div class="card"><span class="mu">المصروفات</span><b style="color:var(--am)">${num(x)} ج</b><span class="cap">${xn} بنود وفواتير صيانة</span></div>
     <div class="card"><span class="mu">المشاريع الخاصة (مستقلة)</span><b style="color:var(--bl)">${num(cam)} ج</b><span class="cap">صندوق مستقل لأعمال التطوير</span></div></div>
