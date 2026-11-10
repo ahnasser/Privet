@@ -62,6 +62,7 @@ tbody tr:hover td{background:color-mix(in srgb,var(--ac) 4%,transparent)}
 table.adm{table-layout:fixed}
 table.adm td,table.adm th{padding:6px 4px}
 table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px}
+.tenant-box{display:flex;flex-direction:column;gap:6px;width:100%}.tenant-box input{width:100%!important}.adm td:nth-child(4){min-width:260px}.prj-part{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin:10px 0}
 @media(max-width:640px){
  body{padding:8px}
  .card{border-radius:16px;padding:13px}
@@ -485,7 +486,7 @@ function vCamAdmin(){
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
     <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
     <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
-    ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">تم تثبيت الشقق المستحقة وقت إنشاء المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه (قد يظهر فرق قروش بسبب التقسيم).</div>`:""}
+    ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">تم تثبيت الشقق المستحقة وقت إنشاء المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه (قد يظهر فرق قروش بسبب التقسيم).</div><button class="btn am" onclick="managePrjApts()">⚙ إدارة المشاركين</button>`:""}
     <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
@@ -498,6 +499,8 @@ async function savePrj(i){
 }
 function selAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=true)}
 function unselAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=false)}
+function managePrjApts(){const p=G.projects[selP];let html=`<h3>إدارة المشاركين</h3><div class="prj-part">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="mpa" value="${i}" ${p.eligibleApts?.includes(i)?"checked":""}> شقة ${i} - ${apt(i)}</label>`).join("")}</div><button class="btn" onclick="savePrjApts()">حفظ</button>`;openMo(html)}
+function savePrjApts(){let arr=[...document.querySelectorAll(".mpa:checked")].map(x=>+x.value); if(!arr.length)return toast("اختر شقة",1); let p=G.projects[selP]; upd({[`projects/${selP}/eligibleApts`]:arr,[`projects/${selP}/perApt`]:Number(p.totalCost||0)/arr.length},"تم تحديث المشاركين"); closeMo()}
 function addPrj(){
   const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
   if(!name||!(totalCost>0)||!Number.isFinite(totalCost))return toast("اكتب اسم المشروع وتكلفة صحيحة",1);
@@ -559,7 +562,7 @@ function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>{const s=statusOf(i);return `<tr><td>${i}</td>
     <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
     <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
-    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر" style="margin-top:4px"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر" style="margin-top:4px"></div></td>
+    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div class="tenant-box" id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر"></div></td>
     <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`}).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
