@@ -181,8 +181,8 @@ function makeSeed(){
   const names=["السيد كرم الدين","(فارغ)","أحمد محمد عبدالرحمن","هاني محمود حسين","أسماء صلاح حسن","إيمان إبراهيم محمود","أحمد يوسف حسن","أحمد ناصر","أميرة محمد فاروق","شريف صلاح الدين","منى محمود نجيب","لبيب أنور","أحمد فتحي محمد","إسلام عماد الدين","نهى حسين حافظ أمين","مصطفى أمدين","(فارغ)","أحمد ربيع شوقي","محمد أحمد عبد الفتاح","أماني محمد مصطفى","أحمد سمير","(فارغ)","عادل عبد الرازق","عاطف محمد صادق"];
   const apartments={};names.forEach((n,i)=>apartments[i+1]={ownerName:n});
   
-  /* ربط إيميلك الإداري الأساسي هنا عشان يدخل دايم كأدمن */
-  const residents={"anasser,awaad@gmail,com":1}; 
+  /* ربط إيميلك الأدمن بصيغة صحيحة (بدون مشاكل في الفواصل) */
+  const residents={"anasser.awaad@gmail.com".replace(/\./g,","):1};
 
   const mp={},pd={};
   const add=(m,i,v,d)=>{(mp[i]??={})[m]=v;if(d)(pd[i]??={})[m]=d};
@@ -284,7 +284,19 @@ async function start(u){
   U={role:admin?"admin":"resident",email,apt:0};
   if(!admin){
     let a=null;try{a=await api("residents/"+key)}catch(e){}
-    if(a==null){await auth.signOut();$("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;return}
+    if(a==null){
+      // أول مرة أو الإيميل غير موجود، نفحص لو قاعدة البيانات فاضية تماماً نزرع الـ Seed وتلقائياً يبقي أدمن
+      try{
+        const checkEmpty = await api("");
+        if(!checkEmpty || !checkEmpty.residents){
+          await api("","PATCH",makeSeed());
+          return start(u);
+        }
+      }catch(err){}
+      await auth.signOut();
+      $("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;
+      return;
+    }
     U.apt=Number(a);
   }
   await load();
@@ -403,7 +415,7 @@ function vSum(){
     <div class="card"><span class="mu">المصروفات</span><b style="color:var(--am)">${num(x)} ج</b><span class="cap">${xn} بنود وفواتير صيانة</span></div>
     <div class="card"><span class="mu">المشاريع الخاصة (مستقلة)</span><b style="color:var(--bl)">${num(cam)} ج</b><span class="cap">صندوق مستقل لأعمال التطوير</span></div></div>
   ${chartSection}
-  ${isA()?`<div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>المشاريع</th></tr>{rows}</table></div></div>`:""}`;
+  ${isA()?`<div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>المشاريع</th></tr>${rows}</table></div></div>`:""}`;
 }
 
 const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}<input type="file" accept="image/*" id="${id}" hidden onchange="this.parentNode.firstChild.textContent='✅'"></label>`;
@@ -420,11 +432,11 @@ function vMonthAdmin(){
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*nActM(selM))} ج</span></div>
   ${A?'<div class="row" style="margin-bottom:8px"><button class="btn am" onclick="groupMsg()">📋 نسخ رسالة المتأخرين للجروب</button><button class="btn gh" style="color:var(--tx)" onclick="waGroup()">إرسال في واتساب 💬</button></div><div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ وأرفق صورة التحويل (📎) ثم حفظ. مسح المبلغ = إلغاء الدفعة.</div>':""}
-  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>الإيصال</th></tr>{rows}</table></div></div>`;
+  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>الإيصال</th></tr>${rows}</table></div></div>`;
 }
 async function savePay(i){
   const v=Math.max(0,Number($("#pa-"+i).value)||0),dt=$("#pd-"+i).value||today(),b=`years/${Y}/`,f=$("#pf-"+i).files[0];
-  const pa=`{b}monthlyPayments/${i}/${selM}`,pd=`{b}payDates/${i}/${selM}`,pf=`{b}payFiles/${i}/${selM}`;
+  const pa=`${b}monthlyPayments/${i}/${selM}`,pd=`${b}payDates/${i}/${selM}`,pf=`${b}payFiles/${i}/${selM}`;
   let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f,"apt/"+i)}catch(e){return toast("تعذر رفع الصورة",1)}}
   const o=v?{[pa]:v,[pd]:dt}:{[pa]:null,[pd]:null,[pf]:null};if(fid&&v)o[pf]=fid;
   upd(o,v?`دفعة شقة ${i} - ${selM}: ${num(v)} ج ✓`:`إلغاء دفعة شقة ${i} - ${selM}`);
@@ -432,27 +444,27 @@ async function savePay(i){
 
 function vExp(){
   const A=isA(),list=exps().filter(e=>expF==="ALL"||e.month===expF),tot=list.reduce((s,e)=>s+Number(e.amount||0),0);
-  const rows=list.map(e=>`<tr><td>{esc(e.month)}</td><td style="white-space:normal">{esc(e.desc)}</td><td class="neg">{num(e.amount)} ج</td><td>{fd(e.date)}</td><td>{e.file?`<button class="btn gh" onclick="showF('${e.file}')">🧾</button> `:""}{A?`<button class="btn gh" onclick="delExp('${e.id}')">حذف</button>`:""}</td></tr>`).join("")
+  const rows=list.map(e=>`<tr><td>${esc(e.month)}</td><td style="white-space:normal">${esc(e.desc)}</td><td class="neg">${num(e.amount)} ج</td><td>${fd(e.date)}</td><td>${e.file?`<button class="btn gh" onclick="showF('${e.file}')">🧾</button> `:""}${A?`<button class="btn gh" onclick="delExp('${e.id}')">حذف</button>`:""}</td></tr>`).join("")
     ||`<tr><td colspan="5" class="mu" style="text-align:center;padding:16px">لا توجد مصروفات</td></tr>`;
   const form=A?`<div class="card"><h3>➕ تسجيل مصروف جديد</h3><div class="row">
-    <select id="xm">{MONTHS.map(m=>`<option ${m===selM?"selected":""}>{m}</option>`).join("")}</select>
+    <select id="xm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
     <input id="xd" placeholder="وصف المصروف" style="flex:1;min-width:160px"><input id="xa" type="number" min="0" placeholder="المبلغ" style="width:110px"><input id="xt" type="date" value="${today()}">
-    {attBtn("xf"," فاتورة")}<button class="btn am" onclick="addExp()">إضافة</button></div></div>`:"";
+    ${attBtn("xf"," فاتورة")}<button class="btn am" onclick="addExp()">إضافة</button></div></div>`:"";
   return form+`<div class="card"><div class="top"><h3>سجل مصروفات ${Y}</h3>
-    <select onchange="expF=this.value;render()"><option value="ALL">كل الشهور</option>{MONTHS.map(m=>`<option ${m===expF?"selected":""}>{m}</option>`).join("")}</select></div>
-    <div class="tw"><table><tr><th>الشهر</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>الفاتورة</th></tr>{rows}</table></div>
-    <div style="margin-top:8px">الإجمالي: <b class="neg">{num(tot)} ج</b></div></div>`;
+    <select onchange="expF=this.value;render()"><option value="ALL">كل الشهور</option>${MONTHS.map(m=>`<option ${m===expF?"selected":""}>${m}</option>`).join("")}</select></div>
+    <div class="tw"><table><tr><th>الشهر</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>الفاتورة</th></tr>${rows}</table></div>
+    <div style="margin-top:8px">الإجمالي: <b class="neg">${num(tot)} ج</b></div></div>`;
 }
 async function addExp(){
   const desc=$("#xd").value.trim(),amount=Number($("#xa").value),f=$("#xf").files[0];
   if(!desc||!(amount>0))return toast("اكتب وصف المصروف والمبلغ",1);
   let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f)}catch(e){return toast("تعذر رفع الصورة",1)}}
   const e={month:$("#xm").value,desc,amount,date:$("#xt").value||today()};if(fid)e.file=fid;
-  upd({[`years/${Y}/expenses/e${Date.now().toString(36)}`]:e},`مصروف: {desc} - {num(amount)} ج ✓`);
+  upd({[`years/${Y}/expenses/e${Date.now().toString(36)}`]:e},`مصروف: ${desc} - ${num(amount)} ج ✓`);
 }
 function delExp(id){
   const e=G.years?.[Y]?.expenses?.[id]||{};
-  if(confirm("تأكيد حذف المصروف؟")){const o={[`years/${Y}/expenses/${id}`]:null};if(e.file)o[`files/${e.file}`]=null;upd(o,`حذف مصروف: {e.desc||""}`)}
+  if(confirm("تأكيد حذف المصروف؟")){const o={[`years/${Y}/expenses/${id}`]:null};if(e.file)o[`files/${e.file}`]=null;upd(o,`حذف مصروف: ${e.desc||""}`)}
 }
 
 let selP=null;
@@ -461,28 +473,28 @@ function vCamAdmin(){
   if(!L.some(x=>x.id===selP))selP=(L.find(x=>!x.closed)||L[0])?.id;
   const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed,na=p?(Array.isArray(p.eligibleApts)?p.eligibleApts.length:nAct()):0;let col=0,rows="";
   if(p)for(let i=1;i<=N;i++){
-    if(!eligible(p,i)){rows+=`<tr><td>{i}</td><td>{esc(apt(i))}</td><td>غير مستحق</td><td>—</td><td>—</td><td></td></tr>`;continue}
+    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>غير مستحق</td><td>—</td><td>—</td><td></td></tr>`;continue}
     const v=pp(p,i),dt=p.dates?.[i]||"",f=p.files?.[i];col+=v;
-    rows+=`<tr><td>{i}</td><td>{esc(apt(i))}{tag(i)}</td>
-      <td>{ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
-      <td>{ed?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
-      <td class="${v>=s?"":"neg"}">{num(Math.max(0,s-v))} ج</td>
-      <td>{f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}{ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
+    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td>
+      <td>${ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
+      <td>${ed?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
+      <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
+      <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
   }
-  const aptCheckboxes=Array.from({length:N},(_,k)=>k+1).map(i=>`<label style="display:inline-flex;align-items:center;gap:4px;background:var(--in);padding:4px 8px;border-radius:8px;border:1px solid var(--ln);font-size:13px"><input type="checkbox" class="pn-chk" value="{i}" ${!isEmpty(i)?"checked":""}> شقة {i}</label>`).join("");
+  const aptCheckboxes=Array.from({length:N},(_,k)=>k+1).map(i=>`<label style="display:inline-flex;align-items:center;gap:4px;background:var(--in);padding:4px 8px;border-radius:8px;border:1px solid var(--ln);font-size:13px"><input type="checkbox" class="pn-chk" value="${i}" ${!isEmpty(i)?"checked":""}> شقة ${i}</label>`).join("");
   const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3>
     <div class="row" style="margin-bottom:10px"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي التكلفة (جنيه)" style="width:170px"><button class="btn am" onclick="addPrj()">إنشاء وتوزيع</button></div>
     <div class="mu" style="margin-bottom:6px">حدد الشقق المشاركة في المشروع (افتراضياً المقيمة محددة، ويقمدك تعديلها لإضافة أي شقة غير مقيمة):</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">{aptCheckboxes}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${aptCheckboxes}</div>
   </div>`:"";
-  const chips=L.length?`<div class="chips">{L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}{esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
-  const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">{num(s)} ج</b></div>
-    <div class="card"><span class="mu">إجمالي المطلوب ({na} شقة)</span><b>{num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
-    <div class="card"><span class="mu">المحصّل</span><b class="pos">{num(col)} ج</b></div>
-    <div class="card"><span class="mu">المتبقي</span><b class="neg">{num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
-    <div class="card"><div class="top"><h3>📷 {esc(p.name)} ${p.closed?"(مغلق)":""}</h3><div class="row">{A?`<button class="btn gh" style="color:var(--tx)" onclick="openEditPrjEligible('${p.id}')">⚙️ تعديل الشقق المشاركة</button> <button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div></div>
-    {ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">الشقق المشاركة في هذا المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه.</div>`:""}
-    <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>{rows}</table></div></div>`:"";
+  const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
+  const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
+    <div class="card"><span class="mu">إجمالي المطلوب (${na} شقة)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
+    <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
+    <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
+    <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3><div class="row">${A?`<button class="btn gh" style="color:var(--tx)" onclick="openEditPrjEligible('${p.id}')">⚙️ تعديل الشقق المشاركة</button> <button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div></div>
+    ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">الشقق المشاركة في هذا المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه.</div>`:""}
+    <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
 async function savePrj(i){
@@ -490,7 +502,7 @@ async function savePrj(i){
   let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f,"apt/"+i)}catch(e){return toast("تعذر رفع الصورة",1)}}
   const nm=G.projects[selP].name,o=v?{[b+`payments/${i}`]:v,[b+`dates/${i}`]:dt}:{[b+`payments/${i}`]:null,[b+`dates/${i}`]:null,[b+`files/${i}`]:null};
   if(fid&&v)o[b+`files/${i}`]=fid;
-  upd(o,`{nm}: شقة {i} - {num(v)} ج ✓`);
+  upd(o,`${nm}: شقة ${i} - ${num(v)} ج ✓`);
 }
 function addPrj(){
   const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
@@ -498,46 +510,46 @@ function addPrj(){
   const eligibleApts=[...document.querySelectorAll(".pn-chk:checked")].map(x=>Number(x.value));
   if(!eligibleApts.length)return toast("اختر شقة واحدة على الأقل للمشاركة في المشروع",1);
   const perApt=totalCost/eligibleApts.length,id="p"+Date.now().toString(36);
-  selP=id;upd({[`projects/${id}`]:{name,totalCost,eligibleApts,perApt,payments:{},dates:{},files:{},createdAt:today(),closed:false}},`مشروع جديد: {name} - نصيب الشقة {num(perApt)} ج ✓`);
+  selP=id;upd({[`projects/${id}`]:{name,totalCost,eligibleApts,perApt,payments:{},dates:{},files:{},createdAt:today(),closed:false}},`مشروع جديد: ${name} - نصيب الشقة ${num(perApt)} ج ✓`);
 }
 function openEditPrjEligible(id){
   const p=G.projects[id],el=new Set(p.eligibleApts||[]);
-  const list=Array.from({length:N},(_,k)=>k+1).map(i=>`<label style="display:inline-flex;align-items:center;gap:6px;background:var(--in);padding:6px 10px;border-radius:8px;border:1px solid var(--ln)"><input type="checkbox" class="ed-chk" value="{i}" ${el.has(i)?"checked":""}> شقة {i}</label>`).join("");
-  openMo(`<div class="top" style="margin-bottom:10px"><b>تعديل الشقق المشاركة في مشروع: {esc(p.name)}</b><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">✕</button></div>
+  const list=Array.from({length:N},(_,k)=>k+1).map(i=>`<label style="display:inline-flex;align-items:center;gap:6px;background:var(--in);padding:6px 10px;border-radius:8px;border:1px solid var(--ln)"><input type="checkbox" class="ed-chk" value="${i}" ${el.has(i)?"checked":""}> شقة ${i}</label>`).join("");
+  openMo(`<div class="top" style="margin-bottom:10px"><b>تعديل الشقق المشاركة في مشروع: ${esc(p.name)}</b><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">✕</button></div>
   <div class="mu" style="margin-bottom:10px">اختر الشقق التي ستتحمل تكلفة هذا المشروع (سيتم إعادة حساب نصيب الشقة تلقائياً):</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:260px;overflow:auto;margin-bottom:14px">{list}</div>
-  <button class="btn" onclick="savePrjEligible('{id}')">حفظ التعديلات ✓</button>`);
+  <div style="display:flex;gap:8px;flex-wrap:wrap;max-height:260px;overflow:auto;margin-bottom:14px">${list}</div>
+  <button class="btn" onclick="savePrjEligible('${id}')">حفظ التعديلات ✓</button>`);
 }
 async function savePrjEligible(id){
   const eligibleApts=[...document.querySelectorAll(".ed-chk:checked")].map(x=>Number(x.value));
   if(!eligibleApts.length)return toast("يجب اختيار شقة واحدة على الأقل",1);
   const p=G.projects[id],totalCost=Number(p.totalCost||(p.perApt*(p.eligibleApts?.length||1))),perApt=totalCost/eligibleApts.length;
   closeMo();
-  upd({[`projects/${id}/eligibleApts`]:eligibleApts,[`projects/${id}/perApt`]:perApt,[`projects/${id}/totalCost`]:totalCost},`تعديل شقق مشروع {p.name} ✓`);
+  upd({[`projects/${id}/eligibleApts`]:eligibleApts,[`projects/${id}/perApt`]:perApt,[`projects/${id}/totalCost`]:totalCost},`تعديل شقق مشروع ${p.name} ✓`);
 }
-function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع {p.name}`)}
+function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
 function vMe(){
   const i=meApt(),d=due();let tot=0;
   const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
-    return `<div><div class="mu">{m}</div><b class="${p?"pos":"mu"}">{num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div>{p?`<span style="display:block;margin-top:4px"><button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${m}')">🖨️</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾</button>`:""}</span>`:""}</div>`}).join("");
-  return `<div class="card">{isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}<h3>كشف حساب شقة {i} - {esc(apt(i))}</h3>
-  <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات {Y}</span><b class="pos">{num(tot)} ج</b></div>
-  {prj().map(q=>`<div class="card"><span class="mu">{esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${!eligible(q,i)?"mu":pp(q,i)>=share(q)?"pos":"neg"}">${eligible(q,i)?`${num(pp(q,i))} / ${num(share(q))} ج`:"غير مستحق"}</b>{eligible(q,i)&&pp(q,i)>0?`<span style="display:block;margin-top:6px"><button class="btn gh" onclick="rcptPrj('${q.id}',{i})">🖨️ إيصال</button></span>`:""}</div>`).join("")}</div>
-  <h3>الدفع الشهري (المطلوب {num(d)} ج)</h3><div class="mg">{grid}</div></div>`;
+    return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div>${p?`<span style="display:block;margin-top:4px"><button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${m}')">🖨️</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾</button>`:""}</span>`:""}</div>`}).join("");
+  return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}<h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
+  <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
+  ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${!eligible(q,i)?"mu":pp(q,i)>=share(q)?"pos":"neg"}">${eligible(q,i)?`${num(pp(q,i))} / ${num(share(q))} ج`:"غير مستحق"}</b>${eligible(q,i)&&pp(q,i)>0?`<span style="display:block;margin-top:6px"><button class="btn gh" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال</button></span>`:""}</div>`).join("")}</div>
+  <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
 }
 
 function savePrjShare(){
   const p=G.projects[selP];if(Array.isArray(p?.eligibleApts))return toast("نصيب المشروع مثبت ولا يمكن تغييره",1);
   const v=Number($("#psh").value);if(!(v>0))return toast("اكتب نصيب صحيح",1);
-  upd({[`projects/${selP}/perApt`]:v},`نصيب {G.projects[selP].name}: {num(v)} ج ✓`);
+  upd({[`projects/${selP}/perApt`]:v},`نصيب ${G.projects[selP].name}: ${num(v)} ج ✓`);
 }
 
 function vSend(){
-  return `<div class="card"><h3>📤 رفع صورة تحويل (شقة {U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
-  <div class="row"><select id="sm">{MONTHS.map(m=>`<option ${m===selM?"selected":""}>{m}</option>`).join("")}</select>
+  return `<div class="card"><h3>📤 رفع صورة تحويل (شقة ${U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
+  <div class="row"><select id="sm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
   <input id="sa" type="number" min="1" value="${due()}" style="width:110px"><input id="sd" type="date" value="${today()}">
-  {attBtn("sf"," صورة التحويل")}<button class="btn am" onclick="sendReq()">إرسال</button></div></div>`;
+  ${attBtn("sf"," صورة التحويل")}<button class="btn am" onclick="sendReq()">إرسال</button></div></div>`;
 }
 async function sendReq(){
   const f=$("#sf").files[0],amount=Number($("#sa").value);
@@ -550,35 +562,35 @@ async function sendReq(){
 }
 function vReq(){
   const L=Object.entries(G.pending||{}).filter(([,r])=>r).map(([id,r])=>({id,...r})).sort((a,b)=>a.t-b.t);
-  const rows=L.map(r=>`<tr><td>{r.apt}</td><td>{esc(apt(r.apt))}</td><td>{esc(r.month)} {esc(r.year||"")}</td><td>{num(r.amount)} ج</td><td>{fd(r.date)}</td>
+  const rows=L.map(r=>`<tr><td>${r.apt}</td><td>${esc(apt(r.apt))}</td><td>${esc(r.month)} ${esc(r.year||"")}</td><td>${num(r.amount)} ج</td><td>${fd(r.date)}</td>
     <td><button class="btn gh" onclick="showF('${r.file}')">🧾 عرض</button> <button class="btn" onclick="okReq('${r.id}')">اعتماد</button> <button class="btn gh" onclick="noReq('${r.id}')">رفض</button></td></tr>`).join("")
     ||`<tr><td colspan="6" class="mu" style="text-align:center;padding:16px">لا توجد طلبات بانتظار الاعتماد</td></tr>`;
-  return `<div class="card"><h3>📥 طلبات تحويل بانتظار الاعتماد</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>الشهر</th><th>المبلغ</th><th>التاريخ</th><th></th></tr>{rows}</table></div></div>`;
+  return `<div class="card"><h3>📥 طلبات تحويل بانتظار الاعتماد</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>الشهر</th><th>المبلغ</th><th>التاريخ</th><th></th></tr>${rows}</table></div></div>`;
 }
 function okReq(id){
   const r=G.pending[id],y=r.year||Y,b=`years/${y}/`,cur=Number(G.years?.[y]?.monthlyPayments?.[r.apt]?.[r.month]||0);
-  upd({[`{b}monthlyPayments/${r.apt}/${r.month}`]:cur+Number(r.amount),[`{b}payDates/${r.apt}/${r.month}`]:r.date,[`{b}payFiles/${r.apt}/${r.month}`]:r.file,[`pending/${id}`]:null},`اعتماد تحويل شقة {r.apt} - {r.month}: {num(r.amount)} ج ✓`);
+  upd({[`${b}monthlyPayments/${r.apt}/${r.month}`]:cur+Number(r.amount),[`${b}payDates/${r.apt}/${r.month}`]:r.date,[`${b}payFiles/${r.apt}/${r.month}`]:r.file,[`pending/${id}`]:null},`اعتماد تحويل شقة ${r.apt} - ${r.month}: ${num(r.amount)} ج ✓`);
 }
-function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة {r.apt} - {r.month}`)}
+function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة ${r.apt} - ${r.month}`)}
 
 function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>{
     const s=statusOf(i);
-    return `<tr><td>{i}</td>
-      <td><input id="on-{i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
-      <td><input id="em-{i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
+    return `<tr><td>${i}</td>
+      <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
+      <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
       <td>
-        <input id="ph-{i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك">
-        <div id="ptw-{i}" ${s==="rent"?"":"hidden"} style="margin-top:4px">
-          <input id="tn-{i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر" style="margin-bottom:4px">
-          <input id="pt-{i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر">
+        <input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك">
+        <div id="ptw-${i}" ${s==="rent"?"":"hidden"} style="margin-top:4px">
+          <input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر" style="margin-bottom:4px">
+          <input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر">
         </div>
       </td>
-      <td><select id="st-{i}" onchange="document.getElementById('ptw-{i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
-      <td><button class="btn" onclick="saveApt({i})">حفظ</button></td></tr>`;
+      <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
+      <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`;
   }).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"مقيمة" و"مستأجرة" بيتحسبوا عادي في الحسابات، و"مستأجرة" بتفتح خانات اسم ورقم واتساب المستأجر. "غير مقيمة" بتطلع الشقة من الحسابات الشهرية.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:22%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>{rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"مقيمة" و"مستأجرة" بيتحسبوا عادي في الحسابات، و"مستأجرة" بتفتح خانات اسم ورقم واتساب المستأجر. "غير مقيمة" بتطلع الشقة من الحسابات الشهرية.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:22%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label></div>`;
 }
@@ -587,27 +599,25 @@ function saveApt(i){
   const em=$("#em-"+i).value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean),old=emailsOf(i),o={},k=e=>"residents/"+e.replace(/\./g,",");
   if(em.some(e=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)))return toast("إيميل غير صحيح",1);
   const c=em.find(e=>{const a=G.residents[e.replace(/\./g,",")];return a&&Number(a)!==i});
-  if(c)return toast(`{c} مسجل في شقة تانية`,1);
+  if(c)return toast(`${c} مسجل في شقة تانية`,1);
   const kk=e=>e.replace(/\./g,",");
-  old.forEach(e=>{if(!em.includes(e)){o[k(e)]=null;o[`access/{i}/${kk(e)}`]=null}});
-  em.forEach(e=>{o[k(e)]=i;o[`access/{i}/${kk(e)}`]=true});
+  old.forEach(e=>{if(!em.includes(e)){o[k(e)]=null;o[`access/${i}/${kk(e)}`]=null}});
+  em.forEach(e=>{o[k(e)]=i;o[`access/${i}/${kk(e)}`]=true});
   const ph=normPhone($("#ph-"+i).value),pt=normPhone($("#pt-"+i).value),tn=$("#tn-"+i)?.value.trim()||"",st=$("#st-"+i).value;
   if(ph===false||(ph&&(ph.length<11||ph.length>15)))return toast("رقم واتساب المالك غير صحيح",1);
   if(pt===false||(pt&&(pt.length<11||pt.length>15)))return toast("رقم واتساب المستأجر غير صحيح",1);
-  o[`phones/{i}`]=ph||null;
-  o[`tenantPhones/{i}`]=st==="rent"?pt||null:null;
-  o[`tenantNames/{i}`]=st==="rent"?tn||null:null;
-  o[`apartments/{i}/ownerName`]=$("#on-"+i).value.trim();
-  o[`apartments/{i}/vacant`]=st==="vac"?true:null;
-  o[`apartments/{i}/occupancyStatus`]=st==="rent"?"rented":null;
-  upd(o,`تحديث بيانات شقة {i} ({st==="rent"?"مستأجرة":st==="vac"?"غير مقيمة":"مقيمة"}) ✓`);
+  o[`phones/${i}`]=ph||null;
+  o[`tenantPhones/${i}`]=st==="rent"?pt||null:null;
+  o[`tenantNames/${i}`]=st==="rent"?tn||null:null;
+  o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
+  o[`apartments/${i}/vacant`]=st==="vac"?true:null;
+  o[`apartments/${i}/occupancyStatus`]=st==="rent"?"rented":null;
+  upd(o,`تحديث بيانات شقة ${i} (${st==="rent"?"مستأجرة":st==="vac"?"غير مقيمة":"مقيمة"}) ✓`);
 }
 
 function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
-
-/* زرار استعادة البيانات الافتراضية مع إيميلك لو حابب تفرضه */
 async function reseed(){
-  if(!confirm("هيتم استبدال بيانات قاعدة البيانات بالبيانات الأساسية ومعاها إيميلك الأدمن. متأكد؟"))return;
+  if(!confirm("هيتم استبدال كل بيانات قاعدة البيانات بالبيانات الأساسية. متأكد؟"))return;
   try{await api("","PATCH",makeSeed());await load();initFlt();render();toast("تمت استعادة البيانات بنجاح ✓")}
   catch(e){console.error("Restore failed:",e);toast("تعذر الاستعادة",1)}
 }
@@ -616,16 +626,16 @@ function normPhone(s){let d=String(s||"").replace(/\D/g,"");if(d.startsWith("00"
 const site=()=>location.origin;
 function remind(i,who){
   const ph=who==="t"?G.tenantPhones?.[i]:G.phones?.[i];if(!ph)return toast("سجّل رقم واتساب المعتمد من تبويب الإدارة",1);
-  const rem=due()-pay(i,selM),nm=who==="t"?G.tenantNames?.[i]||"المستأجر":apt(i),hi=`السلام عليكم يا {nm}،`;
-  const t=`{hi}\nتذكير ودّي بخصوص اشتراك العمارة (عمارة 60 - ساوث هيلز 2) عن شهر {selM} {Y}.\nالمتبقي على شقة {i}: {num(rem)} جنيه.\nتقدر ترفع صورة التحويل من هنا: {site()}\nشكرًا لتعاونك 🌷`;
+  const rem=due()-pay(i,selM),nm=who==="t"?G.tenantNames?.[i]||"المستأجر":apt(i),hi=`السلام عليكم يا ${nm}،`;
+  const t=`${hi}\nتذكير ودّي بخصوص اشتراك العمارة (عمارة 60 - ساوث هيلز 2) عن شهر ${selM} ${Y}.\nالمتبقي على شقة ${i}: ${num(rem)} جنيه.\nتقدر ترفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونك 🌷`;
   window.open("https://wa.me/"+ph+"?text="+encodeURIComponent(t),"_blank");
 }
 
 function lateText(){
   const L=[];let tot=0;
-  for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة {i}: {num(r)} ج`);tot+=r}}
+  for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
   if(!L.length)return "";
-  return `السلام عليكم 🌷\nتذكير باشتراك العمارة عن شهر {selM} {Y} ({num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n{L.join("\n")}\nإجمالي المتبقي: {num(tot)} ج\nيمكن رفع صورة التحويل من هنا: {site()}\nشكرًا لتعاونكم.`;
+  return `السلام عليكم 🌷\nتذكير باشتراك العمارة عن شهر ${selM} ${Y} (${num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
 }
 async function groupMsg(){
   const t=lateText();if(!t)return toast("كل الشقق مسددة لهذا الشهر 🎉");
@@ -656,10 +666,10 @@ function pubSoon(){clearTimeout(pubT);pubT=setTimeout(async()=>{try{await api("p
 async function migrateFiles(){
   const mv=[],bare=f=>f&&!String(f).includes("/");
   Object.entries(G.years||{}).forEach(([y,yo])=>{
-    Object.entries(yo?.expenses||{}).forEach(([id,e])=>{if(e&&bare(e.file))mv.push([e.file,"pub/"+e.file,`years/{y}/expenses/{id}/file`])});
-    Object.entries(yo?.payFiles||{}).forEach(([a,ms])=>Object.entries(ms||{}).forEach(([m,f])=>{if(bare(f))mv.push([f,`apt/{a}/{f}`,`years/{y}/payFiles/{a}/{m}`])}));
+    Object.entries(yo?.expenses||{}).forEach(([id,e])=>{if(e&&bare(e.file))mv.push([e.file,"pub/"+e.file,`years/${y}/expenses/${id}/file`])});
+    Object.entries(yo?.payFiles||{}).forEach(([a,ms])=>Object.entries(ms||{}).forEach(([m,f])=>{if(bare(f))mv.push([f,`apt/${a}/${f}`,`years/${y}/payFiles/${a}/${m}`])}));
   });
-  prj().forEach(p=>Object.entries(p.files||{}).forEach(([a,f])=>{if(bare(f))mv.push([f,`apt/{a}/{f}`,`projects/{p.id}/files/{a}`])}));
+  prj().forEach(p=>Object.entries(p.files||{}).forEach(([a,f])=>{if(bare(f))mv.push([f,`apt/${a}/${f}`,`projects/${p.id}/files/${a}`])}));
   for(const [oldId,np,ref] of mv){
     try{const d=await api("files/"+oldId);if(d==null)continue;await api("files/"+np,"PUT",d);await api("","PATCH",{ [ref]:np, ["files/"+oldId]:null });setLocal(ref,np)}
     catch(e){console.error("migrate",oldId,e)}
@@ -668,7 +678,7 @@ async function migrateFiles(){
 async function syncAccess(){
   await migrateFiles();
   const o={};
-  Object.entries(G.residents||{}).forEach(([k,v])=>{if(v!=null)o[`access/{Number(v)}/{k}`]=true});
+  Object.entries(G.residents||{}).forEach(([k,v])=>{if(v!=null)o[`access/${Number(v)}/${k}`]=true});
   if(!Object.keys(o).length)return;
   try{await api("","PATCH",o);Object.entries(o).forEach(([p,v])=>setLocal(p,v))}catch(e){console.error("access",e)}
 }
@@ -677,11 +687,11 @@ async function loadRes(){
   const a=U.apt,pub=(await api("pub"))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{}};
   o.apartments[a]=(await api("apartments/"+a))||{};
   await Promise.all(Object.keys(pub.years||{}).map(async y=>{
-    const [ex,mp,pd,pf]=await Promise.all(["expenses","monthlyPayments/"+a,"payDates/"+a,"payFiles/"+a].map(k=>api(`years/{y}/{k}`)));
+    const [ex,mp,pd,pf]=await Promise.all(["expenses","monthlyPayments/"+a,"payDates/"+a,"payFiles/"+a].map(k=>api(`years/${y}/${k}`)));
     o.years[y]={expenses:ex||{},monthlyPayments:{[a]:mp||{}},payDates:{[a]:pd||{}},payFiles:{[a]:pf||{}}};
   }));
   await Promise.all(Object.entries(pub.projects||{}).map(async([id,m])=>{
-    const [p,d,f]=await Promise.all(["payments","dates","files"].map(k=>api(`projects/{id}/{k}/{a}`)));
+    const [p,d,f]=await Promise.all(["payments","dates","files"].map(k=>api(`projects/${id}/${k}/${a}`)));
     o.projects[id]={...m,payments:p==null?{}:{[a]:p},dates:d==null?{}:{[a]:d},files:f==null?{}:{[a]:f}};
   }));
   G=o;
