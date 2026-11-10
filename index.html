@@ -489,13 +489,13 @@ function vCamAdmin(){
   }
   const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><div class="row"><button type="button" class="btn gh" onclick="selAllPrj()">تحديد الكل</button><button type="button" class="btn gh" onclick="unselAllPrj()">إلغاء الكل</button></div><div id="prjApts" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;width:100%;margin-top:8px">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="prj-apt" value="${i}" checked> شقة ${i} ${apt(i)}</label>`).join("")}</div><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
   const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
-  const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
-    <div class="card"><span class="mu">إجمالي المطلوب (${na} شقة)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
+  const body=p?`<div class="g"><div class="card"><span class="mu">👥 المشاركون</span><b>${na} </b></div><div class="card"><span class="mu">🚫 المستبعدون</span><b>${N-na}</b></div><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
+    <div class="card"><span class="mu">إجمالي المطلوب (${na} مشارك)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
     <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
     <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
     ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">تم تثبيت الشقق المستحقة وقت إنشاء المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه (قد يظهر فرق قروش بسبب التقسيم).</div><button class="btn am" onclick="managePrjApts()">⚙ إدارة المشاركين</button>`:""}
-    <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
+    <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
 async function savePrj(i){
