@@ -240,7 +240,7 @@ function setLocal(path,v){
 }
 /* كتابة آمنة: تعديل مسارات محددة فقط (لا نكتب فوق القاعدة كلها) */
 async function upd(o,msg){
-  try{const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?"المشرف":"شقة "+U.apt,msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
+  try{const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?((auth.currentUser?.displayName||"مشرف")+" ("+(auth.currentUser?.email||"")+")"):("شقة "+U.apt),msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
   catch(e){console.error("Save failed:",e);toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1)}
   render();
   if(isA())pubSoon();
@@ -479,7 +479,7 @@ function vCamAdmin(){
   if(!L.some(x=>x.id===selP))selP=(L.find(x=>!x.closed)||L[0])?.id;
   const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed,na=p?(Array.isArray(p.eligibleApts)?p.eligibleApts.length:nAct()):0;let col=0,rows="";
   if(p)for(let i=1;i<=N;i++){
-    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>غير مستحق</td><td>—</td><td>—</td><td></td></tr>`;continue}
+    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>🚫 غير مشارك</td><td>—</td><td>—</td><td></td></tr>`;continue}
     const v=pp(p,i),dt=p.dates?.[i]||"",f=p.files?.[i];col+=v;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td>
       <td>${ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
