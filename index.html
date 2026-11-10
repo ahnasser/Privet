@@ -1,3 +1,4 @@
+<!-- V4.1 mobile/dashboard/search -->
 <!-- Building60 V3: tenant UI, project participants enhancements -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -137,6 +138,13 @@ nav .l{display:none}
  nav button{width:100%;flex:none;text-align:right;border:0;background:transparent;padding:11px 12px}
  nav .s{display:none}nav .l{display:inline}
 }
+
+/* V4.1 */
+.searchbar{display:flex;gap:8px;margin:10px 0}.searchbar input{flex:1}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:10px 0}
+.statcard{padding:10px;border:1px solid var(--ln);border-radius:12px;background:var(--card)}
+@media(max-width:700px){table.adm,table.adm tbody,table.adm tr,table.adm td{display:block;width:100%}table.adm tr{border:1px solid var(--ln);margin-bottom:12px;border-radius:12px;padding:8px}}
+
 </style>
 </head>
 <body>
