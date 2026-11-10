@@ -142,11 +142,23 @@ nav .l{display:none}
 <div class="w">
 
 <div id="login" class="card" style="text-align:center">
-  <h1>🏢 عمارة 60 - ساوث هيلز 2</h1><div class="mu" style="margin:4px 0 16px">نظام إدارة التحصيلات والمصروفات</div>
-  <button class="btn" style="width:100%;padding:12px" onclick="googleLogin()">الدخول بحساب Google 🔑</button>
+  <div style="width:56px;height:56px;margin:0 auto 12px;border-radius:16px;background:var(--ac);color:#04231a;display:grid;place-items:center;font-size:28px">🏢</div>
+  <h1 style="color:var(--tx)">عمارة 60 - ساوث هيلز 2</h1><div class="mu" style="margin:4px 0 18px">بوابة اتحاد الشاغلين وإدارة الحسابات</div>
+  <div class="tabs" style="grid-template-columns:1fr 1fr 1fr">
+    <button id="lt-apt" class="on" onclick="loginTab('apt')">رقم الشقة</button>
+    <button id="lt-google" onclick="loginTab('google')">البريد (Gmail)</button>
+    <button id="lt-admin" onclick="loginTab('admin')">المشرف</button>
+  </div>
+  <div id="login-apt">
+    <label class="cap" style="text-align:right">رقم الشقة</label><input id="login-apt-no" type="text" inputmode="numeric" maxlength="2" placeholder="أدخل رقم شقتك (مثال: 8)" autocomplete="username">
+    <label class="cap" style="text-align:right">كلمة المرور</label><input id="login-apt-pass" type="password" placeholder="كلمة المرور المؤقتة أو الجديدة" autocomplete="current-password">
+    <button class="btn" style="width:100%;padding:12px;margin-top:4px" onclick="apartmentLogin()">تسجيل الدخول</button>
+  </div>
+  <div id="login-google" hidden><div class="mu" style="margin:12px 0">ادخل باستخدام حساب Google المسجل لدى إدارة العمارة.</div><button class="btn" style="width:100%;padding:12px" onclick="googleLogin()">الدخول بحساب Google 🔑</button></div>
+  <div id="login-admin" hidden><div class="mu" style="margin:12px 0">دخول المشرف باستخدام حساب Google المعتمد.</div><button class="btn" style="width:100%;padding:12px" onclick="googleLogin()">دخول المشرف بحساب Google</button></div>
   <div id="err" style="margin-top:10px"></div>
-  <div id="ld" class="mu">جارٍ التحميل…</div>
-  <div class="mu" style="margin-top:12px">لو ظهر خطأ في الدخول افتح الرابط من Chrome أو Safari مباشرة (مش من جوّه واتساب أو فيسبوك).</div>
+  <div id="ld" class="mu" hidden>جارٍ التحميل…</div>
+  <div class="mu" style="margin-top:12px">لو ظهر خطأ في الدخول افتح الرابط من Chrome مباشرة.</div>
 </div>
 
 <div id="app" hidden>
@@ -168,9 +180,12 @@ nav .l{display:none}
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script>
 firebase.initializeApp({apiKey:"AIzaSyAQf5ZHFIgR1RqJiZAnc4_xk6Sa4kUZbjs",authDomain:"sh2-bu60.firebaseapp.com",projectId:"sh2-bu60",appId:"1:398417900233:web:d3ea5648000139f30d5318"});
 const auth=firebase.auth();
+const functions=firebase.app().functions("europe-west1");
+const callFn=name=>functions.httpsCallable(name);
 /* وضع الاختبار المحلي: يشتغل بس على localhost لما يتفتح الرابط بـ ?emu */
 const EMU=location.hostname==="localhost"&&/[?&]emu\b/.test(location.search);
 if(EMU){auth.useEmulator("http://127.0.0.1:9099");document.title="🧪 تجريبي - "+document.title}
@@ -266,8 +281,22 @@ function initFlt(){
 const badge=(p,d)=>p>=d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
 function toast(t,bad){const e=$("#toast");e.textContent=t;e.className="show"+(bad?" bad":"");clearTimeout(toast.t);toast.t=setTimeout(()=>e.className="",2600)}
 
-/* ---------- الدخول بحساب Google ---------- */
+/* ---------- تسجيل الدخول: رقم الشقة أو Google ---------- */
 const tok=()=>auth.currentUser.getIdToken();
+function loginTab(which){
+  ["apt","google","admin"].forEach(k=>{$("#login-"+k).hidden=k!==which;$("#lt-"+k).classList.toggle("on",k===which)});
+  $("#err").textContent="";
+}
+function aptLoginEmail(n){return `apt${String(n).padStart(2,"0")}@building60-login.com`}
+async function apartmentLogin(){
+  const n=Number($("#login-apt-no").value),p=$("#login-apt-pass").value;
+  $("#err").textContent="";
+  if(!Number.isInteger(n)||n<1||n>N)return $("#err").textContent="اكتب رقم شقة صحيح من 1 إلى "+N;
+  if(!p)return $("#err").textContent="اكتب كلمة المرور";
+  $("#ld").hidden=false;
+  try{await auth.signInWithEmailAndPassword(aptLoginEmail(n),p)}
+  catch(e){$("#ld").hidden=true;$("#err").textContent=({"auth/user-not-found":"بيانات الدخول غير صحيحة أو لم ينشئ المشرف حساب الشقة بعد","auth/wrong-password":"رقم الشقة أو كلمة المرور غير صحيحة","auth/invalid-credential":"رقم الشقة أو كلمة المرور غير صحيحة","auth/too-many-requests":"محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى"})[e.code]||("تعذر الدخول: "+e.message)}
+}
 function googleLogin(){
   $("#err").textContent="";
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{
@@ -279,12 +308,19 @@ function showLogin(){U=null;G=null;$("#app").hidden=true;$("#login").hidden=fals
 const emailsOf=i=>Object.entries(G.residents||{}).filter(([,v])=>Number(v)===i).map(([k])=>k.replace(/,/g,"."));
 async function start(u){
   $("#err").textContent="";$("#ld").hidden=false;
+  const token=await u.getIdTokenResult(true),claims=token.claims;
+  // حسابات رقم الشقة تحمل رقم الشقة في custom claims من الخادم، ولا تعتمد على بيانات يرسلها المتصفح.
+  if(claims.role==="resident"&&Number.isInteger(Number(claims.apt))&&Number(claims.apt)>0){
+    U={role:"resident",email:(u.email||"").toLowerCase(),apt:Number(claims.apt),mustChangePassword:claims.mustChangePassword===true,authMode:"apartment"};
+    if(U.mustChangePassword){$("#ld").hidden=true;showFirstPasswordChange();return}
+    await load();$("#ld").hidden=true;enter();return;
+  }
   const email=(u.email||"").toLowerCase(),key=email.replace(/\./g,",");
   let admin=false;try{await api("residents");admin=true}catch(e){}
-  U={role:admin?"admin":"resident",email,apt:0};
+  U={role:admin?"admin":"resident",email,apt:0,authMode:"google"};
   if(!admin){
     let a=null;try{a=await api("residents/"+key)}catch(e){}
-    if(a==null){await auth.signOut();$("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;return}
+    if(a==null){await auth.signOut();$("#ld").hidden=true;$("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من المشرف تسجيله.`;return}
     U.apt=Number(a);
   }
   await load();
@@ -296,6 +332,21 @@ async function start(u){
   }
   $("#ld").hidden=true;enter();
 }
+function showFirstPasswordChange(){
+  openMo(`<h3>🔐 تعيين كلمة مرور جديدة</h3><p class="mu">دي أول مرة تدخل فيها. لازم تختار كلمة مرور جديدة قبل فتح بيانات الشقة.</p><label class="cap">كلمة المرور الجديدة (8 أحرف على الأقل)</label><input id="first-pass" type="password" autocomplete="new-password" style="width:100%"><label class="cap">تأكيد كلمة المرور</label><input id="first-pass2" type="password" autocomplete="new-password" style="width:100%"><button class="btn" style="width:100%;margin-top:10px" onclick="finishFirstPasswordChange()">حفظ ومتابعة</button><div id="first-pass-err" class="mu" style="margin-top:8px"></div>`);
+}
+async function finishFirstPasswordChange(){
+  const p=$("#first-pass").value,p2=$("#first-pass2").value,e=$("#first-pass-err");
+  if(p.length<8)return e.textContent="كلمة المرور لازم تكون 8 أحرف على الأقل";
+  if(p!==p2)return e.textContent="كلمتا المرور غير متطابقتين";
+  try{
+    await auth.currentUser.updatePassword(p);
+    await callFn("completeApartmentPasswordChange")({});
+    await auth.currentUser.getIdToken(true);
+    U.mustChangePassword=false;await load();closeMo();enter();
+  }catch(err){e.textContent="تعذر حفظ كلمة المرور: "+(err.message||err)}
+}
+
 function enter(){$("#login").hidden=true;$("#app").hidden=false;tab=isA()?"sum":"me";initFlt();render()}
 
 /* ---------- العرض ---------- */
@@ -556,9 +607,9 @@ function vAdm(){
     <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="المالك 01001234567"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="المستأجر (اختياري)" style="margin-top:4px"></td>
     <td><select id="st-${i}"><option value="occ" ${isEmpty(i)?"":"selected"}>مقيمة</option><option value="vac" ${isEmpty(i)?"selected":""}>غير مقيمة</option></select></td>
     <td><input id="sn-${i}" type="month" value="${sinceOf(i)}"></td>
-    <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`).join("");
+    <td><button class="btn" onclick="saveApt(${i})">حفظ</button><button class="btn gh" style="color:var(--tx);margin-top:5px" onclick="createApartmentPassword(${i})">إنشاء/إعادة كلمة مرور</button></td></tr>`).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من كل الحسابات (الشهري والمشاريع). "تُحسب من شهر" اختياري للشقة اللي بدأت تدفع من شهر معين. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). الساكن ماينفعش يدخل غير لو إيميله مسجل هنا. رقم الواتساب (للتذكير) بيظهر للأدمن بس.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:17%">الاسم</th><th>إيميل الدخول</th><th style="width:15%">واتساب</th><th style="width:12%">الحالة</th><th style="width:14%">تُحسب من</th><th style="width:58px"></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"غير مقيمة" بتطلع الشقة من الحسابات. اكتب إيميل Gmail لكل شقة (أكتر من إيميل بفاصلة). زر «إنشاء/إعادة كلمة مرور» ينشئ كلمة مرور مؤقتة ويعرضها مرة واحدة؛ سلّمها للساكن بأمان، وسيُطلب منه تغييرها أول دخول. رقم الواتساب يظهر للمشرف فقط.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:17%">الاسم</th><th>إيميل الدخول</th><th style="width:15%">واتساب</th><th style="width:12%">الحالة</th><th style="width:14%">تُحسب من</th><th style="width:150px">حساب الدخول</th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label><br><div class="mu" style="margin-bottom:8px">استعادة بيانات الشيت الأصلية (يوليو - نوفمبر 2026) تستبدل كل ما في قاعدة البيانات، استخدمها لو الداتا مش مظبوطة.</div>
   <button class="btn gh" onclick="reseed()">استعادة بيانات الشيت الأصلية</button></div>`;
@@ -577,6 +628,17 @@ function saveApt(i){
   o[`apartments/${i}/vacant`]=$("#st-"+i).value==="vac"?true:null;
   o[`apartments/${i}/since`]=$("#sn-"+i).value||null;
   upd(o,`تحديث بيانات شقة ${i} ✓`);
+}
+async function createApartmentPassword(i){
+  if(!isA())return toast("العملية للمشرف فقط",1);
+  if(isEmpty(i))return toast("لا يمكن إنشاء حساب لشقة غير مقيمة",1);
+  if(!confirm(`إنشاء كلمة مرور مؤقتة لشقة ${i}؟ إذا كان لها حساب، سيتم تغيير كلمة مروره الحالية.`))return;
+  try{
+    const r=await callFn("setApartmentTemporaryPassword")({apt:Number(i)});
+    const password=r.data?.temporaryPassword;
+    if(!password)throw new Error("لم تصل كلمة المرور من الخادم");
+    openMo(`<h3>تم إنشاء كلمة مرور مؤقتة للشقة ${i}</h3><p class="mu">انسخها وسلّمها للساكن عبر قناة آمنة. لن تظهر مرة أخرى بعد إغلاق النافذة.</p><div style="direction:ltr;text-align:center;font-size:22px;font-weight:700;letter-spacing:2px;background:var(--in);padding:14px;border-radius:12px;user-select:all">${esc(password)}</div><div class="row" style="margin-top:12px"><button class="btn" onclick="navigator.clipboard.writeText('${password}').then(()=>toast('تم نسخ كلمة المرور'))">نسخ كلمة المرور</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إغلاق</button></div>`);
+  }catch(e){console.error(e);toast("تعذر إنشاء كلمة المرور: "+(e.message||e),1)}
 }
 function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
 async function reseed(){
