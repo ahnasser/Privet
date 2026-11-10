@@ -237,9 +237,9 @@ async function upd(o,msg){
 }
 async function load(){
   if(!isA())return loadRes();
-  const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending","phones","tenantPhones"]:[]),o={};
+  const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
   await Promise.all(names.map(async k=>o[k]=await api(k)));
-  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};
+  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
@@ -477,7 +477,7 @@ function vCamAdmin(){
       <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
       <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
   }
-  const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
+  const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><div class="row"><button type="button" class="btn gh" onclick="selAllPrj()">تحديد الكل</button><button type="button" class="btn gh" onclick="unselAllPrj()">إلغاء الكل</button></div><div id="prjApts" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;width:100%;margin-top:8px">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="prj-apt" value="${i}" checked> شقة ${i} ${apt(i)}</label>`).join("")}</div><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
   const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
   const body=p?`<div class="g"><div class="card"><span class="mu">نصيب كل شقة</span><b style="color:var(--am)">${num(s)} ج</b></div>
     <div class="card"><span class="mu">إجمالي المطلوب (${na} شقة)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
@@ -495,11 +495,13 @@ async function savePrj(i){
   if(fid&&v)o[b+`files/${i}`]=fid;
   upd(o,`${nm}: شقة ${i} - ${num(v)} ج ✓`);
 }
+function selAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=true)}
+function unselAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=false)}
 function addPrj(){
   const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
   if(!name||!(totalCost>0)||!Number.isFinite(totalCost))return toast("اكتب اسم المشروع وتكلفة صحيحة",1);
-  const eligibleApts=Array.from({length:N},(_,k)=>k+1).filter(i=>!isEmpty(i));
-  if(!eligibleApts.length)return toast("مفيش شقق مقيمة لتوزيع التكلفة عليها",1);
+  const eligibleApts=[...document.querySelectorAll(".prj-apt:checked")].map(x=>Number(x.value));
+  if(!eligibleApts.length)return toast("اختار شقة واحدة على الأقل",1);
   const perApt=totalCost/eligibleApts.length,id="p"+Date.now().toString(36);
   selP=id;upd({[`projects/${id}`]:{name,totalCost,eligibleApts,perApt,createdAt:today(),closed:false}},`مشروع جديد: ${name} - نصيب الشقة ${num(perApt)} ج ✓`);
 }
@@ -556,11 +558,11 @@ function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>{const s=statusOf(i);return `<tr><td>${i}</td>
     <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
     <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
-    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر" style="margin-top:4px"></div></td>
+    <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر" style="margin-top:4px"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر" style="margin-top:4px"></div></td>
     <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`}).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"مقيمة" و"مستأجرة" بيتحسبوا عادي في الحسابات، و"مستأجرة" بتفتح خانة رقم واتساب المستأجر. "غير مقيمة" بتطلع الشقة من كل الحسابات. اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"مقيمة" و"مستأجرة" بيتحسبوا عادي في الحسابات، و"مستأجرة" بتفتح خانة رقم واتساب المستأجر. "غير مقيمة" بتخرج من الاشتراكات الشهرية فقط. المشروعات الخاصة يتم اختيار الشقق المشاركة فيها بشكل مستقل. اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label></div>`;
 }
@@ -573,10 +575,10 @@ function saveApt(i){
   const kk=e=>e.replace(/\./g,",");
   old.forEach(e=>{if(!em.includes(e)){o[k(e)]=null;o[`access/${i}/${kk(e)}`]=null}});
   em.forEach(e=>{o[k(e)]=i;o[`access/${i}/${kk(e)}`]=true});
-  const ph=normPhone($("#ph-"+i).value),pt=normPhone($("#pt-"+i).value),st=$("#st-"+i).value;
+  const ph=normPhone($("#ph-"+i).value),pt=normPhone($("#pt-"+i).value),st=$("#st-"+i).value,tn=$("#tn-"+i)?.value.trim()||"";
   if(ph===false||(ph&&(ph.length<11||ph.length>15)))return toast("رقم واتساب المالك غير صحيح",1);
   if(pt===false||(pt&&(pt.length<11||pt.length>15)))return toast("رقم واتساب المستأجر غير صحيح",1);
-  o[`phones/${i}`]=ph||null;o[`tenantPhones/${i}`]=pt||null;
+  o[`phones/${i}`]=ph||null;o[`tenantPhones/${i}`]=pt||null;o[`tenantNames/${i}`]=tn||null;
   o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
   o[`apartments/${i}/vacant`]=st==="vac"?true:null;
   o[`apartments/${i}/occupancyStatus`]=st==="rent"?"rented":null;
@@ -728,7 +730,7 @@ function openReceipt(r){
   <div class="ln"><span>المبلغ</span><b>${num(r.amount)} جنيه مصري</b></div><div class="ln"><span>عن</span><b>${esc(r.purpose)}</b></div>
   <div class="sig"><span>توقيع المستلم: ........................</span><span>ختم / اعتماد</span></div></div>`);
 }
-const BK=["apartments","years","projects","monthlyDue","phones","tenantPhones","residents","pending"];
+const BK=["apartments","years","projects","monthlyDue","phones","tenantPhones","tenantNames","residents","pending"];
 function exportBackup(){
   const o={};BK.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:"application/json"}));a.download=`building60-backup-${today()}.json`;a.click();
