@@ -596,7 +596,7 @@ function searchApts(raw){
   box.innerHTML=matches.map(({apt:i,exactApt})=>{
     const owner=apt(i),tenant=G.tenantNames?.[i]||'',ph=G.phones?.[i]||'',tph=G.tenantPhones?.[i]||'',st=isEmpty(i)?'غير مقيمة':isRented(i)?'مستأجرة':'مقيمة';
     const months=MONTHS.filter(m=>actM(i,m)).map(m=>({m,p:pay(i,m),d:pdate(i,m)}));
-    const paid=months.reduce((a,x)=>a+x.p,0),dueTotal=months.length*due(),remaining=Math.max(0,dueTotal-paid),late=months.filter(x=>x.p<due());
+    const paid=months.reduce((a,x)=>a+x.p,0),dueTotal=months.reduce((s,x)=>s+dueFor(x.m,Y),0),remaining=Math.max(0,dueTotal-paid),late=months.filter(x=>x.p<dueFor(x.m,Y));
     const projectRows=prj().filter(p=>eligible(p,i)).map(p=>{const shareAmt=share(p),v=pp(p,i);return `<div><span>${esc(p.name)}${p.closed?' (مغلق)':''}</span><span>${num(v)} / ${num(shareAmt)} ج ${v>=shareAmt?'<b class="pos">✓</b>':'<b class="neg">متبقي '+num(Math.max(0,shareAmt-v))+' ج</b>'}</span></div>`}).join('');
     const monthlyRows=months.map(x=>`<div><span>${x.m}</span><span>${x.p>0?num(x.p)+' ج':'لم يدفع'} ${x.p>0?`<span class="mu">(${fd(x.d)})</span>`:''}</span></div>`).join('');
     return `<article class="search-result" data-apartment="${i}"><div class="top"><h3>شقة ${i} — ${esc(owner)}</h3><span class="bd ${st==='غير مقيمة'?'no':st==='مستأجرة'?'wa':'ok'}">${st}</span></div>
@@ -752,7 +752,7 @@ function vMe(){
 function vSend(){
   return `<div class="card"><h3>📤 رفع صورة تحويل (شقة ${U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
   <div class="row"><select id="sm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
-  <input id="sa" type="number" min="1" value="${due()}" style="width:110px"><input id="sd" type="date" value="${today()}">
+  <input id="sa" type="number" min="1" value="${dueFor(selM,Y)}" style="width:110px"><input id="sd" type="date" value="${today()}">
   ${attBtn("sf"," صورة التحويل")}<button class="btn am" onclick="sendReq()">إرسال</button></div></div>`;
 }
 async function sendReq(){
@@ -949,7 +949,7 @@ function vAdm(){
     <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div class="tenant-box" id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر"></div></td>
     <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`}).join("");
-  return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
+  return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${dueFor(selM,Y)}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
   <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label></div>`;
@@ -1006,7 +1006,7 @@ function waGroup(){
 }
 
 const ALLN=()=>Array.from({length:N},(_,k)=>k+1);
-function calcStat(){return{paid:MONTHS.map(m=>ALLN().filter(i=>actM(i,m)).reduce((s,i)=>s+pay(i,m),0)),due:MONTHS.map(m=>due()*nActM(m)),spent:MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((s,e)=>s+Number(e.amount||0),0))}}
+function calcStat(){return{paid:MONTHS.map(m=>ALLN().filter(i=>actM(i,m)).reduce((s,i)=>s+pay(i,m),0)),due:MONTHS.map(m=>dueFor(m,Y)*nActM(m)),spent:MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((s,e)=>s+Number(e.amount||0),0))}}
 function stat(){
   if(isA())return calcStat();
   const p=G.pub?.years?.[Y]||{},f=a=>Array.from({length:12},(_,i)=>Number((a||[])[i]||0));
@@ -1086,7 +1086,7 @@ async function loadRes(){
 function vMonth(){return isA()?vMonthAdmin():vMonthRes()}
 function vCam(){return isA()?vCamAdmin():vCamRes()}
 function vMonthRes(){
-  const i=U.apt,d=due(),k=MONTHS.indexOf(selM),pb=G.pub?.years?.[Y]||{},c=Number((pb.paid||[])[k]||0),t=Number((pb.due||[])[k]||0),p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);
+  const i=U.apt,d=dueFor(selM,Y),k=MONTHS.indexOf(selM),pb=G.pub?.years?.[Y]||{},c=Number((pb.paid||[])[k]||0),t=Number((pb.due||[])[k]||0),p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="g"><div class="card"><span class="mu">تحصيل العمارة (${selM})</span><b class="pos">${num(c)} من ${num(t)} ج</b></div>
   <div class="card"><span class="mu">نسبة التحصيل</span><b>${t?Math.round(c/t*100):0}%</b></div></div>
