@@ -320,7 +320,7 @@ function mob(){
       if(r.querySelector("th")){r.classList.add("th");return}
       [...r.children].forEach((c,i)=>{if(hs[i])c.dataset.l=hs[i]});
       const n=parseInt(r.children[0]&&r.children[0].textContent);
-      if(aptT&&Number.isInteger(n)&&isEmpty(n))r.classList.add("em");
+      if(aptT&&tab!=="cam"&&Number.isInteger(n)&&isEmpty(n))r.classList.add("em");
       if(aptT&&Number.isInteger(n)&&tab==="sum"&&isA()){r.style.cursor="pointer";r.title="اضغط لعرض كشف حساب الشقة";r.onclick=()=>openApt(n)}
     });
   });
@@ -480,13 +480,14 @@ function vCamAdmin(){
   if(!L.some(x=>x.id===selP))selP=(L.find(x=>!x.closed)||L[0])?.id;
   const p=L.find(x=>x.id===selP),s=share(p),ed=A&&p&&!p.closed,na=p?(Array.isArray(p.eligibleApts)?p.eligibleApts.length:nAct()):0;let col=0,rows="";
   if(p)for(let i=1;i<=N;i++){
-    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>🚫 غير مشارك</td><td>—</td><td>—</td><td></td></tr>`;continue}
+    if(!eligible(p,i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>🚫 غير مشارك</td><td>—</td><td>—</td><td>—</td><td></td></tr>`;continue}
     const v=pp(p,i),dt=p.dates?.[i]||"",f=p.files?.[i];col+=v;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td>
       <td>${ed?`<input type="number" min="0" id="ca-${i}" value="${v||""}" placeholder="0">`:num(v)+" ج"}</td>
       <td>${ed?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
+      <td>${v>s+0.5?`<b class="bd" style="background:var(--in);color:var(--bl)">فائض ${num(v-s)} ج</b>`:badge(v,s)}</td>
       <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
-      <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</td></tr>`;
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${v>0?`<button class="btn gh" style="color:var(--tx)" title="طباعة إيصال استلام" onclick="rcptPrj('${p.id}',${i})">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" style="color:var(--tx)" title="عرض صورة التحويل" onclick="showF('${f}')">🧾 صورة التحويل</button>`:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</div></td></tr>`;
   }
   const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><div class="row"><button type="button" class="btn gh" onclick="selAllPrj()">تحديد الكل</button><button type="button" class="btn gh" onclick="unselAllPrj()">إلغاء الكل</button></div><div id="prjApts" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;width:100%;margin-top:8px">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="prj-apt" value="${i}" checked> شقة ${i} ${apt(i)}</label>`).join("")}</div><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
   const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
@@ -495,7 +496,7 @@ function vCamAdmin(){
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
     <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
     <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
-    ${ed&&!Array.isArray(p.eligibleApts)?`<div class="row" style="margin-bottom:8px"><label>نصيب الشقة <input id="psh" type="number" value="${s}" style="width:100px"></label><button class="btn am" onclick="savePrjShare()">تعديل النصيب</button></div>`:p?.eligibleApts?`<div class="mu" style="margin:8px 0">تم تثبيت الشقق المستحقة وقت إنشاء المشروع: ${p.eligibleApts.length} شقة. نصيب الشقة ${num(s)} جنيه (قد يظهر فرق قروش بسبب التقسيم).</div><button class="btn am" onclick="managePrjApts()">⚙ إدارة المشاركين</button>`:""}
+    ${ed?`<div class="row" style="margin:8px 0;justify-content:space-between"><div class="mu">${Array.isArray(p.eligibleApts)?`التكلفة ${num(p.totalCost!=null?p.totalCost:s*na)} ج على ${p.eligibleApts.length} شقة، نصيب الشقة ${num(s)} ج.`:`نصيب الشقة ${num(s)} ج.`} تقدر تعدّل التكلفة والمشاركين في أي وقت.</div><button class="btn am" onclick="editPrj()">⚙ تعديل التكلفة والمشاركين</button></div>`:`<div class="mu" style="margin:8px 0">${p.closed?"المشروع مغلق. أعد فتحه لو عايز تعدّل أو تسجّل دفعات.":""}</div>`}
     <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
@@ -508,8 +509,43 @@ async function savePrj(i){
 }
 function selAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=true)}
 function unselAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=false)}
-function managePrjApts(){const p=G.projects[selP];let html=`<h3>إدارة المشاركين</h3><div class="prj-part">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="mpa" value="${i}" ${p.eligibleApts?.includes(i)?"checked":""}> شقة ${i} - ${apt(i)}</label>`).join("")}</div><button class="btn" onclick="savePrjApts()">حفظ</button>`;openMo(html)}
-function savePrjApts(){let arr=[...document.querySelectorAll(".mpa:checked")].map(x=>+x.value); if(!arr.length)return toast("اختر شقة",1); let p=G.projects[selP]; upd({[`projects/${selP}/eligibleApts`]:arr,[`projects/${selP}/perApt`]:Number(p.totalCost||0)/arr.length},"تم تحديث المشاركين"); closeMo()}
+function managePrjApts(){editPrj()}
+
+function editPrj(){
+  const p=G.projects[selP];if(!p)return;
+  if(p.closed)return toast("المشروع مغلق، أعد فتحه الأول",1);
+  const el=(Array.isArray(p.eligibleApts)?p.eligibleApts:ALLN().filter(i=>!isEmpty(i))).map(Number),tc=p.totalCost!=null?p.totalCost:share(p)*el.length;
+  openMo(`<div class="top" style="margin-bottom:10px"><b>⚙ تعديل مشروع: ${esc(p.name)}</b><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">✕</button></div>
+  <label class="mu">إجمالي تكلفة المشروع (جنيه)</label><input id="ep-total" type="number" min="1" value="${tc}" oninput="prjPreview()" style="width:100%;margin:4px 0 12px">
+  <div class="top" style="margin-bottom:6px"><b>الشقق المشاركة</b><div class="row"><button type="button" class="btn gh" style="color:var(--tx)" onclick="epAll(true)">تحديد الكل</button><button type="button" class="btn gh" style="color:var(--tx)" onclick="epAll(false)">إلغاء الكل</button></div></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:34vh;overflow:auto">${ALLN().map(i=>`<label style="background:var(--in);border:1px solid ${pp(p,i)>0?"var(--ac)":"var(--ln)"};border-radius:10px;padding:6px 8px;font-size:13px"><input type="checkbox" class="ep-apt" value="${i}" ${el.includes(i)?"checked":""} onchange="prjPreview()"> شقة ${i} - ${esc(apt(i))}${pp(p,i)>0?` <span class="mu">(دفعت ${num(pp(p,i))})</span>`:""}</label>`).join("")}</div>
+  <div id="ep-prev" class="ln2" style="margin-top:10px"></div>
+  <div class="mu" style="margin:8px 0">الدفعات المسجلة مابتتغيرش، والمتبقي لكل شقة بيتحسب على النصيب الجديد. الشقة اللي دفعت ماتتشالش من المشاركين غير بعد مسح دفعتها.</div>
+  <div class="row"><button class="btn" onclick="savePrjEdit()">حفظ التعديل</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إلغاء</button></div>`);
+  prjPreview();
+}
+const epSel=()=>[...document.querySelectorAll(".ep-apt:checked")].map(x=>+x.value);
+function epAll(on){document.querySelectorAll(".ep-apt").forEach(x=>x.checked=on);prjPreview()}
+function prjPreview(){
+  const p=G.projects[selP],t=Number($("#ep-total").value)||0,sel=epSel(),n=sel.length,col=sel.reduce((s,i)=>s+pp(p,i),0);
+  $("#ep-prev").innerHTML=n&&t>0?`<span>${n} مشارك × ${num(t/n)} ج</span><b>المتبقي بعد التعديل: ${num(Math.max(0,t-col))} ج</b>`:'<span class="mu">اكتب تكلفة واختار شقة على الأقل</span>';
+}
+function savePrjEdit(){
+  const p=G.projects[selP],t=Number($("#ep-total").value),arr=epSel();
+  if(!(t>0)||!Number.isFinite(t))return toast("اكتب تكلفة صحيحة",1);
+  if(!arr.length)return toast("اختار شقة واحدة على الأقل",1);
+  const out=ALLN().filter(i=>pp(p,i)>0&&!arr.includes(i));
+  if(out.length)return toast(`شقق ${out.join("، ")} دافعة بالفعل، امسح دفعتها الأول لو هتشيلها`,1);
+  const oldEl=(Array.isArray(p.eligibleApts)?p.eligibleApts:[]).map(Number),oldT=p.totalCost,perApt=t/arr.length;
+  const added=arr.filter(i=>!oldEl.includes(i)),removed=oldEl.filter(i=>!arr.includes(i)),parts=[];
+  if(Number(oldT)!==t)parts.push(`التكلفة ${num(oldT||0)} ← ${num(t)} ج`);
+  if(added.length)parts.push(`إضافة شقق ${added.join("،")}`);
+  if(removed.length)parts.push(`إزالة شقق ${removed.join("،")}`);
+  if(!parts.length){closeMo();return toast("مفيش تغيير")}
+  upd({[`projects/${selP}/totalCost`]:t,[`projects/${selP}/eligibleApts`]:arr,[`projects/${selP}/perApt`]:perApt},`تعديل مشروع ${p.name}: ${parts.join(" | ")} - النصيب الجديد ${num(perApt)} ج ✓`);
+  closeMo();
+}
+
 function addPrj(){
   const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
   if(!name||!(totalCost>0)||!Number.isFinite(totalCost))return toast("اكتب اسم المشروع وتكلفة صحيحة",1);
@@ -693,7 +729,7 @@ function vMonthRes(){
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="g"><div class="card"><span class="mu">تحصيل العمارة (${selM})</span><b class="pos">${num(c)} من ${num(t)} ج</b></div>
   <div class="card"><span class="mu">نسبة التحصيل</span><b>${t?Math.round(c/t*100):0}%</b></div></div>
-  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>${!actM(i,selM)?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="row"><span>المدفوع: <b>${num(p)} ج</b> من ${num(d)} ج</span>${badge(p,d)}<span class="mu">تاريخ الدفع: ${fd(dt)}</span>${f?`<button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}</div>`}</div>`;
+  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>${!actM(i,selM)?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="row"><span>المدفوع: <b>${num(p)} ج</b> من ${num(d)} ج</span>${badge(p,d)}<span class="mu">تاريخ الدفع: ${fd(dt)}</span>${p>0?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}</div>`}</div>`;
 }
 function vCamRes(){
   const L=prj(),i=U.apt;
@@ -702,7 +738,7 @@ function vCamRes(){
     const s=share(q),el=eligible(q,i),v=pp(q,i),tot=q.totalCost!=null?Number(q.totalCost):s*(q.eligibleApts?.length||0),col=Number(q.collected||0),f=q.files?.[i];
     return `<div class="card"><div class="top"><h3>${q.closed?"📦 ":""}${esc(q.name)}</h3><span class="mu">${esc(q.createdAt||"")}</span></div>
     <div class="g"><div class="card"><span class="mu">نصيب الشقة</span><b style="color:var(--am)">${num(s)} ج</b></div><div class="card"><span class="mu">إجمالي المشروع</span><b>${num(tot)} ج</b></div><div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div><div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,tot-col))} ج</b></div></div>
-    <div class="row">${el?`<span>دفعتك: <b>${num(v)} ج</b> من ${num(s)} ج</span>${badge(v,s)}${f?` <button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}`:'<span class="mu">شقتك غير مستحقة على هذا المشروع</span>'}</div></div>`;
+    <div class="row">${el?`<span>دفعتك: <b>${num(v)} ج</b> من ${num(s)} ج</span>${badge(v,s)}${v>0?` <button class="btn gh" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال</button>`:""}${f?` <button class="btn gh" onclick="showF('${f}')">🧾 صورة التحويل</button>`:""}`:'<span class="mu">شقتك غير مستحقة على هذا المشروع</span>'}</div></div>`;
   }).join("");
 }
 /* اختبار القواعد: شغّله من Console بعد تسجيل الدخول: rulesTest() */
