@@ -145,6 +145,17 @@ nav .l{display:none}
 .statcard{padding:10px;border:1px solid var(--ln);border-radius:12px;background:var(--card)}
 @media(max-width:700px){table.adm,table.adm tbody,table.adm tr,table.adm td{display:block;width:100%}table.adm tr{border:1px solid var(--ln);margin-bottom:12px;border-radius:12px;padding:8px}}
 
+
+/* V5.2A Mobile Cards */
+@media(max-width:768px){
+ table.adm tr, .tw table tr{display:block!important;border:1px solid var(--ln);border-radius:14px;padding:10px;margin-bottom:10px;background:var(--card)}
+ table.adm tr.th,.tw table tr.th{display:none!important}
+ table.adm td,.tw table td{display:block!important;width:100%!important;border:0;padding:6px 0;white-space:normal}
+ table.adm td:before,.tw table td[data-l]:before{content:attr(data-l);display:block;color:var(--mu);font-size:11px;margin-bottom:2px}
+ input,select,.btn{min-height:48px;font-size:16px}
+ .tw{overflow:visible}
+}
+
 </style>
 </head>
 <body>
