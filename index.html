@@ -1,6 +1,4 @@
-<!-- Building 60 V5.7 FREE — manual JSON backup, shared-admin audit metadata, scoped in-app notifications. No Cloud Functions / Storage backup. -->
-<!-- V5.3 mobile polish + admin apartment search -->
-<!-- Building60 V3: tenant UI, project participants enhancements -->
+<!-- Building 60 V5.8 FREE — manual JSON backup, shared-admin audit metadata, scoped in-app notifications. No Cloud Functions / Storage backup. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -72,7 +70,6 @@ table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px
  #login{margin:22px auto;padding:20px}
  nav{padding-bottom:5px}
  nav button{border-radius:11px}
-
  input,select{font-size:16px}
  .card{padding:12px}
  .top{align-items:flex-start}
@@ -89,7 +86,6 @@ table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px
  .g{grid-template-columns:1fr 1fr}.g b{font-size:17px}
  nav button{padding:8px 11px;font-size:14px}
 }
-
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 14px}
 .chart-card{min-width:0;background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 82%,var(--in)));border:1px solid var(--ln);border-radius:20px;padding:17px;box-shadow:var(--shadow)}
 .chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -100,8 +96,6 @@ table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px
 .chart-svg{width:100%;height:auto;display:block;overflow:visible}
 .chart-empty{padding:32px 8px;text-align:center;color:var(--mu);font-size:13px}
 @media(max-width:760px){.chart-grid{grid-template-columns:1fr}.chart-card{padding:13px}}
-
-
 #app{display:grid;grid-template-columns:230px minmax(0,1fr);grid-template-rows:auto 1fr;gap:14px;align-items:start;max-width:1480px;margin:0 auto}
 #app>.card:first-child{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:18px;border-radius:22px;padding:16px 22px}
 #nav{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:7px;overflow:visible;margin:0;padding:12px;background:linear-gradient(160deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--bg)));border:1px solid var(--ln);border-radius:20px;min-height:calc(100vh - 130px);position:sticky;top:12px}
@@ -139,15 +133,10 @@ nav .l{display:none}
  nav button{width:100%;flex:none;text-align:right;border:0;background:transparent;padding:11px 12px}
  nav .s{display:none}nav .l{display:inline}
 }
-
-/* V4.1 */
 .searchbar{display:flex;gap:8px;margin:10px 0}.searchbar input{flex:1}
 .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:10px 0}
 .statcard{padding:10px;border:1px solid var(--ln);border-radius:12px;background:var(--card)}
 @media(max-width:700px){table.adm,table.adm tbody,table.adm tr,table.adm td{display:block;width:100%}table.adm tr{border:1px solid var(--ln);margin-bottom:12px;border-radius:12px;padding:8px}}
-
-
-/* V5.2A Mobile Cards */
 @media(max-width:768px){
  table.adm tr, .tw table tr{display:block!important;border:1px solid var(--ln);border-radius:14px;padding:10px;margin-bottom:10px;background:var(--card)}
  table.adm tr.th,.tw table tr.th{display:none!important}
@@ -156,9 +145,6 @@ nav .l{display:none}
  input,select,.btn{min-height:48px;font-size:16px}
  .tw{overflow:visible}
 }
-
-
-/* V5.3 Mobile polish: compact secondary selectors and prevent oversized controls */
 @media(max-width:850px){
   body{padding:7px}
   #app{gap:8px}
@@ -198,9 +184,6 @@ nav .l{display:none}
 .search-result .sr-projects{margin-top:9px;border-top:1px solid var(--ln);padding-top:8px;font-size:12px}
 .search-result .sr-projects>div{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
 @media(max-width:420px){.search-result{padding:10px}.search-result .sr-grid{gap:5px}.search-result .sr-stat{padding:7px}}
-
-
-/* V5.4: precise apartment search + compact mobile admin layout */
 @media(max-width:640px){
   html,body{width:100%;max-width:100%;overflow-x:hidden}
   body{padding:7px}
@@ -225,8 +208,6 @@ nav .l{display:none}
   .search-result .row{align-items:stretch}
   .search-result .row .btn{max-width:100%;white-space:normal}
 }
-
-/* V5.6 — restrained premium polish; visual-only layer */
 :root{--shadow:0 14px 34px rgba(0,0,0,.20)}
 .card,.chart-card{transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}
 .card:hover,.chart-card:hover{border-color:color-mix(in srgb,var(--ac) 32%,var(--ln));box-shadow:0 16px 38px rgba(0,0,0,.24)}
@@ -269,7 +250,6 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
-
 </style>
 </head>
 <body>
@@ -307,14 +287,12 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
 <script>
 firebase.initializeApp({apiKey:"AIzaSyAQf5ZHFIgR1RqJiZAnc4_xk6Sa4kUZbjs",authDomain:"sh2-bu60.firebaseapp.com",projectId:"sh2-bu60",appId:"1:398417900233:web:d3ea5648000139f30d5318"});
 const auth=firebase.auth();
-/* وضع الاختبار المحلي: يشتغل بس على localhost لما يتفتح الرابط بـ ?emu */
 const EMU=location.hostname==="localhost"&&/[?&]emu\b/.test(location.search);
 if(EMU){auth.useEmulator("http://127.0.0.1:9099");document.title="🧪 تجريبي - "+document.title}
 const DB = EMU?"http://127.0.0.1:9000":"https://sh2-bu60-default-rtdb.europe-west1.firebasedatabase.app";
 const N = 24;
 const MONTHS = ["يناير","فبراير","مارس","إبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
-/* ---------- بيانات الشيت الأصلية (تُستخدم لو القاعدة فاضية أو عند الاستعادة) ---------- */
 function makeSeed(){
   const names=["السيد كرم الدين","(فارغ)","أحمد محمد عبدالرحمن","هاني محمود حسين","أسماء صلاح حسن","إيمان إبراهيم محمود","أحمد يوسف حسن","أحمد ناصر","أميرة محمد فاروق","شريف صلاح الدين","منى محمود نجيب","لبيب أنور","أحمد فتحي محمد","إسلام عماد الدين","نهى حسين حافظ أمين","مصطفى أمدين","(فارغ)","أحمد ربيع شوقي","محمد أحمد عبد الفتاح","أماني محمد مصطفى","أحمد سمير","(فارغ)","عادل عبد الرازق","عاطف محمد صادق"];
   const apartments={};names.forEach((n,i)=>apartments[i+1]={ownerName:n});
@@ -341,7 +319,6 @@ function makeSeed(){
     years:{"2026":{monthlyPayments:mp,payDates:pd,expenses}}};
 }
 
-/* ---------- حالة التطبيق ---------- */
 let G=null,U=null,Y="2026",tab="sum",selM=MONTHS[new Date().getMonth()],expF="ALL",flt=new Set();
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -352,7 +329,6 @@ const isA=()=>U&&U.role==="admin";
 function theme(t){document.documentElement.dataset.t=t;localStorage.setItem("b60t",t);$("#th").textContent=t==="light"?"🌙":"☀️"}
 theme(localStorage.getItem("b60t")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"));
 
-/* ---------- الوصول لـ Firebase ---------- */
 const url=p=>DB+"/"+p.split("/").filter(Boolean).map(encodeURIComponent).join("/")+".json";
 async function apiRaw(p,method="GET",body,q=""){
   const t=await tok(),r=await fetch(url(p)+(q?q+"&":"?")+"auth="+t+(EMU?"&ns=demo-bu60-default-rtdb":""),{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
@@ -364,7 +340,6 @@ function setLocal(path,v){
   k.slice(0,-1).forEach(s=>o=o[s]??(o[s]={}));
   if(v===null)delete o[k[k.length-1]];else o[k[k.length-1]]=v;
 }
-/* كتابة آمنة: تعديل مسارات محددة فقط (لا نكتب فوق القاعدة كلها) */
 async function upd(o,msg){
   try{const actor={uid:auth.currentUser?.uid||"",email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||"",role:isA()?"admin":"resident",apartment:isA()?null:Number(U?.apt||0)};
     const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?((actor.name||"مشرف")+" ("+(actor.email||"")+")"):("شقة "+U.apt),actorUid:actor.uid,actorEmail:actor.email,actorName:actor.name,actorRole:actor.role,apartment:actor.apartment,msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
@@ -382,7 +357,6 @@ async function load(){
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
-/* ---------- قراءة البيانات ---------- */
 const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
 const isEmpty=i=>{const a=G.apartments?.[i]||{},n=(a.ownerName||"").trim();return a.vacant===true||!n||n==="(فارغ)"};
@@ -408,7 +382,6 @@ function initFlt(){
 const badge=(p,d)=>p>=d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
 function toast(t,bad){const e=$("#toast");e.textContent=t;e.className="show"+(bad?" bad":"");clearTimeout(toast.t);toast.t=setTimeout(()=>e.className="",2600)}
 
-/* ---------- الدخول بحساب Google ---------- */
 const tok=()=>auth.currentUser.getIdToken();
 function googleLogin(){
   $("#err").textContent="";
@@ -420,12 +393,11 @@ function logout(){auth.signOut()}
 function showLogin(){U=null;G=null;$("#app").hidden=true;$("#login").hidden=false;$("#ld").hidden=true}
 const emailsOf=i=>Object.entries(G.residents||{}).filter(([,v])=>Number(v)===i).map(([k])=>k.replace(/,/g,"."));
 
-/* === التعديل الجذري هنا لمنع خطأ 401 وتحديد الصلاحيات بدقة === */
+/* === التحقق من الصلاحيات وتحديد شقة المستخدم === */
 async function start(u){
   $("#err").textContent="";$("#ld").hidden=false;
   const email=(u.email||"").toLowerCase(),key=email.replace(/\./g,",");
   
-  // قائمة الإيميلات الإدارية المعروفة
   const ADMIN_EMAILS = [
     'anasser.awaad@gmail.com',
     'adelali.uppit@gmail.com',
@@ -441,10 +413,10 @@ async function start(u){
     try {
       a = await api("residents/" + key);
     } catch(e) {
-      console.error(e);
+      console.error("Residents query failed:", e);
     }
     
-    if(a == null){
+    if(a == null || a === undefined){
       await auth.signOut();
       $("#ld").hidden=true;
       $("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;
@@ -456,13 +428,13 @@ async function start(u){
   try {
     await load();
     if(admin){
-      U.apt = Number(G.residents[key])||0;
+      U.apt = Number(G.residents?.[key])||0;
       await syncAccess(); pubSoon();
     }
   } catch(err) {
-    console.error(err);
+    console.error("Load failed:", err);
     $("#ld").hidden=true;
-    $("#err").textContent="تعذر تحميل بيانات الشقة. تأكد من تسجيل الإيميل في قاعدة البيانات.";
+    $("#err").textContent="تعذر تحميل بيانات الشقة. حاول تسجيل الدخول مرة أخرى أو التأكد من قواعد البيانات.";
     return;
   }
 
@@ -471,7 +443,6 @@ async function start(u){
 
 function enter(){$("#login").hidden=true;$("#app").hidden=false;tab=isA()?"sum":"me";initFlt();render()}
 
-/* ---------- العرض ---------- */
 function mob(){
   document.querySelectorAll("#view table").forEach(t=>{
     const hs=[...t.querySelectorAll("th")].map(x=>x.textContent.trim()),aptT=hs[0]==="شقة"&&tab!=="adm";
@@ -506,7 +477,6 @@ function render(){
   mob();
 }
 
-/* --- الملخص --- */
 function togM(m){flt.has(m)?flt.delete(m):flt.add(m);render()}
 function allM(on){flt=on?new Set(MONTHS):new Set();render()}
 function moneyAxis(v){
@@ -553,8 +523,6 @@ function donutChart(title,subtitle,paid,total){
 
 function vSum(){
   const ms=MONTHS.filter(m=>flt.has(m)),d=due(),AP=prj().filter(q=>!q.closed);let c=0,rows="",okN=0,lateN=0;
-    // Residents cannot read the apartments collection in full. Use admin-published
-  // aggregate counts so the public dashboard never derives building totals from one apartment.
   const liveStatus={total:N,occupied:ALLN().filter(i=>statusOf(i)==="occ").length,
     rented:ALLN().filter(i=>statusOf(i)==="rent").length,vacant:ALLN().filter(i=>statusOf(i)==="vac").length};
   const statusSummary=isA()?liveStatus:(G.pub?.apartmentStatus||null);
@@ -592,7 +560,6 @@ function vSum(){
   ${isA()?`<div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>المشاريع</th></tr>${rows}</table></div></div>`:""}`;
 }
 
-/* --- بحث شامل للمشرف: رقم الشقة / الاسم / موبايل المالك أو المستأجر --- */
 function vSearch(){
   if(!isA())return '<div class="card">البحث متاح للمشرف فقط.</div>';
   return `<div class="card"><h3>🔎 البحث عن شقة أو مالك</h3>
@@ -608,7 +575,6 @@ function searchApts(raw){
   const q=toLatin(raw).trim().toLocaleLowerCase('ar'),qd=q.replace(/\D/g,''),matches=[];
   if(!q){count.textContent='اكتب رقم الشقة أو جزءًا من الاسم أو 3 أرقام على الأقل من الموبايل.';box.innerHTML='';return}
   const numericOnly=/^\d+$/.test(q);
-  // رقم مكوّن من رقم أو رقمين يُعامل كرقم شقة فقط، حتى لا تظهر شقق أخرى لمجرد احتواء هاتفها على نفس الرقم.
   const apartmentNumberQuery=numericOnly&&qd.length<=2;
   for(let i=1;i<=N;i++){
     const owner=String(apt(i)||''),tenant=String(G.tenantNames?.[i]||''),phone=String(G.phones?.[i]||''),tenantPhone=String(G.tenantPhones?.[i]||'');
@@ -636,7 +602,6 @@ function searchApts(raw){
   }).join('');
 }
 
-/* --- التحصيل الشهري (تاريخ + صورة التحويل) --- */
 const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}<input type="file" accept="image/*" id="${id}" hidden onchange="this.parentNode.firstChild.textContent='✅'"></label>`;
 function vMonthAdmin(){
   const A=isA(),d=due();let c=0,rows="";
@@ -661,7 +626,6 @@ async function savePay(i){
   upd(o,v?`دفعة شقة ${i} - ${selM}: ${num(v)} ج ✓`:`إلغاء دفعة شقة ${i} - ${selM}`);
 }
 
-/* --- المصروفات (مع الفواتير) --- */
 function vExp(){
   const A=isA(),list=exps().filter(e=>expF==="ALL"||e.month===expF),tot=list.reduce((s,e)=>s+Number(e.amount||0),0);
   const rows=list.map(e=>`<tr><td>${esc(e.month)}</td><td style="white-space:normal">${esc(e.desc)}</td><td class="neg">${num(e.amount)} ج</td><td>${fd(e.date)}</td><td>${e.file?`<button class="btn gh" onclick="showF('${e.file}')">🧾</button> `:""}${A?`<button class="btn gh" onclick="delExp('${e.id}')">حذف</button>`:""}</td></tr>`).join("")
@@ -687,7 +651,6 @@ function delExp(id){
   if(confirm("تأكيد حذف المصروف؟")){const o={[`years/${Y}/expenses/${id}`]:null};if(e.file)o[`files/${e.file}`]=null;upd(o,`حذف مصروف: ${e.desc||""}`)}
 }
 
-/* --- المشاريع والتحصيلات الخاصة (الكاميرات وغيرها) --- */
 let selP=null;
 function vCamAdmin(){
   const A=isA(),L=prj();
@@ -723,7 +686,6 @@ async function savePrj(i){
 }
 function selAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=true)}
 function unselAllPrj(){document.querySelectorAll(".prj-apt").forEach(x=>x.checked=false)}
-function managePrjApts(){editPrj()}
 
 function editPrj(){
   const p=G.projects[selP];if(!p)return;
@@ -734,7 +696,7 @@ function editPrj(){
   <div class="top" style="margin-bottom:6px"><b>الشقق المشاركة</b><div class="row"><button type="button" class="btn gh" style="color:var(--tx)" onclick="epAll(true)">تحديد الكل</button><button type="button" class="btn gh" style="color:var(--tx)" onclick="epAll(false)">إلغاء الكل</button></div></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:34vh;overflow:auto">${ALLN().map(i=>`<label style="background:var(--in);border:1px solid ${pp(p,i)>0?"var(--ac)":"var(--ln)"};border-radius:10px;padding:6px 8px;font-size:13px"><input type="checkbox" class="ep-apt" value="${i}" ${el.includes(i)?"checked":""} onchange="prjPreview()"> شقة ${i} - ${esc(apt(i))}${pp(p,i)>0?` <span class="mu">(دفعت ${num(pp(p,i))})</span>`:""}</label>`).join("")}</div>
   <div id="ep-prev" class="ln2" style="margin-top:10px"></div>
-  <div class="mu" style="margin:8px 0">الدفعات المسجلة مابتتغيرش، والمتبقي لكل شقة بيتحسب على النصيب الجديد. الشقة اللي دفعت ماتتشالش من المشاركين غير بعد مسح دفعتها.</div>
+  <div class="mu" style="margin:8px 0">الدفعات المسجلة مابتتغيرش، والمتبقي لكل شقة بيتحسب على النصيب الجديد.</div>
   <div class="row"><button class="btn" onclick="savePrjEdit()">حفظ التعديل</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إلغاء</button></div>`);
   prjPreview();
 }
@@ -770,7 +732,6 @@ function addPrj(){
 }
 function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
-/* --- كشف حساب الساكن --- */
 function vMe(){
   const i=meApt(),d=due();let tot=0;
   const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
@@ -781,13 +742,6 @@ function vMe(){
   <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
 }
 
-function savePrjShare(){
-  const p=G.projects[selP];if(Array.isArray(p?.eligibleApts))return toast("نصيب المشروع مثبت ولا يمكن تغييره",1);
-  const v=Number($("#psh").value);if(!(v>0))return toast("اكتب نصيب صحيح",1);
-  upd({[`projects/${selP}/perApt`]:v},`نصيب ${G.projects[selP].name}: ${num(v)} ج ✓`);
-}
-
-/* --- رفع تحويل (الساكن) + اعتماد (الأدمن) --- */
 function vSend(){
   return `<div class="card"><h3>📤 رفع صورة تحويل (شقة ${U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
   <div class="row"><select id="sm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
@@ -816,9 +770,6 @@ function okReq(id){
 }
 function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة ${r.apt} - ${r.month}`)}
 
-/* --- الإدارة --- */
-
-/* --- V5.7 مركز التنبيهات: بيانات كل ساكن معزولة حسب الشقة --- */
 function notificationItems(){
   const raw=isA()?(G.notifications?.admin||{}):(G.notifications?.residents?.[U.apt]||{});
   const read=isA()?(G.notificationReads?.admin||{}):(G.notificationReads?.residents?.[U.apt]||{});
@@ -834,7 +785,7 @@ function vNotifications(){
   </article>`).join("");
   return `<div class="card"><div class="top"><div><h3>🔔 مركز التنبيهات</h3><div class="mu">${isA()?"تنبيهات الإدارة وطلبات السكان":"تنبيهات تخص شقتك فقط"}</div></div><span class="bd ${unread?'wa':'ok'}">${unread} غير مقروء</span></div>
     ${cards||'<div class="chart-empty">لا توجد تنبيهات حتى الآن</div>'}
-    <div class="mu" style="margin-top:10px">التنبيهات داخل البرنامج. لا يتم إرسال رسائل SMS أو WhatsApp تلقائياً في هذه المرحلة.</div></div>`;
+    <div class="mu" style="margin-top:10px">التنبيهات داخل البرنامج.</div></div>`;
 }
 async function markNotificationRead(id){
   try{
@@ -846,7 +797,6 @@ async function markNotificationRead(id){
   }catch(e){toast("تعذر تحديث حالة التنبيه",1)}
 }
 
-/* --- مركز التقارير: متاح للمشرف فقط، ويقرأ البيانات الموجودة دون تعديلها --- */
 let reportType="expenses",reportMonth="ALL",reportApt="1",reportProject="";
 function reportRows(){
   const rows=[];
@@ -993,7 +943,7 @@ function vAdm(){
     <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`}).join("");
   return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${due()}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">"مقيمة" و"مستأجرة" بيتحسبوا عادي في الحسابات، و"مستأجرة" بتفتح خانة رقم واتساب المستأجر. "غير مقيمة" بتخرج من الاشتراكات الشهرية فقط. المشروعات الخاصة يتم اختيار الشقق المشاركة فيها بشكل مستقل. اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label></div>`;
 }
@@ -1023,7 +973,6 @@ async function reseed(){
   catch(e){console.error("Restore failed:",e);toast("تعذر الاستعادة",1)}
 }
 
-/* ---------- تذكيرات واتساب (بتتبعت من واتساب الأدمن) ---------- */
 function normPhone(s){let d=String(s||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="20"+d.slice(1);return d}
 const wa=(phone,text)=>`https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 const site=()=>location.origin;
@@ -1038,7 +987,7 @@ function lateText(){
   const L=[];let tot=0;
   for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
   if(!L.length)return "";
-  return `السلام عليكم 🌷\nتذكير باشتراك العمارة عن شهر ${selM} ${Y} (${num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
+  return `السلام عليكم 🌷\nتذكير بااشتراك العمارة عن شهر ${selM} ${Y} (${num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
 }
 async function groupMsg(){
   const t=lateText();if(!t)return toast("كل الشقق مسددة لهذا الشهر 🎉");
@@ -1049,9 +998,6 @@ function waGroup(){
   openMo(`<div class="top" style="margin-bottom:8px"><b>رسالة الجروب (عدّل قبل الإرسال)</b><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">✕</button></div><textarea id="gm" rows="12" style="width:100%;background:var(--in);color:var(--tx);border:1px solid var(--ln);border-radius:10px;padding:10px;font:inherit">${esc(t)}</textarea><div class="row" style="margin-top:8px"><button class="btn" onclick="gmSend()">إرسال في واتساب 💬</button><button class="btn gh" style="color:var(--tx)" onclick="gmCopy()">📋 نسخ</button></div>`);
 }
 
-
-/* ---------- الصور / السجل / التصدير ---------- */
-/* ---------- بيانات عامة منشورة (pub) + تحميل الساكن + اختبار القواعد ---------- */
 const ALLN=()=>Array.from({length:N},(_,k)=>k+1);
 function calcStat(){return{paid:MONTHS.map(m=>ALLN().filter(i=>actM(i,m)).reduce((s,i)=>s+pay(i,m),0)),due:MONTHS.map(m=>due()*nActM(m)),spent:MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((s,e)=>s+Number(e.amount||0),0))}}
 function stat(){
@@ -1061,7 +1007,6 @@ function stat(){
 }
 function buildPub(){
   const old=Y,out={monthlyDue:due(),years:{},projects:{},
-    // Aggregate-only occupancy summary; no resident names, phones, or apartment-level data.
     apartmentStatus:{total:N,
       occupied:ALLN().filter(i=>statusOf(i)==="occ").length,
       rented:ALLN().filter(i=>statusOf(i)==="rent").length,
@@ -1073,8 +1018,7 @@ function buildPub(){
 }
 let pubT;
 function pubSoon(){clearTimeout(pubT);pubT=setTimeout(async()=>{try{await api("pub","PUT",buildPub())}catch(e){console.error("pub",e)}},900)}
-/* يطابق خريطة الدخول للقواعد، ويثبّت المشاريع القديمة على الشقق المقيمة وقت الترحيل */
-/* ترحيل لمرة واحدة: الصور القديمة (id بدون مجلد) تتنقل لـ files/pub أو files/apt/<شقة> عشان تتفتح مع القواعد الجديدة */
+
 async function migrateFiles(){
   const mv=[],bare=f=>f&&!String(f).includes("/");
   Object.entries(G.years||{}).forEach(([y,yo])=>{
@@ -1095,22 +1039,43 @@ async function syncAccess(){
   if(!Object.keys(o).length)return;
   try{await api("","PATCH",o);Object.entries(o).forEach(([p,v])=>setLocal(p,v))}catch(e){console.error("access",e)}
 }
-/* الساكن: يقرأ فقط مسارات مسموحة له (ملخص عام + شقته + المصروفات) */
+
+/* تعديل مهم لـ loadRes لجعل التحميل آمناً حتى لو اختفت القواعد أو كانت الوصولات محددة */
 async function loadRes(){
-  const a=U.apt,pub=(await api("pub"))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{},notifications:{residents:{}},notificationReads:{residents:{}}};
-  const [residentNotifs,residentReads]=await Promise.all([api(`notifications/residents/${a}`),api(`notificationReads/residents/${a}/${auth.currentUser.uid}`)]);
-  o.notifications.residents[a]=residentNotifs||{};o.notificationReads.residents[a]=residentReads||{};
-  o.apartments[a]=(await api("apartments/"+a))||{};
-  await Promise.all(Object.keys(pub.years||{}).map(async y=>{
-    const [ex,mp,pd,pf]=await Promise.all(["expenses","monthlyPayments/"+a,"payDates/"+a,"payFiles/"+a].map(k=>api(`years/${y}/${k}`)));
+  const a=U.apt,pub=(await api("pub").catch(()=>({})))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{},notifications:{residents:{}},notificationReads:{residents:{}}};
+  
+  const [residentNotifs,residentReads]=await Promise.all([
+    api(`notifications/residents/${a}`).catch(()=>({})),
+    api(`notificationReads/residents/${a}/${auth.currentUser.uid}`).catch(()=>({}))
+  ]);
+  
+  o.notifications.residents[a]=residentNotifs||{};
+  o.notificationReads.residents[a]=residentReads||{};
+  o.apartments[a]=(await api("apartments/"+a).catch(()=>({})))||{};
+  
+  const yearsToLoad = Object.keys(pub.years||{}).length ? Object.keys(pub.years) : [Y];
+  
+  await Promise.all(yearsToLoad.map(async y=>{
+    const [ex,mp,pd,pf]=await Promise.all([
+      api(`years/${y}/expenses`).catch(()=>({})),
+      api(`years/${y}/monthlyPayments/${a}`).catch(()=>({})),
+      api(`years/${y}/payDates/${a}`).catch(()=>({})),
+      api(`years/${y}/payFiles/${a}`).catch(()=>({}))
+    ]);
     o.years[y]={expenses:ex||{},monthlyPayments:{[a]:mp||{}},payDates:{[a]:pd||{}},payFiles:{[a]:pf||{}}};
   }));
+  
   await Promise.all(Object.entries(pub.projects||{}).map(async([id,m])=>{
-    const [p,d,f]=await Promise.all(["payments","dates","files"].map(k=>api(`projects/${id}/${k}/${a}`)));
+    const [p,d,f]=await Promise.all([
+      api(`projects/${id}/payments/${a}`).catch(()=>({})),
+      api(`projects/${id}/dates/${a}`).catch(()=>({})),
+      api(`projects/${id}/files/${a}`).catch(()=>({}))
+    ]);
     o.projects[id]={...m,payments:p==null?{}:{[a]:p},dates:d==null?{}:{[a]:d},files:f==null?{}:{[a]:f}};
   }));
   G=o;
 }
+
 function vMonth(){return isA()?vMonthAdmin():vMonthRes()}
 function vCam(){return isA()?vCamAdmin():vCamRes()}
 function vMonthRes(){
@@ -1130,22 +1095,7 @@ function vCamRes(){
     <div class="row">${el?`<span>دفعتك: <b>${num(v)} ج</b> من ${num(s)} ج</span>${badge(v,s)}${v>0?` <button class="btn gh" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال</button>`:""}${f?` <button class="btn gh" onclick="showF('${f}')">🧾 صورة التحويل</button>`:""}`:'<span class="mu">شقتك غير مستحقة على هذا المشروع</span>'}</div></div>`;
   }).join("");
 }
-/* اختبار القواعد: شغّله من Console بعد تسجيل الدخول: rulesTest() */
-async function rulesTest(){
-  const A=isA(),me=U.apt||5,ot=me===3?8:3,pid=Object.keys(G.projects||{})[0]||"cam",key=U.email.replace(/\./g,","),rows=[];
-  const r=async(path,exp,q)=>{let ok=true;try{await api(path,"GET",undefined,q||"")}catch(e){ok=false}rows.push({نوع:"قراءة",مسار:path||"(الجذر)",متوقع:exp?"مسموح":"ممنوع",فعلي:ok?"مسموح":"ممنوع",نتيجة:ok===exp?"✅":"❌"})};
-  const w=async(path,val,exp)=>{let ok=true;try{await api(path,"PUT",val);if(A)await api(path,"DELETE")}catch(e){ok=false}rows.push({نوع:"كتابة",مسار:path,متوقع:exp?"مسموح":"ممنوع",فعلي:ok?"مسموح":"ممنوع",نتيجة:ok===exp?"✅":"❌"})};
-  await r("pub",true);await r("apartments/"+me,true);await r("apartments/"+ot,A);await r(`years/${Y}/expenses`,true);
-  await r(`years/${Y}/monthlyPayments/${me}`,true);await r(`years/${Y}/monthlyPayments/${ot}`,A);await r(`years/${Y}/payDates/${ot}`,A);await r(`years/${Y}/payFiles/${ot}`,A);
-  await r(`projects/${pid}/payments/${me}`,true);await r(`projects/${pid}/payments/${ot}`,A);
-  for(const p of ["projects","years","apartments","residents","phones","tenantPhones","pending","access","log"])await r(p,A);
-  await r("residents/"+key,true);await r("",A,"?shallow=true");
-  await w("pub/__t",1,A);await w(`years/${Y}/expenses/__t`,{amount:1},A);await w(`files/apt/${ot}/__t`,"x",A);
-  await w("pending/__t",{email:U.email,apt:String(ot),month:"x",amount:1,file:`apt/${ot}/x`,status:"pending"},A);
-  console.table(rows);const bad=rows.filter(x=>x.نتيجة==="❌").length;console.log(bad?`❌ ${bad} اختبار فشل`:"✅ كل الاختبارات نجحت");return rows;
-}
 
-/* ---------- حالة الاتصال + النوافذ المنبثقة + إيصال الاستلام + النسخ الاحتياطي ---------- */
 function setNet(ok){const e=$("#net");if(e){e.textContent=ok?"● قاعدة البيانات متصلة":"● غير متصل";e.className="bd "+(ok?"ok":"no")}}
 async function api(...a){try{const r=await apiRaw(...a);setNet(true);return r}catch(e){setNet(!(e instanceof TypeError));throw e}}
 function openMo(html){$("#mb").innerHTML=html;$("#mo").hidden=false}
@@ -1213,7 +1163,6 @@ function exportCsv(){
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`building60-${Y}.csv`;a.click();
 }
 
-/* ---------- التشغيل ---------- */
 auth.onAuthStateChanged(u=>{
   if(!u){showLogin();return}
   start(u).catch(e=>{$("#ld").hidden=true;$("#err").textContent="تعذر تحميل البيانات: "+e.message});
