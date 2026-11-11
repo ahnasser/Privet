@@ -414,13 +414,13 @@ function go(k){if(k==="me")adminApt=0;tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
   const np=Object.keys(G.pending||{}).length,
-    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
+    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],["reports","التقارير 📊"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
             :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
-  const LONG={req:"طلبات التحويل بانتظار الاعتماد",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل"};
+  const LONG={req:"طلبات التحويل بانتظار الاعتماد",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل",reports:"تقارير المصروفات والمشروعات وكشوف الشقق"};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')"><span class="s">${l}</span><span class="l">${LONG[k]||l}${k==="req"&&np?` (${np})`:""}</span></button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
-  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch})[tab]();
+  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch,reports:vReports})[tab]();
   if(tab==="adm")loadLog();
   mob();
 }
@@ -472,7 +472,13 @@ function donutChart(title,subtitle,paid,total){
 
 function vSum(){
   const ms=MONTHS.filter(m=>flt.has(m)),d=due(),AP=prj().filter(q=>!q.closed);let c=0,rows="",okN=0,lateN=0;
-    const rented=ALLN().filter(i=>statusOf(i)==="rent").length,vacant=ALLN().filter(i=>statusOf(i)==="vac").length,occupied=ALLN().filter(i=>statusOf(i)==="occ").length;
+    // Residents cannot read the apartments collection in full. Use admin-published
+  // aggregate counts so the public dashboard never derives building totals from one apartment.
+  const liveStatus={total:N,occupied:ALLN().filter(i=>statusOf(i)==="occ").length,
+    rented:ALLN().filter(i=>statusOf(i)==="rent").length,vacant:ALLN().filter(i=>statusOf(i)==="vac").length};
+  const statusSummary=isA()?liveStatus:(G.pub?.apartmentStatus||null);
+  const rented=Number(statusSummary?.rented||0),vacant=Number(statusSummary?.vacant||0),occupied=Number(statusSummary?.occupied||0);
+  const statusValue=v=>statusSummary?num(v):"—";
   for(let i=1;i<=N&&isA();i++){
     if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td></tr>`;continue}
     const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=d*am.length,cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;if(need>0){if(need-p<=0)okN++;else lateN++}
@@ -497,7 +503,7 @@ function vSum(){
   </div>`;
   return `<div class="card"><div class="top"><h3>🗓️ الشهور المحسوبة</h3><div class="row"><button class="chip" onclick="allM(true)">الكل</button><button class="chip" onclick="allM(false)">لا شيء</button></div></div>
     <div class="chips">${MONTHS.map(m=>`<button class="chip ${flt.has(m)?"on":""}" onclick="togM('${m}')">${m}</button>`).join("")}</div></div>
-  <div class="g"><div class="card"><span class="mu">🏠 إجمالي الشقق</span><b>24</b></div><div class="card"><span class="mu">🟢 مقيمة</span><b>${occupied}</b></div><div class="card"><span class="mu">🟠 مستأجرة</span><b>${rented}</b></div><div class="card"><span class="mu">⚫ غير مقيمة</span><b>${vacant}</b></div></div><div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b><span class="cap">صافي التحصيلات بعد المصروفات</span></div>
+  <div class="g"><div class="card"><span class="mu">🏠 إجمالي الشقق</span><b>${statusValue(statusSummary?.total??N)}</b></div><div class="card"><span class="mu">🟢 مقيمة</span><b>${statusValue(occupied)}</b></div><div class="card"><span class="mu">🟠 مستأجرة</span><b>${statusValue(rented)}</b></div><div class="card"><span class="mu">⚫ غير مقيمة</span><b>${statusValue(vacant)}</b>${!statusSummary&&!isA()?'<span class="cap">سيتم تحديث الملخص بعد دخول المشرف</span>':''}</div></div><div class="g"><div class="card"><span class="mu">الرصيد (الفترة)</span><b class="${c-x<0?"neg":"pos"}">${num(c-x)} ج</b><span class="cap">صافي التحصيلات بعد المصروفات</span></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(c)} ج</b><span class="cap">من مستهدف ${num(tg)} ج (${tg?Math.round(c/tg*100):0}%)</span></div>
     <div class="card"><span class="mu">المصروفات</span><b style="color:var(--am)">${num(x)} ج</b><span class="cap">${xn} بنود وفواتير صيانة</span></div>
     <div class="card"><span class="mu">المشاريع الخاصة (مستقلة)</span><b style="color:var(--bl)">${num(cam)} ج</b><span class="cap">صندوق مستقل لأعمال التطوير</span></div></div>
@@ -730,6 +736,85 @@ function okReq(id){
 function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة ${r.apt} - ${r.month}`)}
 
 /* --- الإدارة --- */
+
+/* --- مركز التقارير: متاح للمشرف فقط، ويقرأ البيانات الموجودة دون تعديلها --- */
+let reportType="expenses",reportMonth="ALL",reportApt="1",reportProject="";
+function reportRows(){
+  const rows=[];
+  if(reportType==="expenses"){
+    rows.push(["الشهر","البيان","المبلغ بالجنيه","التاريخ"]);
+    exps().filter(e=>reportMonth==="ALL"||e.month===reportMonth)
+      .forEach(e=>rows.push([e.month,e.desc,Number(e.amount||0),e.date||""]));
+  }else if(reportType==="projects"){
+    const L=prj().filter(p=>!reportProject||p.id===reportProject);
+    rows.push(["المشروع","رقم الشقة","المالك","نصيب الشقة","المدفوع","المتبقي","تاريخ الدفع","الحالة"]);
+    L.forEach(p=>{
+      const members=Array.isArray(p.eligibleApts)?p.eligibleApts.map(Number):ALLN().filter(i=>eligible(p,i));
+      members.forEach(i=>{
+        const dueShare=share(p),paid=pp(p,i);
+        rows.push([p.name,i,apt(i),dueShare,paid,Math.max(0,dueShare-paid),p.dates?.[i]||"",p.closed?"مغلق":"مفتوح"]);
+      });
+    });
+  }else if(reportType==="apartment"){
+    const i=Math.max(1,Math.min(N,Number(reportApt)||1)),months=MONTHS;
+    rows.push(["نوع الحركة","الفترة / المشروع","المطلوب","المدفوع","المتبقي","التاريخ"]);
+    months.forEach(m=>{
+      const active=actM(i,m),need=active?due():0,p=active?pay(i,m):0;
+      rows.push(["اشتراك شهري",m,need,p,Math.max(0,need-p),active?pdate(i,m)||"": "غير محسوب"]);
+    });
+    prj().forEach(p=>{
+      const el=eligible(p,i),need=el?share(p):0,paid=el?pp(p,i):0;
+      rows.push(["مشروع",p.name,need,paid,Math.max(0,need-paid),el?(p.dates?.[i]||""):"غير مشارك"]);
+    });
+  }
+  return rows;
+}
+function vReports(){
+  if(!isA())return '<div class="card">التقارير التفصيلية متاحة للمشرف فقط.</div>';
+  const projects=prj();
+  if(reportProject&&!G.projects?.[reportProject])reportProject="";
+  const body=reportType==="expenses"
+    ?`<label>الشهر <select id="rmonth" onchange="reportMonth=this.value;render()"><option value="ALL" ${reportMonth==="ALL"?"selected":""}>كل الشهور</option>${MONTHS.map(m=>`<option value="${m}" ${reportMonth===m?"selected":""}>${m}</option>`).join("")}</select></label>`
+    :reportType==="projects"
+      ?`<label>المشروع <select id="rproject" onchange="reportProject=this.value;render()"><option value="">كل المشروعات</option>${projects.map(p=>`<option value="${esc(p.id)}" ${reportProject===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select></label>`
+      :`<label>الشقة <select id="rapt" onchange="reportApt=this.value;render()">${ALLN().map(i=>`<option value="${i}" ${Number(reportApt)===i?"selected":""}>شقة ${i} — ${esc(apt(i))}</option>`).join("")}</select></label>`;
+  const rows=reportRows(),head=rows[0]||[],data=rows.slice(1);
+  const total=reportType==="expenses"?data.reduce((a,r)=>a+Number(r[2]||0),0):
+    reportType==="projects"?data.reduce((a,r)=>a+Number(r[4]||0),0):
+    data.reduce((a,r)=>a+Number(r[3]||0),0);
+  const title=reportType==="expenses"?"تقرير المصروفات":reportType==="projects"?"تقرير المشروعات":`كشف حساب شقة ${reportApt}`;
+  return `<div class="card"><div class="top"><h3>📊 مركز التقارير</h3><span class="bd ok">للمشرف</span></div>
+    <div class="mu" style="margin-bottom:10px">تقارير للقراءة والتصدير فقط. لا يتم تعديل أي سجل في قاعدة البيانات عند إنشاء التقرير.</div>
+    <div class="row"><label>نوع التقرير <select id="rtype" onchange="reportType=this.value;render()">
+      <option value="expenses" ${reportType==="expenses"?"selected":""}>المصروفات والفواتير</option>
+      <option value="projects" ${reportType==="projects"?"selected":""}>المشروعات والتحصيل</option>
+      <option value="apartment" ${reportType==="apartment"?"selected":""}>كشف حساب شقة</option>
+    </select></label>${body}</div>
+    <div class="g" style="margin-top:12px"><div class="card"><span class="mu">عدد السجلات</span><b>${data.length}</b></div><div class="card"><span class="mu">${reportType==="expenses"?"إجمالي المصروفات":"إجمالي المدفوع في التقرير"}</span><b class="pos">${num(total)} ج</b></div></div>
+    <div class="row" style="margin:10px 0"><button class="btn" onclick="exportReportCsv()">📥 تصدير التقرير CSV</button><button class="btn gh" onclick="printReport()">🖨️ طباعة التقرير</button></div>
+    <h3>${title} — ${Y}</h3><div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
+      ${data.length?data.map(r=>`<tr>${r.map(v=>`<td>${esc(v==null?"—":String(v))}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}" class="mu">لا توجد بيانات مطابقة</td></tr>`}
+    </tbody></table></div>
+  </div>`;
+}
+function exportReportCsv(){
+  if(!isA())return toast("غير مصرح",1);
+  const rows=reportRows(),csv="\ufeff"+rows.map(r=>r.map(c=>`"${String(c??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`building60-${reportType}-${Y}-${today()}.csv`;a.click();URL.revokeObjectURL(a.href);
+}
+function printReport(){
+  if(!isA())return toast("غير مصرح",1);
+  const rows=reportRows(),title=reportType==="expenses"?"تقرير المصروفات":reportType==="projects"?"تقرير المشروعات":`كشف حساب شقة ${reportApt}`;
+  const w=window.open("","_blank");if(!w)return toast("اسمح بفتح النوافذ المنبثقة للطباعة",1);
+  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>${esc(title)}</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2{margin-bottom:6px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:20px}td,th{border:1px solid #bbb;padding:8px;text-align:right}th{background:#eee}@media print{button{display:none}}</style>
+  <h2>${esc(title)} — ${esc(Y)}</h2><p>عمارة 60 — تاريخ التقرير: ${esc(today())}</p>
+  <table><thead><tr>${rows[0].map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${esc(v==null?"—":String(v))}</td>`).join("")}</tr>`).join("")}</tbody></table>
+  <script>window.onload=()=>window.print()<\/script></html>`);
+  w.document.close();
+}
+
 function vAdm(){
   const rows=Array.from({length:N},(_,k)=>k+1).map(i=>{const s=statusOf(i);return `<tr><td>${i}</td>
     <td><input id="on-${i}" value="${esc(G.apartments?.[i]?.ownerName||"")}"></td>
@@ -805,7 +890,12 @@ function stat(){
   return{paid:f(p.paid),due:f(p.due),spent:f(p.spent)};
 }
 function buildPub(){
-  const old=Y,out={monthlyDue:due(),years:{},projects:{}};
+  const old=Y,out={monthlyDue:due(),years:{},projects:{},
+    // Aggregate-only occupancy summary; no resident names, phones, or apartment-level data.
+    apartmentStatus:{total:N,
+      occupied:ALLN().filter(i=>statusOf(i)==="occ").length,
+      rented:ALLN().filter(i=>statusOf(i)==="rent").length,
+      vacant:ALLN().filter(i=>statusOf(i)==="vac").length}};
   Object.keys(G.years||{}).forEach(y=>{Y=y;out.years[y]=calcStat()});Y=old;
   prj().forEach(p=>{const el=ALLN().filter(i=>eligible(p,i));
     out.projects[p.id]={name:p.name,closed:!!p.closed,totalCost:p.totalCost??null,perApt:p.perApt??null,eligibleApts:el,collected:el.reduce((s,i)=>s+pp(p,i),0),createdAt:p.createdAt||""}});
