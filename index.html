@@ -376,7 +376,7 @@ async function load(){
   if(!isA())return loadRes();
   const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
   await Promise.all(names.map(async k=>o[k]=await api(k)));
-  o.notifications={admin:(await api("notifications/admin"))||{}};
+  o.notifications={admin:{}};
   o.notificationReads={admin:(await api("notificationReads/admin/"+auth.currentUser.uid))||{}};
   G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};
 }
