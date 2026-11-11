@@ -224,6 +224,51 @@ nav .l{display:none}
   .search-result .row{align-items:stretch}
   .search-result .row .btn{max-width:100%;white-space:normal}
 }
+
+/* V5.6 — restrained premium polish; visual-only layer */
+:root{--shadow:0 14px 34px rgba(0,0,0,.20)}
+.card,.chart-card{transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}
+.card:hover,.chart-card:hover{border-color:color-mix(in srgb,var(--ac) 32%,var(--ln));box-shadow:0 16px 38px rgba(0,0,0,.24)}
+button,.btn,select,input{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+#view>.card{animation:v56-enter .28s ease both}
+.chart-card{overflow:hidden}
+.chart-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(69,224,176,.10);color:var(--ac);font-size:19px;flex:none}
+.reports-shell{padding:clamp(13px,2vw,22px)}
+.report-filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:13px;margin:14px 0;background:var(--in);border:1px solid var(--ln);border-radius:15px}
+.report-filters label{min-width:min(230px,100%);flex:1}
+.report-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:13px 0}
+.report-kpi{background:linear-gradient(145deg,var(--in),color-mix(in srgb,var(--in) 82%,var(--card)));border:1px solid var(--ln);border-radius:15px;padding:13px 15px;min-width:0}
+.report-kpi span{display:block;color:var(--mu);font-size:12px}
+.report-kpi b{display:block;color:var(--ac);font-size:clamp(18px,2.2vw,25px);margin-top:4px;font-variant-numeric:tabular-nums}
+.report-chart-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:14px}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:18px;min-height:180px}
+.donut-wrap svg{width:min(48%,190px);height:auto;flex:none}
+.donut-legend{flex:1;min-width:0}
+.donut-legend>div{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--ln);font-size:12px}
+.donut-legend>div:last-child{border:0}
+.donut-legend b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.report-actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.report-table-title{margin:20px 0 10px}
+.report-chart .chart-svg rect{transform-box:fill-box;transform-origin:bottom;animation:bar-rise .55s cubic-bezier(.2,.7,.2,1) both}
+.report-chart .chart-svg rect:nth-of-type(3n){animation-delay:.04s}
+@keyframes v56-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bar-rise{from{transform:scaleY(.05);opacity:.35}to{transform:scaleY(1);opacity:.92}}
+@media(max-width:760px){
+ .report-chart-grid{grid-template-columns:1fr}
+ .report-kpis{gap:8px}
+ .report-kpi{padding:10px}
+ .report-filters{display:grid;grid-template-columns:1fr;gap:9px}
+ .report-filters label{min-width:0}
+ .report-actions .btn{flex:1;min-width:130px}
+ .donut-wrap{gap:8px}
+ .donut-wrap svg{width:44%}
+ .donut-legend>div{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
 </style>
 </head>
 <body>
@@ -769,6 +814,66 @@ function reportRows(){
   }
   return rows;
 }
+function reportBarChart(title,subtitle,labels,series){
+  const W=720,H=260,L=48,R=14,T=16,B=58,ph=H-T-B,pw=W-L-R;
+  const max=Math.max(1,...series.flatMap(s=>s.values.map(v=>Math.max(0,Number(v)||0))));
+  const step=pw/Math.max(1,labels.length),count=series.length,bw=Math.min(22,step/(count+1)*.72),gap=Math.max(3,bw*.18);
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">`;
+  for(let g=0;g<=4;g++){
+    const val=max*g/4,y=T+ph*(1-g/4);
+    svg+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--ln)" stroke-dasharray="4 5"/>`;
+    svg+=`<text x="${L-8}" y="${y+4}" text-anchor="end" fill="var(--mu)" font-size="10">${moneyAxis(val)}</text>`;
+  }
+  labels.forEach((label,i)=>{
+    const cx=L+step*(i+.5),allW=count*bw+(count-1)*gap;
+    series.forEach((sr,j)=>{
+      const v=Math.max(0,Number(sr.values[i])||0),h=ph*v/max,x=cx-allW/2+j*(bw+gap),y=T+ph-h;
+      svg+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="5" fill="${sr.color}" opacity=".92"><title>${esc(label)}: ${esc(sr.label)} ${num(v)} ج</title></rect>`;
+    });
+    svg+=`<text x="${cx}" y="${H-27}" text-anchor="middle" fill="var(--mu)" font-size="${labels.length>8?10:11}">${esc(String(label).slice(0,9))}</text>`;
+  });
+  svg+='</svg>';
+  const legend=series.map(x=>`<span><i class="legend-dot" style="background:${x.color}"></i>${esc(x.label)}</span>`).join("");
+  return `<section class="chart-card report-chart"><div class="chart-head"><div><h3>${esc(title)}</h3><div class="chart-sub">${esc(subtitle)}</div></div><span class="chart-mark">▥</span></div>${svg}<div class="chart-legend">${legend}</div></section>`;
+}
+function reportDonut(title,subtitle,parts){
+  const total=parts.reduce((s,p)=>s+Math.max(0,Number(p.value)||0),0),r=66,c=2*Math.PI*r;
+  let offset=0,circles="";
+  parts.forEach(p=>{
+    const v=Math.max(0,Number(p.value)||0),dash=total?c*v/total:0;
+    circles+=`<circle cx="100" cy="100" r="${r}" fill="none" stroke="${p.color}" stroke-width="19" stroke-dasharray="${dash} ${c-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"/>`;
+    offset+=dash;
+  });
+  return `<section class="chart-card report-chart"><div class="chart-head"><div><h3>${esc(title)}</h3><div class="chart-sub">${esc(subtitle)}</div></div><span class="chart-mark">◉</span></div>
+    <div class="donut-wrap"><svg viewBox="0 0 200 200" role="img" aria-label="${esc(title)}">${circles||""}<text x="100" y="96" text-anchor="middle" fill="var(--tx)" font-size="19" font-weight="700">${num(total)}</text><text x="100" y="118" text-anchor="middle" fill="var(--mu)" font-size="11">جنيه</text></svg>
+    <div class="donut-legend">${parts.map(p=>`<div><span><i class="legend-dot" style="background:${p.color}"></i>${esc(p.label)}</span><b>${num(p.value)} ج</b></div>`).join("")}</div></div></section>`;
+}
+function reportCharts(data){
+  const green="#45e0b0",blue="#75aaff",amber="#ffd166",red="#ff718b";
+  if(reportType==="expenses"){
+    if(reportMonth==="ALL"){
+      const vals=MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((a,e)=>a+Number(e.amount||0),0));
+      const total=vals.reduce((a,b)=>a+b,0),active=vals.filter(v=>v>0).length;
+      return `<div class="report-kpis"><div class="report-kpi"><span>إجمالي مصروفات السنة</span><b>${num(total)} ج</b></div><div class="report-kpi"><span>شهور بها مصروفات</span><b>${active} من 12</b></div></div>`+
+        reportBarChart("المصروفات على مدار السنة",`توزيع المصروفات شهرياً خلال ${Y}`,MONTHS,[{label:"المصروفات",color:amber,values:vals}]);
+    }
+    const grouped={};data.forEach(r=>{const k=String(r[1]||"بدون وصف");grouped[k]=(grouped[k]||0)+Number(r[2]||0)});
+    const sorted=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    return reportBarChart("أعلى بنود الصرف",`تفصيل مصروفات ${reportMonth}`,sorted.map(x=>x[0]),[{label:"المصروفات",color:amber,values:sorted.map(x=>x[1])}]);
+  }
+  if(reportType==="projects"){
+    const paid=data.reduce((a,r)=>a+Number(r[4]||0),0),remaining=data.reduce((a,r)=>a+Number(r[5]||0),0);
+    const perApt={};data.forEach(r=>{const k=`شقة ${r[1]}`;perApt[k]=(perApt[k]||0)+Number(r[4]||0)});
+    const top=Object.entries(perApt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    return `<div class="chart-grid report-chart-grid">${reportDonut("موقف التحصيل","المدفوع مقارنة بالمتبقي",[{label:"المدفوع",value:paid,color:green},{label:"المتبقي",value:remaining,color:red}])}
+      ${reportBarChart("المدفوع حسب الشقة","أعلى 8 شقق مساهمة",top.map(x=>x[0]),[{label:"المدفوع",color:blue,values:top.map(x=>x[1])}])}</div>`;
+  }
+  const paid=data.filter(r=>r[0]==="اشتراك شهري");
+  return `<div class="report-kpis"><div class="report-kpi"><span>إجمالي المطلوب</span><b>${num(data.reduce((a,r)=>a+Number(r[2]||0),0))} ج</b></div><div class="report-kpi"><span>إجمالي المتبقي</span><b>${num(data.reduce((a,r)=>a+Number(r[4]||0),0))} ج</b></div></div>`+
+    reportBarChart("الاشتراك الشهري","المطلوب مقابل المدفوع لكل شهر",MONTHS,
+      [{label:"المطلوب",color:blue,values:MONTHS.map(m=>{const r=paid.find(x=>x[1]===m);return r?Number(r[2]||0):0})},
+       {label:"المدفوع",color:green,values:MONTHS.map(m=>{const r=paid.find(x=>x[1]===m);return r?Number(r[3]||0):0})}]);
+}
 function vReports(){
   if(!isA())return '<div class="card">التقارير التفصيلية متاحة للمشرف فقط.</div>';
   const projects=prj();
@@ -783,16 +888,16 @@ function vReports(){
     reportType==="projects"?data.reduce((a,r)=>a+Number(r[4]||0),0):
     data.reduce((a,r)=>a+Number(r[3]||0),0);
   const title=reportType==="expenses"?"تقرير المصروفات":reportType==="projects"?"تقرير المشروعات":`كشف حساب شقة ${reportApt}`;
-  return `<div class="card"><div class="top"><h3>📊 مركز التقارير</h3><span class="bd ok">للمشرف</span></div>
-    <div class="mu" style="margin-bottom:10px">تقارير للقراءة والتصدير فقط. لا يتم تعديل أي سجل في قاعدة البيانات عند إنشاء التقرير.</div>
-    <div class="row"><label>نوع التقرير <select id="rtype" onchange="reportType=this.value;render()">
+  return `<div class="card reports-shell"><div class="top"><div><h3>📊 مركز التقارير</h3><div class="chart-sub">قراءة وتحليل وتصدير — دون تعديل سجلات قاعدة البيانات</div></div><span class="bd ok">للمشرف</span></div>
+    <div class="report-filters"><label>نوع التقرير <select id="rtype" onchange="reportType=this.value;render()">
       <option value="expenses" ${reportType==="expenses"?"selected":""}>المصروفات والفواتير</option>
       <option value="projects" ${reportType==="projects"?"selected":""}>المشروعات والتحصيل</option>
       <option value="apartment" ${reportType==="apartment"?"selected":""}>كشف حساب شقة</option>
     </select></label>${body}</div>
-    <div class="g" style="margin-top:12px"><div class="card"><span class="mu">عدد السجلات</span><b>${data.length}</b></div><div class="card"><span class="mu">${reportType==="expenses"?"إجمالي المصروفات":"إجمالي المدفوع في التقرير"}</span><b class="pos">${num(total)} ج</b></div></div>
-    <div class="row" style="margin:10px 0"><button class="btn" onclick="exportReportCsv()">📥 تصدير التقرير CSV</button><button class="btn gh" onclick="printReport()">🖨️ طباعة التقرير</button></div>
-    <h3>${title} — ${Y}</h3><div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
+    <div class="report-kpis"><div class="report-kpi"><span>عدد السجلات</span><b>${data.length}</b></div><div class="report-kpi"><span>${reportType==="expenses"?"إجمالي المصروفات":"إجمالي المدفوع في التقرير"}</span><b>${num(total)} ج</b></div></div>
+    ${reportCharts(data)}
+    <div class="report-actions"><button class="btn" onclick="exportReportCsv()">📥 تصدير CSV</button><button class="btn gh" onclick="printReport()">🖨️ طباعة / PDF</button></div>
+    <h3 class="report-table-title">${title} — ${Y}</h3><div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
       ${data.length?data.map(r=>`<tr>${r.map(v=>`<td>${esc(v==null?"—":String(v))}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}" class="mu">لا توجد بيانات مطابقة</td></tr>`}
     </tbody></table></div>
   </div>`;
@@ -806,10 +911,11 @@ function exportReportCsv(){
 function printReport(){
   if(!isA())return toast("غير مصرح",1);
   const rows=reportRows(),title=reportType==="expenses"?"تقرير المصروفات":reportType==="projects"?"تقرير المشروعات":`كشف حساب شقة ${reportApt}`;
+  const charts=reportCharts(rows.slice(1));
   const w=window.open("","_blank");if(!w)return toast("اسمح بفتح النوافذ المنبثقة للطباعة",1);
   w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>${esc(title)}</title>
-  <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h2{margin-bottom:6px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:20px}td,th{border:1px solid #bbb;padding:8px;text-align:right}th{background:#eee}@media print{button{display:none}}</style>
-  <h2>${esc(title)} — ${esc(Y)}</h2><p>عمارة 60 — تاريخ التقرير: ${esc(today())}</p>
+  <style>:root{--ac:#159b79;--bl:#477dc4;--am:#d59a19;--rd:#d84c68;--ln:#d7dde5;--mu:#596575;--tx:#172033;--in:#f5f7fa;--card:#fff}body{font-family:Arial,sans-serif;padding:24px;color:#111}h2{margin-bottom:6px}p{color:#555}.chart-card{border:1px solid #bbb;border-radius:12px;padding:12px;margin:14px 0;break-inside:avoid}.chart-sub,.chart-legend{font-size:11px;color:#555}.chart-svg{width:100%;height:auto}.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.donut-wrap{display:flex;align-items:center;gap:16px}.donut-wrap svg{width:160px}.donut-legend>div{display:flex;gap:12px;justify-content:space-between}.report-kpis{display:flex;gap:12px}.report-kpi{border:1px solid #bbb;padding:10px;border-radius:8px;flex:1}table{border-collapse:collapse;width:100%;margin-top:20px}td,th{border:1px solid #bbb;padding:8px;text-align:right}th{background:#eee}@media print{button{display:none}.chart-svg rect{animation:none!important}}</style>
+  <h2>${esc(title)} — ${esc(Y)}</h2><p>عمارة 60 — تاريخ التقرير: ${esc(today())}</p>${charts}
   <table><thead><tr>${rows[0].map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map(v=>`<td>${esc(v==null?"—":String(v))}</td>`).join("")}</tr>`).join("")}</tbody></table>
   <script>window.onload=()=>window.print()<\/script></html>`);
   w.document.close();
