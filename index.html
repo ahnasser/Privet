@@ -357,6 +357,13 @@ async function load(){
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
+function dueFor(month, year=Y){
+  if(String(year)==="2026"){
+    if(month==="يوليو") return 160;
+    if(["أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"].includes(month)) return 180;
+  }
+  return Number(G.monthlyDue||180);
+}
 const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
 const isEmpty=i=>{const a=G.apartments?.[i]||{},n=(a.ownerName||"").trim();return a.vacant===true||!n||n==="(فارغ)"};
@@ -530,7 +537,7 @@ function vSum(){
   const statusValue=v=>statusSummary?num(v):"—";
   for(let i=1;i<=N&&isA();i++){
     if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td></tr>`;continue}
-    const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=d*am.length,cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;if(need>0){if(need-p<=0)okN++;else lateN++}
+    const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=am.reduce((s,m)=>s+dueFor(m,Y),0),cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;if(need>0){if(need-p<=0)okN++;else lateN++}
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp<=0?'<b class="bd ok">مسدّد</b>':`<b class="bd no">متبقي ${num(cp)}</b>`}</td></tr>`;
   }
   const x=exps().filter(e=>flt.has(e.month)).reduce((s,e)=>s+Number(e.amount||0),0);
@@ -539,7 +546,7 @@ function vSum(){
   if(!isA())c=ms.reduce((s,m)=>s+monthlyPaid[MONTHS.indexOf(m)],0);
   const tg=ms.reduce((s,m)=>s+monthlyDue[MONTHS.indexOf(m)],0),xn=exps().filter(e=>flt.has(e.month)).length;
   const sideRows=`<div>${isA()?`<div class="ln2"><span>✅ مسددة بالكامل</span><b class="pos">${okN} شقة</b></div><div class="ln2"><span>⚠️ متبقي عليها متأخرات</span><b class="neg">${lateN} شقة</b></div>`:""}<div class="ln2"><span>إجمالي المتبقي للتحصيل</span><b>${num(Math.max(0,tg-c))} ج</b></div></div>`;
-  const target=ms.reduce((s,m)=>s+due()*nActM(m),0);
+  const target=ms.reduce((s,m)=>s+dueFor(m,Y)*nActM(m),0);
   const paid=ms.reduce((s,m)=>s+monthlyPaid[MONTHS.indexOf(m)],0);
   const chartSection=`<div class="chart-grid">
     ${barChart("التحصيل والمستهدف الشهري",`مقارنة المحصل بالمستهدف خلال ${Y}`,[{label:"المحصّل",color:"var(--ac)",values:monthlyPaid},{label:"المستهدف",color:"var(--bl)",values:monthlyDue}])}
@@ -818,7 +825,7 @@ function reportRows(){
     const i=Math.max(1,Math.min(N,Number(reportApt)||1)),months=MONTHS;
     rows.push(["نوع الحركة","الفترة / المشروع","المطلوب","المدفوع","المتبقي","التاريخ"]);
     months.forEach(m=>{
-      const active=actM(i,m),need=active?due():0,p=active?pay(i,m):0;
+      const active=actM(i,m),need=active?dueFor(m,Y):0,p=active?pay(i,m):0;
       rows.push(["اشتراك شهري",m,need,p,Math.max(0,need-p),active?pdate(i,m)||"": "غير محسوب"]);
     });
     prj().forEach(p=>{
