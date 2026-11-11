@@ -349,20 +349,23 @@ async function upd(o,msg){
 }
 async function load(){
   if(!isA())return loadRes();
-  const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
+  const names=["apartments","years","projects","monthlyDue","monthlyDueHistory"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
   await Promise.all(names.map(async k=>o[k]=await api(k)));
   o.notifications={admin:{}};
   o.notificationReads={admin:(await api("notificationReads/admin/"+auth.currentUser.uid))||{}};
-  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};
+  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};G.monthlyDueHistory??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
 function dueFor(month, year=Y){
-  if(String(year)==="2026"){
-    if(month==="يوليو") return 160;
-    if(["أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"].includes(month)) return 180;
-  }
-  return Number(G.monthlyDue||180);
+  const map=G.monthlyDueHistory||{};
+  const idx=MONTHS.indexOf(month)+1;
+  const key=`${year}-${String(idx).padStart(2,"0")}`;
+  if(map[key]!=null) return Number(map[key]);
+  const keys=Object.keys(map).sort();
+  let last=Number(G.monthlyDue||180);
+  for(const k of keys){ if(k<=key) last=Number(map[k]); }
+  return last;
 }
 const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
@@ -611,7 +614,7 @@ function searchApts(raw){
 
 const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}<input type="file" accept="image/*" id="${id}" hidden onchange="this.parentNode.firstChild.textContent='✅'"></label>`;
 function vMonthAdmin(){
-  const A=isA(),d=due();let c=0,rows="";
+  const A=isA(),d=dueFor(selM,Y);let c=0,rows="";
   for(let i=1;i<=N;i++){
     if(!actM(i,selM)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td><b class="bd" style="background:var(--in);color:var(--mu)">غير مقيمة</b></td><td></td></tr>`;continue}
     const p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);c+=p;
@@ -740,7 +743,7 @@ function addPrj(){
 function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
 function vMe(){
-  const i=meApt(),d=due();let tot=0;
+  const i=meApt(),d=dueFor(selM,Y);let tot=0;
   const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
     return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div>${p?`<span style="display:block;margin-top:4px"><button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${m}')">🖨️</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾</button>`:""}</span>`:""}</div>`}).join("");
   return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}<h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
@@ -985,16 +988,16 @@ const wa=(phone,text)=>`https://wa.me/${phone}?text=${encodeURIComponent(text)}`
 const site=()=>location.origin;
 function remind(i,who){
   const ph=who==="t"?G.tenantPhones?.[i]:G.phones?.[i];if(!ph)return toast("سجّل رقم واتساب الشقة من تبويب الإدارة",1);
-  const rem=due()-pay(i,selM),nm=apt(i),hi=who!=="t"&&nm&&nm!=="—"&&nm!=="(فارغ)"?`السلام عليكم يا ${nm}،`:"السلام عليكم،";
+  const rem=dueFor(selM,Y)-pay(i,selM),nm=apt(i),hi=who!=="t"&&nm&&nm!=="—"&&nm!=="(فارغ)"?`السلام عليكم يا ${nm}،`:"السلام عليكم،";
   const t=`${hi}\nتذكير ودّي بخصوص اشتراك العمارة (عمارة 60 - ساوث هيلز 2) عن شهر ${selM} ${Y}.\nالمتبقي على شقة ${i}: ${num(rem)} جنيه.\nتقدر ترفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونك 🌷`;
   window.open("https://wa.me/"+ph+"?text="+encodeURIComponent(t),"_blank");
 }
 
 function lateText(){
   const L=[];let tot=0;
-  for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=due()-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
+  for(let i=1;i<=N;i++){if(!actM(i,selM))continue;const r=dueFor(selM,Y)-pay(i,selM);if(r>0){L.push(`شقة ${i}: ${num(r)} ج`);tot+=r}}
   if(!L.length)return "";
-  return `السلام عليكم 🌷\nتذكير بااشتراك العمارة عن شهر ${selM} ${Y} (${num(due())} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
+  return `السلام عليكم 🌷\nتذكير بااشتراك العمارة عن شهر ${selM} ${Y} (${num(dueFor(selM,Y))} ج لكل شقة).\nالشقق اللي لسه ماسددتش:\n${L.join("\n")}\nإجمالي المتبقي: ${num(tot)} ج\nيمكن رفع صورة التحويل من هنا: ${site()}\nشكرًا لتعاونكم.`;
 }
 async function groupMsg(){
   const t=lateText();if(!t)return toast("كل الشقق مسددة لهذا الشهر 🎉");
