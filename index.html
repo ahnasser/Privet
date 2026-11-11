@@ -1,4 +1,4 @@
-<!-- V4.1 mobile/dashboard/search -->
+<!-- V5.3 mobile polish + admin apartment search -->
 <!-- Building60 V3: tenant UI, project participants enhancements -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -155,6 +155,48 @@ nav .l{display:none}
  input,select,.btn{min-height:48px;font-size:16px}
  .tw{overflow:visible}
 }
+
+
+/* V5.3 Mobile polish: compact secondary selectors and prevent oversized controls */
+@media(max-width:850px){
+  body{padding:7px}
+  #app{gap:8px}
+  #app>.card:first-child{gap:8px;padding:11px}
+  #app>.card:first-child .row{gap:6px}
+  #app>.card:first-child select,#app>.card:first-child .btn{min-height:40px;padding:6px 10px;font-size:13px}
+  #nav{gap:6px;padding:6px;margin-bottom:8px;border-radius:14px;scrollbar-width:thin}
+  #nav button{min-height:40px;padding:7px 11px;font-size:13px;line-height:1.35;border-radius:11px}
+  #view>.card,.chart-card{border-radius:15px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:6px;padding:2px 1px 8px;margin-bottom:8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .chips .chip{min-height:36px;padding:5px 10px;font-size:12px;line-height:1.3;border-radius:10px;scroll-snap-align:start}
+  .chips .chip:hover{transform:none}
+  .g{gap:7px}
+  .g .card{padding:10px}
+  .tw table tr{padding:9px;margin-bottom:8px}
+  .tw table td{padding:4px 0}
+  .tw table td:before{margin-bottom:1px}
+  .tw table input,.tw table select{min-height:42px;padding:7px 9px}
+  .tw table .btn{min-height:40px;padding:6px 10px;font-size:13px}
+  .searchbar{position:sticky;top:0;z-index:3;background:var(--bg);padding:5px 0}
+}
+@media(max-width:420px){
+  #app>.card:first-child{align-items:stretch;flex-direction:column}
+  #app>.card:first-child>div:first-child{min-width:0}
+  #app>.card:first-child .row{width:100%;justify-content:space-between}
+  #app>.card:first-child .row select{flex:1;min-width:72px}
+  #nav button{padding:7px 9px;font-size:12px}
+  .chips .chip{padding:5px 8px;font-size:11px}
+}
+.search-results{display:grid;gap:10px;margin-top:10px}
+.search-result{background:var(--card);border:1px solid var(--ln);border-radius:15px;padding:13px}
+.search-result h3{margin:0;font-size:16px}
+.search-result .sr-meta{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0;color:var(--mu);font-size:12px}
+.search-result .sr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.search-result .sr-stat{background:var(--in);border:1px solid var(--ln);border-radius:10px;padding:8px;font-size:12px;min-width:0}
+.search-result .sr-stat b{display:block;font-size:15px;margin-top:2px}
+.search-result .sr-projects{margin-top:9px;border-top:1px solid var(--ln);padding-top:8px;font-size:12px}
+.search-result .sr-projects>div{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
+@media(max-width:420px){.search-result{padding:10px}.search-result .sr-grid{gap:5px}.search-result .sr-stat{padding:7px}}
 
 </style>
 </head>
@@ -342,13 +384,13 @@ function go(k){if(k==="me")adminApt=0;tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
   const np=Object.keys(G.pending||{}).length,
-    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
+    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
             :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
-  const LONG={req:"طلبات التحويل بانتظار الاعتماد",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️"};
+  const LONG={req:"طلبات التحويل بانتظار الاعتماد",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل"};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')"><span class="s">${l}</span><span class="l">${LONG[k]||l}${k==="req"&&np?` (${np})`:""}</span></button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
-  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend})[tab]();
+  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch})[tab]();
   if(tab==="adm")loadLog();
   mob();
 }
@@ -431,6 +473,44 @@ function vSum(){
     <div class="card"><span class="mu">المشاريع الخاصة (مستقلة)</span><b style="color:var(--bl)">${num(cam)} ج</b><span class="cap">صندوق مستقل لأعمال التطوير</span></div></div>
   ${chartSection}
   ${isA()?`<div class="card"><h3>موقف التحصيل لسنة ${Y}</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>المتبقي</th><th>المشاريع</th></tr>${rows}</table></div></div>`:""}`;
+}
+
+/* --- بحث شامل للمشرف: رقم الشقة / الاسم / موبايل المالك أو المستأجر --- */
+function vSearch(){
+  if(!isA())return '<div class="card">البحث متاح للمشرف فقط.</div>';
+  return `<div class="card"><h3>🔎 البحث عن شقة أو مالك</h3>
+    <div class="mu">ابحث برقم الشقة أو اسم المالك أو المستأجر أو رقم موبايل المالك / المستأجر. البحث للعرض فقط ولا يغيّر أي بيانات.</div>
+    <div class="searchbar"><input id="aptSearch" type="search" autocomplete="off" placeholder="مثال: 12 أو أحمد أو 010..." oninput="searchApts(this.value)"><button class="btn gh" style="color:var(--tx)" onclick="document.getElementById('aptSearch').value='';searchApts('')">مسح</button></div>
+    <div id="searchCount" class="mu">اكتب أي جزء من الاسم أو رقم الموبايل أو رقم الشقة.</div><div id="searchResults" class="search-results"></div>
+  </div>`;
+}
+function searchApts(raw){
+  const box=document.getElementById('searchResults'),count=document.getElementById('searchCount');
+  if(!box||!count||!isA())return;
+  const q=String(raw||'').trim().toLocaleLowerCase('ar'),qd=q.replace(/\D/g,''),matches=[];
+  if(!q){count.textContent='اكتب أي جزء من الاسم أو رقم الموبايل أو رقم الشقة.';box.innerHTML='';return}
+  for(let i=1;i<=N;i++){
+    const owner=String(apt(i)||''),tenant=String(G.tenantNames?.[i]||''),phone=String(G.phones?.[i]||''),tenantPhone=String(G.tenantPhones?.[i]||'');
+    const all=[owner,tenant,String(i),phone,tenantPhone];
+    const hit=all.some(v=>v.toLocaleLowerCase('ar').includes(q)) || (qd.length>0&&[phone,tenantPhone].some(v=>normPhone(v).includes(qd)));
+    if(hit)matches.push(i);
+  }
+  count.textContent=`نتائج البحث: ${matches.length} شقة`;
+  if(!matches.length){box.innerHTML='<div class="card mu">لا توجد نتائج مطابقة. جرّب جزءًا مختلفًا من الاسم أو رقم الموبايل.</div>';return}
+  box.innerHTML=matches.map(i=>{
+    const owner=apt(i),tenant=G.tenantNames?.[i]||'',ph=G.phones?.[i]||'',tph=G.tenantPhones?.[i]||'',st=isEmpty(i)?'غير مقيمة':isRented(i)?'مستأجرة':'مقيمة';
+    const months=MONTHS.filter(m=>actM(i,m)).map(m=>({m,p:pay(i,m),d:pdate(i,m)}));
+    const paid=months.reduce((a,x)=>a+x.p,0),dueTotal=months.length*due(),remaining=Math.max(0,dueTotal-paid),late=months.filter(x=>x.p<due());
+    const projectRows=prj().filter(p=>eligible(p,i)).map(p=>{const shareAmt=share(p),v=pp(p,i);return `<div><span>${esc(p.name)}${p.closed?' (مغلق)':''}</span><span>${num(v)} / ${num(shareAmt)} ج ${v>=shareAmt?'<b class="pos">✓</b>':'<b class="neg">متبقي '+num(Math.max(0,shareAmt-v))+' ج</b>'}</span></div>`}).join('');
+    const monthlyRows=months.map(x=>`<div><span>${x.m}</span><span>${x.p>0?num(x.p)+' ج':'لم يدفع'} ${x.p>0?`<span class="mu">(${fd(x.d)})</span>`:''}</span></div>`).join('');
+    return `<article class="search-result"><div class="top"><h3>شقة ${i} — ${esc(owner)}</h3><span class="bd ${st==='غير مقيمة'?'no':st==='مستأجرة'?'wa':'ok'}">${st}</span></div>
+      <div class="sr-meta">${ph?`<span>📱 المالك: ${esc(ph)}</span>`:''}${tenant?`<span>👤 المستأجر: ${esc(tenant)}</span>`:''}${tph?`<span>📱 المستأجر: ${esc(tph)}</span>`:''}</div>
+      <div class="sr-grid"><div class="sr-stat">إجمالي المدفوع في ${Y}<b class="pos">${num(paid)} ج</b></div><div class="sr-stat">المتبقي حسب الاشتراكات المسجلة<b class="${remaining?'neg':'pos'}">${num(remaining)} ج</b></div><div class="sr-stat">شهور عليها مبلغ متبقٍ<b>${late.length} من ${months.length}</b></div><div class="sr-stat">حالة الإشغال<b>${st}</b></div></div>
+      <div class="sr-projects"><b>التحصيل الشهري (${Y})</b>${monthlyRows||'<div class="mu">لا توجد شهور محسوبة على الشقة في هذه السنة.</div>'}</div>
+      <div class="sr-projects"><b>المشروعات الخاصة</b>${projectRows||'<div class="mu">لا توجد مشروعات مستحقة على الشقة.</div>'}</div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="openApt(${i})">فتح كشف حساب الشقة</button>${ph?`<button class="btn gh" style="color:var(--tx)" onclick="window.open('https://wa.me/${normPhone(ph)}','_blank')">واتساب المالك</button>`:''}${tph?`<button class="btn gh" style="color:var(--tx)" onclick="window.open('https://wa.me/${normPhone(tph)}','_blank')">واتساب المستأجر</button>`:''}</div>
+    </article>`;
+  }).join('');
 }
 
 /* --- التحصيل الشهري (تاريخ + صورة التحويل) --- */
