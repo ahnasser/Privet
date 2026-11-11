@@ -1,3 +1,4 @@
+<!-- Building 60 V5.7 FREE — manual JSON backup, shared-admin audit metadata, scoped in-app notifications. No Cloud Functions / Storage backup. -->
 <!-- V5.3 mobile polish + admin apartment search -->
 <!-- Building60 V3: tenant UI, project participants enhancements -->
 <!DOCTYPE html>
@@ -302,6 +303,7 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script>
 firebase.initializeApp({apiKey:"AIzaSyAQf5ZHFIgR1RqJiZAnc4_xk6Sa4kUZbjs",authDomain:"sh2-bu60.firebaseapp.com",projectId:"sh2-bu60",appId:"1:398417900233:web:d3ea5648000139f30d5318"});
 const auth=firebase.auth();
@@ -364,7 +366,8 @@ function setLocal(path,v){
 }
 /* كتابة آمنة: تعديل مسارات محددة فقط (لا نكتب فوق القاعدة كلها) */
 async function upd(o,msg){
-  try{const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?((auth.currentUser?.displayName||"مشرف")+" ("+(auth.currentUser?.email||"")+")"):("شقة "+U.apt),msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
+  try{const actor={uid:auth.currentUser?.uid||"",email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||"",role:isA()?"admin":"resident",apartment:isA()?null:Number(U?.apt||0)};
+    const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?((actor.name||"مشرف")+" ("+(actor.email||"")+")"):("شقة "+U.apt),actorUid:actor.uid,actorEmail:actor.email,actorName:actor.name,actorRole:actor.role,apartment:actor.apartment,msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
   catch(e){console.error("Save failed:",e);toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1)}
   render();
   if(isA())pubSoon();
@@ -373,6 +376,8 @@ async function load(){
   if(!isA())return loadRes();
   const names=["apartments","years","projects","monthlyDue"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
   await Promise.all(names.map(async k=>o[k]=await api(k)));
+  o.notifications={admin:(await api("notifications/admin"))||{}};
+  o.notificationReads={admin:(await api("notificationReads/admin/"+auth.currentUser.uid))||{}};
   G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
@@ -459,13 +464,13 @@ function go(k){if(k==="me")adminApt=0;tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
   const np=Object.keys(G.pending||{}).length,
-    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],["reports","التقارير 📊"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
-            :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
+    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["notifs","التنبيهات 🔔"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],["reports","التقارير 📊"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
+            :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["notifs","التنبيهات 🔔"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
-  const LONG={req:"طلبات التحويل بانتظار الاعتماد",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل",reports:"تقارير المصروفات والمشروعات وكشوف الشقق"};
+  const LONG={req:"طلبات التحويل بانتظار الاعتماد",notifs:"مركز التنبيهات والإشعارات",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل",reports:"تقارير المصروفات والمشروعات وكشوف الشقق"};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')"><span class="s">${l}</span><span class="l">${LONG[k]||l}${k==="req"&&np?` (${np})`:""}</span></button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
-  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch,reports:vReports})[tab]();
+  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch,reports:vReports,notifs:vNotifications})[tab]();
   if(tab==="adm")loadLog();
   mob();
 }
@@ -782,6 +787,34 @@ function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({
 
 /* --- الإدارة --- */
 
+/* --- V5.7 مركز التنبيهات: بيانات كل ساكن معزولة حسب الشقة --- */
+function notificationItems(){
+  const raw=isA()?(G.notifications?.admin||{}):(G.notifications?.residents?.[U.apt]||{});
+  const read=isA()?(G.notificationReads?.admin||{}):(G.notificationReads?.residents?.[U.apt]||{});
+  return Object.entries(raw).map(([id,n])=>({id,...(n||{}),isRead:!!read[id]})).sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
+}
+function vNotifications(){
+  const L=notificationItems(),unread=L.filter(x=>!x.isRead).length;
+  const cards=L.map(n=>`<article class="search-result" style="border-color:${n.isRead?'var(--ln)':'color-mix(in srgb,var(--ac) 55%,var(--ln))'}">
+    <div class="top"><b>${esc(n.title||"تنبيه من إدارة العمارة")}</b><span class="bd ${n.isRead?'':'ok'}">${n.isRead?'تمت القراءة':'جديد'}</span></div>
+    <div style="margin:8px 0;white-space:pre-wrap">${esc(n.message||"")}</div>
+    <div class="sr-meta"><span>${new Date(Number(n.createdAt||Date.now())).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'})}</span>${n.apt?`<span>شقة ${esc(n.apt)}</span>`:''}</div>
+    ${n.isRead?'':`<button class="btn gh" style="color:var(--tx)" onclick="markNotificationRead('${esc(n.id)}')">تحديد كمقروء</button>`}
+  </article>`).join("");
+  return `<div class="card"><div class="top"><div><h3>🔔 مركز التنبيهات</h3><div class="mu">${isA()?"تنبيهات الإدارة وطلبات السكان":"تنبيهات تخص شقتك فقط"}</div></div><span class="bd ${unread?'wa':'ok'}">${unread} غير مقروء</span></div>
+    ${cards||'<div class="chart-empty">لا توجد تنبيهات حتى الآن</div>'}
+    <div class="mu" style="margin-top:10px">التنبيهات داخل البرنامج. لا يتم إرسال رسائل SMS أو WhatsApp تلقائياً في هذه المرحلة.</div></div>`;
+}
+async function markNotificationRead(id){
+  try{
+    const p=isA()?`notificationReads/admin/${auth.currentUser.uid}/${id}`:`notificationReads/residents/${U.apt}/${auth.currentUser.uid}/${id}`;
+    await api(p,"PUT",true);
+    if(isA()){G.notificationReads??={admin:{}};G.notificationReads.admin[id]=true}
+    else{G.notificationReads??={residents:{}};G.notificationReads.residents[U.apt]??={};G.notificationReads.residents[U.apt][id]=true}
+    render();
+  }catch(e){toast("تعذر تحديث حالة التنبيه",1)}
+}
+
 /* --- مركز التقارير: متاح للمشرف فقط، ويقرأ البيانات الموجودة دون تعديلها --- */
 let reportType="expenses",reportMonth="ALL",reportApt="1",reportProject="";
 function reportRows(){
@@ -1033,7 +1066,9 @@ async function syncAccess(){
 }
 /* الساكن: يقرأ فقط مسارات مسموحة له (ملخص عام + شقته + المصروفات) */
 async function loadRes(){
-  const a=U.apt,pub=(await api("pub"))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{}};
+  const a=U.apt,pub=(await api("pub"))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{},notifications:{residents:{}},notificationReads:{residents:{}}};
+  const [residentNotifs,residentReads]=await Promise.all([api(`notifications/residents/${a}`),api(`notificationReads/residents/${a}/${auth.currentUser.uid}`)]);
+  o.notifications.residents[a]=residentNotifs||{};o.notificationReads.residents[a]=residentReads||{};
   o.apartments[a]=(await api("apartments/"+a))||{};
   await Promise.all(Object.keys(pub.years||{}).map(async y=>{
     const [ex,mp,pd,pf]=await Promise.all(["expenses","monthlyPayments/"+a,"payDates/"+a,"payFiles/"+a].map(k=>api(`years/${y}/${k}`)));
@@ -1136,7 +1171,7 @@ async function loadLog(){
   try{
     const d=await api("log","GET",undefined,"?orderBy=%22%24key%22&limitToLast=40"),el=$("#logbox");if(!el)return;
     const L=Object.values(d||{}).sort((a,b)=>b.t-a.t);
-    el.innerHTML=L.length?`<table>${L.map(l=>`<tr><td>${new Date(l.t).toLocaleString("ar-EG",{dateStyle:"short",timeStyle:"short"})}</td><td>${esc(l.who)}</td><td style="white-space:normal">${esc(l.msg)}</td></tr>`).join("")}</table>`:"لا توجد تعديلات مسجلة بعد";
+    el.innerHTML=L.length?`<table>${L.map(l=>`<tr><td>${new Date(l.t).toLocaleString("ar-EG",{dateStyle:"short",timeStyle:"short"})}</td><td>${esc(l.who)}${l.actorUid?`<div class="mu" dir="ltr" title="Firebase UID">UID: ${esc(l.actorUid)}</div>`:""}</td><td style="white-space:normal">${esc(l.msg)}</td></tr>`).join("")}</table>`:"لا توجد تعديلات مسجلة بعد";
   }catch(e){const el=$("#logbox");if(el)el.textContent="تعذر تحميل السجل"}
 }
 function exportCsv(){
