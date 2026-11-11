@@ -419,25 +419,56 @@ function googleLogin(){
 function logout(){auth.signOut()}
 function showLogin(){U=null;G=null;$("#app").hidden=true;$("#login").hidden=false;$("#ld").hidden=true}
 const emailsOf=i=>Object.entries(G.residents||{}).filter(([,v])=>Number(v)===i).map(([k])=>k.replace(/,/g,"."));
+
+/* === التعديل الجذري هنا لمنع خطأ 401 وتحديد الصلاحيات بدقة === */
 async function start(u){
   $("#err").textContent="";$("#ld").hidden=false;
   const email=(u.email||"").toLowerCase(),key=email.replace(/\./g,",");
-  let admin=false;try{await api("residents");admin=true}catch(e){}
-  U={role:admin?"admin":"resident",email,apt:0};
+  
+  // قائمة الإيميلات الإدارية المعروفة
+  const ADMIN_EMAILS = [
+    'anasser.awaad@gmail.com',
+    'adelali.uppit@gmail.com',
+    'monanaguib974@gmail.com',
+    'ahmed.mohamed.199229@gmail.com'
+  ];
+  
+  const admin = ADMIN_EMAILS.includes(email);
+  U = { role: admin ? "admin" : "resident", email, apt: 0 };
+
   if(!admin){
-    let a=null;try{a=await api("residents/"+key)}catch(e){}
-    if(a==null){await auth.signOut();$("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;return}
-    U.apt=Number(a);
+    let a = null;
+    try {
+      a = await api("residents/" + key);
+    } catch(e) {
+      console.error(e);
+    }
+    
+    if(a == null){
+      await auth.signOut();
+      $("#ld").hidden=true;
+      $("#err").textContent=`الإيميل ${email} غير مسجل في أي شقة. اطلب من الأدمن يسجله.`;
+      return;
+    }
+    U.apt = Number(a);
   }
-  await load();
-  if(admin){
-    U.apt=Number(G.residents[key])||0;
-    await syncAccess();pubSoon();
-    const ks=await api("","GET",undefined,"?shallow=true");
-    if(ks&&("adminPassword" in ks||"passwords" in ks))await api("","PATCH",{adminPassword:null,passwords:null});
+
+  try {
+    await load();
+    if(admin){
+      U.apt = Number(G.residents[key])||0;
+      await syncAccess(); pubSoon();
+    }
+  } catch(err) {
+    console.error(err);
+    $("#ld").hidden=true;
+    $("#err").textContent="تعذر تحميل بيانات الشقة. تأكد من تسجيل الإيميل في قاعدة البيانات.";
+    return;
   }
-  $("#ld").hidden=true;enter();
+
+  $("#ld").hidden=true; enter();
 }
+
 function enter(){$("#login").hidden=true;$("#app").hidden=false;tab=isA()?"sum":"me";initFlt();render()}
 
 /* ---------- العرض ---------- */
@@ -670,7 +701,7 @@ function vCamAdmin(){
       <td>${ed?`<input type="date" id="cd-${i}" value="${dt}">`:fd(dt)}</td>
       <td>${v>s+0.5?`<b class="bd" style="background:var(--in);color:var(--bl)">فائض ${num(v-s)} ج</b>`:badge(v,s)}</td>
       <td class="${v>=s?"":"neg"}">${num(Math.max(0,s-v))} ج</td>
-      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${v>0?`<button class="btn gh" style="color:var(--tx)" title="طباعة إيصال استلام" onclick="rcptPrj('${p.id}',${i})">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" style="color:var(--tx)" title="عرض صورة التحويل" onclick="showF('${f}')">🧾 صورة التحويل</button>`:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</div></td></tr>`;
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${v>0?`<button class="btn gh" style="color:var(--tx)" title="طباعة إيصال استلام" onclick="rcptPrj('${p.id}',${i})">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" style="color:var(--tx)" title="عرض صورة التحويل" onclick="showF('${f}')">🧾 صورة التحويل</button>`:""}${ed?attBtn("cf-"+i)+` <button class="btn" onclick="savePrj(${i})">حفظ</button>`:""}</div></tr>`;
   }
   const add=A?`<div class="card"><h3>➕ مشروع / تحصيل خاص جديد</h3><div class="row"><input id="pn" placeholder="اسم المشروع (مثال: دهان السلم)" style="flex:1;min-width:180px"><input id="ps" type="number" min="1" placeholder="إجمالي تكلفة المشروع (جنيه)" style="width:190px"><div class="row"><button type="button" class="btn gh" onclick="selAllPrj()">تحديد الكل</button><button type="button" class="btn gh" onclick="unselAllPrj()">إلغاء الكل</button></div><div id="prjApts" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;width:100%;margin-top:8px">${Array.from({length:N},(_,k)=>k+1).map(i=>`<label><input type="checkbox" class="prj-apt" value="${i}" checked> شقة ${i} ${apt(i)}</label>`).join("")}</div><button class="btn am" onclick="addPrj()">إنشاء وتقسيم</button></div></div>`:"";
   const chips=L.length?`<div class="chips">${L.map(x=>`<button class="chip ${x.id===selP?"on":""}" onclick="selP='${x.id}';render()">${x.closed?"📦 ":""}${esc(x.name)}</button>`).join("")}</div>`:`<div class="card mu">لا توجد مشاريع حاليًا</div>`;
