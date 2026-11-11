@@ -270,9 +270,15 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+
+/* V6.0 Executive Dashboard + Mobile Nav */
+.mobile-nav{display:none}@media(max-width:850px){.mobile-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#0f172a;border-top:1px solid #334155;z-index:9999}.mobile-nav a{flex:1;text-align:center;padding:10px 4px;color:#fff;text-decoration:none;font-size:12px}body{padding-bottom:72px}}
+.execdash{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}.execcard{padding:10px;border-radius:12px;border:1px solid #334155;background:#111827}.execcard b{display:block;font-size:22px;margin-top:6px}
+
 </style>
 </head>
 <body>
+<div class="execdash"><div class="execcard">⚠️ متأخرات<b id="ex-late">--</b></div><div class="execcard">💰 متبقي<b id="ex-rem">--</b></div><div class="execcard">✅ مسدد<b id="ex-paid">--</b></div><div class="execcard">📷 مشاريع مفتوحة<b id="ex-prj">--</b></div></div>
 <button id="th" title="فاتح / داكن" onclick="theme(document.documentElement.dataset.t==='light'?'dark':'light')">☀️</button>
 <div class="w">
 
@@ -1193,5 +1199,16 @@ document.addEventListener("visibilitychange",()=>{
   if(U&&Date.now()-hiddenAt>120000&&!document.activeElement?.matches("input"))reload();
 });
 </script>
+
+<div class="mobile-nav">
+<a href="#sum">🏠<br>ملخص</a>
+<a href="#monthly">💰<br>تحصيل</a>
+<a href="#projects">📷<br>مشاريع</a>
+<a href="#search">🔍<br>بحث</a>
+<a href="#admin">⚙️<br>إدارة</a>
+</div>
+
+
+<script>(function(){setTimeout(function(){try{if(window.G){document.getElementById('ex-prj')&& (document.getElementById('ex-prj').textContent=Object.values(G.projects||{}).filter(p=>!p.closed).length);}}catch(e){}},1500);})();</script>
 </body>
 </html>
