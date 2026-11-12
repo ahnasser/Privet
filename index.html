@@ -1,10 +1,10 @@
-<!-- Building 60 V6.8.1 — header/theme button hotfix; no data/business logic changes. -->
+<!-- Building 60 V6.9 — unified responsive interface; no data/business logic changes. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عمارة 60 - ساوث هيلز 2 | V6.8.1</title>
+<title>عمارة 60 - ساوث هيلز 2 | V6.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0b1220;--card:#131f33;--in:#0b1527;--ln:#263750;--tx:#e7eef8;--mu:#9aabc2;--ac:#45e0b0;--am:#ffd166;--rd:#ff718b;--bl:#75aaff;--shadow:0 12px 32px rgba(0,0,0,.16)}
@@ -693,6 +693,147 @@ tbody tr:hover td{background:color-mix(in srgb,var(--ac) 6%,var(--card))}
  #app>.top .app-brand{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
  #app>.top .brand-info h1{font-size:clamp(17px,4.5vw,21px);padding:0}
  #th{width:36px;height:36px;flex-basis:36px}
+}
+
+
+
+/* Building 60 V6.9 — unified design layer; presentation-only overrides */
+:root{
+ --ui-radius:14px;
+ --ui-radius-sm:10px;
+ --ui-space:12px;
+ --ui-focus:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent);
+}
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+#app,#view,#nav,.card,.chart-card,.tw{min-width:0}
+#view{display:flex;flex-direction:column;gap:12px}
+#view>.card{width:100%;min-width:0}
+#view .card>.top,
+#view .top{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ flex-wrap:wrap;
+ gap:10px;
+}
+#view h2,#view h3,#view h4{overflow-wrap:anywhere}
+#view .card h3{margin-top:0}
+#view .mu{line-height:1.65}
+#view .row{display:flex;align-items:center;flex-wrap:wrap;gap:9px;min-width:0}
+#view .row>*{min-width:0;max-width:100%}
+#view .row input,
+#view .row select{flex:1 1 145px}
+#view .row .btn{flex:0 0 auto}
+#view input:not([type=checkbox]):not([type=radio]),
+#view select,
+#view textarea{
+ max-width:100%;
+ min-width:0;
+ border-radius:var(--ui-radius-sm);
+}
+#view input:focus-visible,
+#view select:focus-visible,
+#view textarea:focus-visible,
+#view button:focus-visible,
+#nav button:focus-visible{
+ outline:0;
+ box-shadow:var(--ui-focus);
+}
+#view .btn{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ min-height:40px;
+ line-height:1.4;
+ white-space:normal;
+}
+#view .btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
+#view .chips{align-items:stretch}
+#view .chip{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-width:0;
+ min-height:38px;
+ border-radius:var(--ui-radius-sm);
+ line-height:1.35;
+}
+#view .g{align-items:stretch;min-width:0}
+#view .g>.card{height:100%;min-width:0}
+#view .g .card b,
+#view .g .card strong{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#view .bd{max-width:100%;white-space:normal;line-height:1.45;text-align:center}
+#view .tw{
+ width:100%;
+ max-width:100%;
+ overflow-x:auto;
+ overflow-y:hidden;
+ border:1px solid var(--ln);
+ border-radius:12px;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;
+}
+#view .tw table{
+ width:100%;
+ min-width:680px;
+ margin:0;
+ border:0;
+ border-radius:0;
+}
+#view .tw th{position:sticky;top:0;z-index:1}
+#view .tw td,#view .tw th{vertical-align:middle}
+#view .tw td{overflow-wrap:anywhere}
+#view .chart-grid,
+#view .chart-card,
+#view .report-kpis,
+#view .finance-kpis{min-width:0}
+#view .chart-svg{display:block;width:100%;height:auto}
+#view .chart-card{overflow:hidden}
+#view .searchbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#view .searchbar input{flex:1 1 220px;min-width:0}
+#view .search-results{display:grid;gap:9px}
+#view .search-result{min-width:0;overflow-wrap:anywhere}
+#view .payment-history{min-width:0}
+#view .payment-line{min-width:0}
+#view .report-filters,
+#view .finance-note,
+#view .project-state-note{max-width:100%;overflow-wrap:anywhere}
+#view .report-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#mb{max-width:100%;overflow-x:hidden}
+#mb .top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+#mb .row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#mb input,#mb select,#mb textarea{max-width:100%;min-width:0}
+#toast{max-width:calc(100vw - 24px);overflow-wrap:anywhere}
+@media(max-width:999px){
+ #view{gap:10px}
+ #view .tw{border-radius:11px}
+}
+@media(max-width:640px){
+ #view{gap:9px}
+ #view>.card{padding:13px}
+ #view .card>.top,#view .top{align-items:flex-start;gap:8px}
+ #view .card>.top>.row,#view .top>.row{width:100%}
+ #view .row{gap:7px}
+ #view .row input,
+ #view .row select{flex:1 1 130px}
+ #view .row .btn{min-height:40px;padding:8px 11px}
+ #view .tw{margin-inline:0}
+ #view .tw table{min-width:640px;font-size:12px}
+ #view .tw th,#view .tw td{padding:9px 8px}
+ #view .report-actions .btn{flex:1 1 auto}
+ #mb{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 20px);overflow:auto}
+ #mb .row>*{flex:1 1 130px}
+ #mb .row .btn{flex:0 0 auto}
+}
+@media(max-width:380px){
+ #view .tw table{min-width:600px}
+ #view .g .card{overflow-wrap:anywhere}
+ #view .row .btn{padding:7px 9px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
 }
 
 </style>
