@@ -496,7 +496,8 @@ function makeSeed(){
 let G=null,U=null,Y="2026",tab="sum",selM=MONTHS[new Date().getMonth()],expF="ALL",flt=new Set();
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const num=v=>Number(v||0).toLocaleString("en-US");
+const roundMoney=v=>{const n=Number(v);return Number.isFinite(n)?Math.round((n+Number.EPSILON)*100)/100:0;};
+const num=v=>roundMoney(v).toLocaleString("en-US",{maximumFractionDigits:2});
 const fd=d=>d?d.slice(8,10)+"/"+d.slice(5,7)+"/"+d.slice(0,4):"—";
 const today=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
 const isA=()=>U&&U.role==="admin";
@@ -994,7 +995,7 @@ function vCamAdmin(){
   return chips+body+add;
 }
 async function savePrj(i){
-  const v=Math.max(0,Number($("#ca-"+i).value)||0),dt=$("#cd-"+i).value||today(),f=$("#cf-"+i).files[0],b=`projects/${selP}/`;
+  const v=roundMoney(Math.max(0,Number($("#ca-"+i).value)||0)),dt=$("#cd-"+i).value||today(),f=$("#cf-"+i).files[0],b=`projects/${selP}/`;
   let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f,"apt/"+i)}catch(e){return toast("تعذر رفع الصورة",1)}}
   const nm=G.projects[selP].name,o=v?{[b+`payments/${i}`]:v,[b+`dates/${i}`]:dt}:{[b+`payments/${i}`]:null,[b+`dates/${i}`]:null,[b+`files/${i}`]:null};
   if(fid&&v)o[b+`files/${i}`]=fid;
@@ -1023,7 +1024,7 @@ function prjPreview(){
   $("#ep-prev").innerHTML=n&&t>0?`<span>${n} مشارك × ${num(t/n)} ج</span><b>المتبقي بعد التعديل: ${num(Math.max(0,t-col))} ج</b>`:'<span class="mu">اكتب تكلفة واختار شقة على الأقل</span>';
 }
 function savePrjEdit(){
-  const p=G.projects[selP],t=Number($("#ep-total").value),arr=epSel();
+  const p=G.projects[selP],t=roundMoney(Number($("#ep-total").value)),arr=epSel();
   if(!(t>0)||!Number.isFinite(t))return toast("اكتب تكلفة صحيحة",1);
   if(!arr.length)return toast("اختار شقة واحدة على الأقل",1);
   const out=ALLN().filter(i=>pp(p,i)>0&&!arr.includes(i));
@@ -1039,7 +1040,7 @@ function savePrjEdit(){
 }
 
 function addPrj(){
-  const name=$("#pn").value.trim(),totalCost=Number($("#ps").value);
+  const name=$("#pn").value.trim(),totalCost=roundMoney(Number($("#ps").value));
   if(!name||!(totalCost>0)||!Number.isFinite(totalCost))return toast("اكتب اسم المشروع وتكلفة صحيحة",1);
   const eligibleApts=[...document.querySelectorAll(".prj-apt:checked")].map(x=>Number(x.value));
   if(!eligibleApts.length)return toast("اختار شقة واحدة على الأقل",1);
@@ -1153,7 +1154,7 @@ function reportRows(){
   if(reportType==="expenses"){
     rows.push(["الشهر","البيان","المبلغ بالجنيه","التاريخ"]);
     exps().filter(e=>reportMonth==="ALL"||e.month===reportMonth)
-      .forEach(e=>rows.push([e.month,e.desc,Number(e.amount||0),e.date||""]));
+      .forEach(e=>rows.push([e.month,e.desc,roundMoney(e.amount),e.date||""]));
   }else if(reportType==="projects"){
     const L=prj().filter(p=>!reportProject||p.id===reportProject);
     rows.push(["المشروع","رقم الشقة","المالك","نصيب الشقة","المدفوع","المتبقي","تاريخ الدفع","الحالة"]);
@@ -1161,7 +1162,7 @@ function reportRows(){
       const members=Array.isArray(p.eligibleApts)?p.eligibleApts.map(Number):ALLN().filter(i=>eligible(p,i));
       members.forEach(i=>{
         const dueShare=share(p),paid=pp(p,i);
-        rows.push([p.name,i,apt(i),dueShare,paid,Math.max(0,dueShare-paid),p.dates?.[i]||"",p.closed?"مغلق":"مفتوح"]);
+        rows.push([p.name,i,apt(i),roundMoney(dueShare),roundMoney(paid),roundMoney(Math.max(0,dueShare-paid)),p.dates?.[i]||"",p.closed?"مغلق":"مفتوح"]);
       });
     });
   }else if(reportType==="apartment"){
@@ -1169,11 +1170,11 @@ function reportRows(){
     rows.push(["نوع الحركة","الفترة / المشروع","المطلوب","المدفوع","المتبقي","التاريخ"]);
     months.forEach(m=>{
       const active=actM(i,m),need=active?dueFor(m,Y):0,p=pay(i,m);
-      rows.push(["اشتراك شهري",m,need,p,Math.max(0,need-p),active?pdate(i,m)||"":(pdate(i,m)||"غير مستحق")]);
+      rows.push(["اشتراك شهري",m,roundMoney(need),roundMoney(p),roundMoney(Math.max(0,need-p)),active?pdate(i,m)||"":(pdate(i,m)||"غير مستحق")]);
     });
     prj().forEach(p=>{
       const el=eligible(p,i),need=el?share(p):0,paid=el?pp(p,i):0;
-      rows.push(["مشروع",p.name,need,paid,Math.max(0,need-paid),el?(p.dates?.[i]||""):"غير مشارك"]);
+      rows.push(["مشروع",p.name,roundMoney(need),roundMoney(paid),roundMoney(Math.max(0,need-paid)),el?(p.dates?.[i]||""):"غير مشارك"]);
     });
   }
   return rows;
@@ -1321,7 +1322,7 @@ function vReports(){
     <div class="report-kpis"><div class="report-kpi"><span>عدد السجلات</span><b>${data.length}</b></div><div class="report-kpi"><span>${reportType==="expenses"?"إجمالي المصروفات":"إجمالي المدفوع في التقرير"}</span><b>${num(total)} ج</b></div></div>
     ${reportCharts(data)}
     <div class="report-actions"><button class="btn" onclick="exportReportCsv()">📥 تصدير CSV</button><button class="btn gh" onclick="printReport()">🖨️ طباعة / PDF</button></div>
-    <h3 class="report-table-title">${title} — ${Y}</h3><div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
+    <h3 class="report-table-title">${title} — ${Y}</h3>${reportType==="projects"?`<div class="finance-note">كل القيم المالية معروضة حتى قرشين عشريين فقط. المتبقي = نصيب الشقة − المدفوع، مع الاحتفاظ بالدقة الأصلية في قاعدة البيانات.</div>`:""}<div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
       ${data.length?data.map(r=>`<tr>${r.map(v=>`<td>${esc(v==null?"—":String(v))}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}" class="mu">لا توجد بيانات مطابقة</td></tr>`}
     </tbody></table></div>
   </div>`;
