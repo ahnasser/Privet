@@ -1,10 +1,10 @@
-<!-- Building 60 V6.4 — responsive financial summary cards; V6.2 financial and receipt logic preserved. -->
+<!-- Building 60 V6.5 — statement layout polish and reversible project closure. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عمارة 60 - ساوث هيلز 2 | V6.4</title>
+<title>عمارة 60 - ساوث هيلز 2 | V6.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0b1220;--card:#131f33;--in:#0b1527;--ln:#263750;--tx:#e7eef8;--mu:#9aabc2;--ac:#45e0b0;--am:#ffd166;--rd:#ff718b;--bl:#75aaff;--shadow:0 12px 32px rgba(0,0,0,.16)}
@@ -288,6 +288,142 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+/* V6.4 — compact apartment cards and payment transaction ledger */
+.payment-history{display:grid;gap:6px;min-width:0}
+.payment-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 9px;border:1px solid var(--ln);border-radius:11px;background:var(--in);min-width:0}
+.payment-line-main{display:flex;flex:1 1 145px;flex-direction:column;gap:2px;min-width:0}
+.payment-line-main b,.payment-line>div b{font-size:12px;overflow-wrap:anywhere}
+.payment-line small{font-size:10px;color:var(--mu);line-height:1.5;overflow-wrap:anywhere}
+.payment-line strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.payment-line .btn{padding:5px 8px;font-size:11px}
+.payment-line.legacy{border-style:dashed}
+.payment-line.voided{opacity:.72;border-color:color-mix(in srgb,var(--rd) 45%,var(--ln))}
+.payment-empty{padding:7px 2px;font-size:11px}
+.payment-modal{max-width:620px;margin:auto}
+.payment-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.payment-form-grid label{display:flex;flex-direction:column;gap:5px;color:var(--mu);font-size:12px;min-width:0}
+.payment-form-grid input,.payment-form-grid select{width:100%;min-width:0}
+.payment-form-grid .wide{grid-column:1/-1}
+.payment-modal-actions{display:flex;justify-content:flex-start;margin-top:14px}
+.statement-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.statement-month{border:1px solid var(--ln);background:var(--card);border-radius:15px;padding:11px;min-width:0}
+.statement-month-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:9px}
+.statement-month-head>b{font-size:15px}
+.statement-month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.statement-month-grid>div{background:var(--in);border:1px solid var(--ln);border-radius:9px;padding:7px;min-width:0}
+.statement-month-grid small{display:block;color:var(--mu);font-size:10px;margin-bottom:3px}
+.statement-month-grid b{display:block;font-size:13px;overflow-wrap:anywhere}
+.finance-apt-mobile{display:none}
+.finance-apt-card{background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--in)));border:1px solid var(--ln);border-radius:16px;padding:12px;margin:0 0 9px;min-width:0;box-shadow:0 7px 18px rgba(0,0,0,.10)}
+.finance-apt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
+.finance-apt-head>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.finance-apt-head strong{font-size:15px;color:var(--tx)}
+.finance-apt-head span{font-size:12px;color:var(--mu);overflow-wrap:anywhere}
+.finance-apt-head>div:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.finance-apt-head small{font-size:10px;color:var(--mu)}
+.finance-apt-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.finance-apt-metrics>div{min-width:0;background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 80%,transparent);border-radius:11px;padding:8px 9px}
+.finance-apt-metrics span{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:3px}
+.finance-apt-metrics b{display:block;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.finance-apt-metrics .positive b{color:var(--ac)}
+.finance-apt-metrics .negative b{color:var(--rd)}
+.finance-apt-metrics .primary{border-color:color-mix(in srgb,var(--bl) 42%,var(--ln))}
+.finance-apt-open{width:100%;margin-top:9px}
+@media(max-width:760px){
+ .finance-apt-mobile{display:block}
+ .finance-apt-desktop{display:none}
+ .statement-months{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+ .payment-form-grid{grid-template-columns:1fr}
+ .payment-form-grid .wide{grid-column:auto}
+ .payment-line{gap:5px;padding:7px}
+ .payment-line .btn{padding:5px 6px}
+ .finance-apt-card{padding:10px}
+}
+
+/* V6.5 — real page styles for monthly statement cards and project controls */
+.payment-history{display:grid;gap:7px;min-width:0;margin-top:9px}
+.payment-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--ln);border-radius:11px;background:var(--in);min-width:0}
+.payment-line-main{display:flex;flex:1 1 150px;flex-direction:column;gap:3px;min-width:0}
+.payment-line-main b,.payment-line>div b{font-size:12px;overflow-wrap:anywhere}
+.payment-line small{font-size:10px;color:var(--mu);line-height:1.5;overflow-wrap:anywhere}
+.payment-line strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.payment-line .btn{padding:5px 8px;font-size:11px}
+.payment-line.legacy{border-style:dashed}
+.payment-line.voided{opacity:.76;border-color:color-mix(in srgb,var(--rd) 45%,var(--ln))}
+.payment-empty{padding:8px 2px;font-size:11px;color:var(--mu)}
+.payment-modal{max-width:620px;margin:auto}
+.payment-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.payment-form-grid label{display:flex;flex-direction:column;gap:5px;color:var(--mu);font-size:12px;min-width:0}
+.payment-form-grid input,.payment-form-grid select{width:100%;min-width:0}
+.payment-form-grid .wide{grid-column:1/-1}
+.payment-modal-actions{display:flex;justify-content:flex-start;margin-top:14px}
+.statement-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:12px}
+.statement-month{position:relative;overflow:hidden;border:1px solid var(--ln);background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 90%,var(--in)));border-radius:15px;padding:13px;min-width:0;box-shadow:0 6px 16px rgba(0,0,0,.10)}
+.statement-month:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--ac),color-mix(in srgb,var(--ac) 18%,transparent))}
+.statement-month-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin:2px 0 11px;padding-bottom:9px;border-bottom:1px solid var(--ln)}
+.statement-month-head>b{font-size:15px;line-height:1.5;color:var(--tx)}
+.statement-month-head .bd{flex-shrink:0;font-size:10px;padding:4px 8px}
+.statement-month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:9px}
+.statement-month-grid>div{background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 82%,transparent);border-radius:10px;padding:9px;min-width:0}
+.statement-month-grid small{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:4px}
+.statement-month-grid b{display:block;font-size:14px;line-height:1.45;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.statement-month-grid>div:nth-child(1){border-color:color-mix(in srgb,var(--bl) 38%,var(--ln))}
+.statement-month-grid>div:nth-child(2) b{color:var(--ac)}
+.statement-month-grid>div:nth-child(3) b:not(:where(.neg)){color:var(--ac)}
+.statement-month .payment-history{border-top:1px dashed var(--ln);padding-top:8px}
+.finance-apt-mobile{display:none}
+.finance-apt-card{background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--in)));border:1px solid var(--ln);border-radius:16px;padding:12px;margin:0 0 9px;min-width:0;box-shadow:0 7px 18px rgba(0,0,0,.10)}
+.finance-apt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
+.finance-apt-head>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.finance-apt-head strong{font-size:15px;color:var(--tx)}
+.finance-apt-head span{font-size:12px;color:var(--mu);overflow-wrap:anywhere}
+.finance-apt-head>div:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.finance-apt-head small{font-size:10px;color:var(--mu)}
+.finance-apt-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.finance-apt-metrics>div{min-width:0;background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 80%,transparent);border-radius:11px;padding:8px 9px}
+.finance-apt-metrics span{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:3px}
+.finance-apt-metrics b{display:block;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.finance-apt-metrics .positive b{color:var(--ac)}
+.finance-apt-metrics .negative b{color:var(--rd)}
+.finance-apt-metrics .primary{border-color:color-mix(in srgb,var(--bl) 42%,var(--ln))}
+.finance-apt-open{width:100%;margin-top:9px}
+.finance-month-mobile{display:none}
+.finance-month-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
+.finance-month-head strong{font-size:16px;color:var(--tx)}
+.finance-month-card{background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--in)));border:1px solid var(--ln);border-radius:16px;padding:12px;margin:0 0 10px;min-width:0;box-shadow:0 7px 18px rgba(0,0,0,.10)}
+.finance-month-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.finance-month-metrics>div{min-width:0;background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 80%,transparent);border-radius:11px;padding:8px 9px}
+.finance-month-metrics span{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:3px}
+.finance-month-metrics b{display:block;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.finance-month-metrics .primary{border-color:color-mix(in srgb,var(--bl) 42%,var(--ln))}
+.finance-month-metrics .positive b{color:var(--ac)}
+.finance-month-metrics .negative b{color:var(--rd)}
+.project-state-note{margin:8px 0;padding:10px 12px;border:1px dashed var(--ln);border-radius:11px;background:var(--in);font-size:12px;line-height:1.7;color:var(--mu)}
+.project-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:760px){
+ .finance-apt-mobile{display:block}.finance-apt-desktop{display:none}
+ .statement-months{grid-template-columns:1fr;gap:9px}
+ .statement-month{padding:11px;border-radius:13px}
+ .finance-month-mobile{display:block}.finance-month-desktop{display:none}
+ .finance-shell{padding:12px}.finance-shell>.top{gap:7px}
+ .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}
+ .finance-kpi{padding:10px;border-radius:12px}.finance-kpi span{font-size:11px;line-height:1.4}
+ .finance-kpi b{font-size:17px;line-height:1.4;overflow-wrap:anywhere}
+ .finance-note{font-size:11px;line-height:1.6;padding:9px 10px}
+ .finance-shell .report-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ .finance-shell .report-actions .btn{min-width:0;white-space:normal;padding:8px 9px;font-size:12px}
+}
+@media(max-width:420px){
+ .payment-form-grid{grid-template-columns:1fr}.payment-form-grid .wide{grid-column:auto}
+ .payment-line{gap:5px;padding:7px}.payment-line .btn{padding:5px 6px}
+ .finance-apt-card{padding:10px}
+ .statement-month-grid{gap:6px}.statement-month-grid>div{padding:8px}
+ .statement-month-grid b{font-size:13px}
+ .finance-month-metrics{gap:5px}.finance-month-metrics>div{padding:7px}.finance-month-metrics b{font-size:14px}
+}
+
 </style>
 </head>
 <body>
@@ -852,8 +988,8 @@ function vCamAdmin(){
     <div class="card"><span class="mu">إجمالي المطلوب (${na} مشارك)</span><b>${num(p.totalCost!=null?p.totalCost:s*na)} ج</b></div>
     <div class="card"><span class="mu">المحصّل</span><b class="pos">${num(col)} ج</b></div>
     <div class="card"><span class="mu">المتبقي</span><b class="neg">${num(Math.max(0,(p.totalCost!=null?Number(p.totalCost):s*na)-col))} ج</b></div></div>
-    <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"إعادة فتح":"إغلاق وأرشفة"}</button>`:""}</div>
-    ${ed?`<div class="row" style="margin:8px 0;justify-content:space-between"><div class="mu">${Array.isArray(p.eligibleApts)?`التكلفة ${num(p.totalCost!=null?p.totalCost:s*na)} ج على ${p.eligibleApts.length} شقة، نصيب الشقة ${num(s)} ج.`:`نصيب الشقة ${num(s)} ج.`} تقدر تعدّل التكلفة والمشاركين في أي وقت.</div><button class="btn am" onclick="editPrj()">⚙ تعديل التكلفة والمشاركين</button></div>`:`<div class="mu" style="margin:8px 0">${p.closed?"المشروع مغلق. أعد فتحه لو عايز تعدّل أو تسجّل دفعات.":""}</div>`}
+    <div class="card"><div class="top"><h3>📷 ${esc(p.name)} ${p.closed?"(مغلق)":""}</h3>${A?`<button class="btn gh" style="color:var(--tx)" onclick="togPrj()">${p.closed?"↩ إعادة فتح للتعديل":"🔒 إغلاق المشروع"}</button>`:""}</div>
+    ${ed?`<div class="row" style="margin:8px 0;justify-content:space-between"><div class="mu">${Array.isArray(p.eligibleApts)?`التكلفة ${num(p.totalCost!=null?p.totalCost:s*na)} ج على ${p.eligibleApts.length} شقة، نصيب الشقة ${num(s)} ج.`:`نصيب الشقة ${num(s)} ج.`} تقدر تعدّل التكلفة والمشاركين في أي وقت.</div><button class="btn am" onclick="editPrj()">⚙ تعديل التكلفة والمشاركين</button></div>`:`<div class="mu" style="margin:8px 0">${p.closed?"المشروع مغلق حاليًا؛ بياناته ودفعاته محفوظة. اضغط (إعادة فتح للتعديل) لتعديل التكلفة أو المشاركين أو تسجيل دفعات جديدة، وبعد الانتهاء يمكنك إغلاقه مرة أخرى.":"المشروع مفتوح وقابل للتعديل وتسجيل الدفعات. إغلاقه لا يحذف بياناته، ويمكن إعادة فتحه لاحقًا."}</div>`}
     <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>المتبقي</th><th>الإيصال</th></tr>${rows}</table></div></div>`:"";
   return chips+body+add;
 }
@@ -910,7 +1046,15 @@ function addPrj(){
   const perApt=totalCost/eligibleApts.length,id="p"+Date.now().toString(36);
   selP=id;upd({[`projects/${id}`]:{name,totalCost,eligibleApts,perApt,createdAt:today(),closed:false}},`مشروع جديد: ${name} - نصيب الشقة ${num(perApt)} ج ✓`);
 }
-function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
+function togPrj(){
+  const p=G.projects[selP];if(!p)return;
+  const reopening=!!p.closed;
+  const msg=reopening
+    ?`إعادة فتح مشروع «${p.name}»؟\nهتقدر تعدّل التكلفة والشقق المشاركة وتسجّل دفعات جديدة.`
+    :`إغلاق مشروع «${p.name}»؟\nالإغلاق لا يحذف أي بيانات، ويمكن إعادة فتح المشروع لاحقًا للتعديل.`;
+  if(!confirm(msg))return;
+  upd({[`projects/${selP}/closed`]:reopening?null:true},`${reopening?"إعادة فتح":"إغلاق"} مشروع ${p.name}`);
+}
 
 function vMe(){
   const i=meApt();let paidTotal=0,dueTotal=0,arrears=0,surplus=0;
@@ -1336,59 +1480,6 @@ function printFinance(){
   const money=v=>num(v)+" ج";
   w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>المراجعة المالية ${esc(Y)}</title>
   <style>body{font-family:Arial,sans-serif;padding:22px;color:#172033}h2,h3{margin:8px 0}p{color:#586579}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.k{border:1px solid #ccd3dd;padding:10px;border-radius:8px}.k b{display:block;font-size:18px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:12px 0 22px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:right;font-size:12px}th{background:#eef2f7}section{break-inside:avoid}@media print{button{display:none}}
-/* V6.4 — compact apartment cards and payment transaction ledger */
-.payment-history{display:grid;gap:6px;min-width:0}
-.payment-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 9px;border:1px solid var(--ln);border-radius:11px;background:var(--in);min-width:0}
-.payment-line-main{display:flex;flex:1 1 145px;flex-direction:column;gap:2px;min-width:0}
-.payment-line-main b,.payment-line>div b{font-size:12px;overflow-wrap:anywhere}
-.payment-line small{font-size:10px;color:var(--mu);line-height:1.5;overflow-wrap:anywhere}
-.payment-line strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.payment-line .btn{padding:5px 8px;font-size:11px}
-.payment-line.legacy{border-style:dashed}
-.payment-line.voided{opacity:.72;border-color:color-mix(in srgb,var(--rd) 45%,var(--ln))}
-.payment-empty{padding:7px 2px;font-size:11px}
-.payment-modal{max-width:620px;margin:auto}
-.payment-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
-.payment-form-grid label{display:flex;flex-direction:column;gap:5px;color:var(--mu);font-size:12px;min-width:0}
-.payment-form-grid input,.payment-form-grid select{width:100%;min-width:0}
-.payment-form-grid .wide{grid-column:1/-1}
-.payment-modal-actions{display:flex;justify-content:flex-start;margin-top:14px}
-.statement-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.statement-month{border:1px solid var(--ln);background:var(--card);border-radius:15px;padding:11px;min-width:0}
-.statement-month-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:9px}
-.statement-month-head>b{font-size:15px}
-.statement-month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
-.statement-month-grid>div{background:var(--in);border:1px solid var(--ln);border-radius:9px;padding:7px;min-width:0}
-.statement-month-grid small{display:block;color:var(--mu);font-size:10px;margin-bottom:3px}
-.statement-month-grid b{display:block;font-size:13px;overflow-wrap:anywhere}
-.finance-apt-mobile{display:none}
-.finance-apt-card{background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--in)));border:1px solid var(--ln);border-radius:16px;padding:12px;margin:0 0 9px;min-width:0;box-shadow:0 7px 18px rgba(0,0,0,.10)}
-.finance-apt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
-.finance-apt-head>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
-.finance-apt-head strong{font-size:15px;color:var(--tx)}
-.finance-apt-head span{font-size:12px;color:var(--mu);overflow-wrap:anywhere}
-.finance-apt-head>div:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.finance-apt-head small{font-size:10px;color:var(--mu)}
-.finance-apt-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.finance-apt-metrics>div{min-width:0;background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 80%,transparent);border-radius:11px;padding:8px 9px}
-.finance-apt-metrics span{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:3px}
-.finance-apt-metrics b{display:block;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.finance-apt-metrics .positive b{color:var(--ac)}
-.finance-apt-metrics .negative b{color:var(--rd)}
-.finance-apt-metrics .primary{border-color:color-mix(in srgb,var(--bl) 42%,var(--ln))}
-.finance-apt-open{width:100%;margin-top:9px}
-@media(max-width:760px){
- .finance-apt-mobile{display:block}
- .finance-apt-desktop{display:none}
- .statement-months{grid-template-columns:1fr}
-}
-@media(max-width:420px){
- .payment-form-grid{grid-template-columns:1fr}
- .payment-form-grid .wide{grid-column:auto}
- .payment-line{gap:5px;padding:7px}
- .payment-line .btn{padding:5px 6px}
- .finance-apt-card{padding:10px}
-}
 </style>
   <h2>مركز المراجعة المالية — عمارة 60</h2><p>السنة ${esc(Y)} — تاريخ التقرير ${esc(today())}. المتأخرات محسوبة حتى الشهر الحالي، والشهور التالية معروضة كتوقعات.</p>
   <div class="kpis"><div class="k">المطلوب حتى الآن<b>${money(d.totalDue)}</b></div><div class="k">المحصّل<b>${money(d.totalPaid)}</b></div><div class="k">المتأخرات الشهرية<b>${money(d.arrears)}</b></div><div class="k">الرصيد الزائد / المقدم<b>${money(d.surplus)}</b></div><div class="k">المصروفات<b>${money(d.expenses)}</b></div><div class="k">صافي الحركة<b>${money(d.net)}</b></div></div>
