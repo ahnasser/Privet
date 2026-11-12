@@ -1,10 +1,10 @@
-<!-- Building 60 V6.8 — responsive UI refinement; no data/business logic changes. -->
+<!-- Building 60 V6.8.1 — header/theme button hotfix; no data/business logic changes. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عمارة 60 - ساوث هيلز 2 | V6.8</title>
+<title>عمارة 60 - ساوث هيلز 2 | V6.8.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0b1220;--card:#131f33;--in:#0b1527;--ln:#263750;--tx:#e7eef8;--mu:#9aabc2;--ac:#45e0b0;--am:#ffd166;--rd:#ff718b;--bl:#75aaff;--shadow:0 12px 32px rgba(0,0,0,.16)}
@@ -590,6 +590,111 @@ tbody tr:hover td{background:color-mix(in srgb,var(--ac) 6%,var(--card))}
  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
+
+
+/* V6.8 responsive refinements — correctly placed in the main page stylesheet */
+#app>.top{position:sticky}
+#nav button{overflow-wrap:anywhere}
+#view .card>.top{align-items:center}
+#view .card>.top h3{margin-bottom:0}
+.chips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;overflow:visible}
+.chips .chip{min-width:0;width:100%;white-space:nowrap}
+.chart-card,.g .card{min-width:0}
+.chart-svg{max-width:100%}
+.g .card .mu,.g .card .cap{overflow-wrap:anywhere}
+@media(min-width:851px){
+ #app>.top{min-height:82px}
+ #nav{padding:12px}
+ #nav button{min-height:43px}
+ #view>.card{padding:20px}
+ .chips{grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}
+ .chips .chip{padding:7px 5px;font-size:13px}
+}
+@media(max-width:850px){
+ #app>.top{gap:8px}
+ #app>.top .row{width:100%}
+ #nav{scroll-padding-inline:8px}
+ #nav button{flex:0 0 auto}
+ .chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:2px 0;margin:8px 0 0}
+ .chips .chip{min-height:40px;padding:7px 5px;font-size:13px}
+ .chart-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+ body{padding:7px}
+ #app{gap:8px}
+ #app>.top{padding:12px 12px 10px;border-radius:16px;gap:7px}
+ #app>.top .app-brand{min-height:39px;text-align:right}
+ #app>.top .brand-info h1{font-size:clamp(17px,4.5vw,21px);line-height:1.35;margin-bottom:2px}
+ #who{font-size:11px}
+ #net{font-size:10px;padding:2px 7px;min-height:20px}
+ #app>.top .row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:stretch}
+ #app>.top .row select{grid-column:auto;min-width:0;width:100%;min-height:39px}
+ #app>.top .row .btn{min-height:39px;padding:6px 10px;font-size:13px}
+ #nav{margin:0;padding:6px;gap:5px}
+ #nav button{min-height:39px;padding:7px 10px;font-size:12px}
+ #view>.card{padding:12px;border-radius:15px}
+ #view .card>.top{gap:8px}
+ #view .card>.top h3{font-size:15px}
+ .chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .chips .chip{min-height:38px;font-size:12px;padding:6px 3px}
+ .g{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .g .card{padding:11px 10px;border-radius:13px}
+ .g .card b{font-size:clamp(16px,4.2vw,19px);line-height:1.35;margin-top:4px}
+ .g .card .mu{font-size:11px;line-height:1.5}
+ .g .card .cap{font-size:10px;line-height:1.45}
+ .chart-card{padding:12px;border-radius:14px}
+ .chart-head h3{font-size:15px}
+ .chart-sub{font-size:11px}
+}
+@media(max-width:380px){
+ #app>.top .row{grid-template-columns:minmax(0,1fr) auto auto}
+ #app>.top .row select{grid-column:auto}
+ .chips{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #nav button{font-size:11px;padding:7px 8px}
+}
+@media(prefers-reduced-motion:reduce){#nav button,.btn,.chip{transition:none}}
+
+/* V6.8.1 hotfix — keep theme toggle in the header flow; no overlap with action buttons */
+.app-brand{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ min-width:0;
+}
+.brand-info{min-width:0;flex:1 1 auto}
+.brand-info h1{line-height:1.35}
+#th{
+ position:static!important;
+ inset:auto!important;
+ flex:0 0 38px;
+ display:grid;
+ place-items:center;
+ width:38px;
+ height:38px;
+ margin:0;
+ padding:0;
+ border:1px solid var(--ln);
+ border-radius:50%;
+ background:var(--in);
+ color:var(--tx);
+ box-shadow:none;
+ cursor:pointer;
+ z-index:auto;
+}
+#th:hover{border-color:var(--ac);background:var(--card)}
+@media(max-width:850px){
+ #app>.top .app-brand{width:100%;padding:0;min-height:42px}
+ #app>.top .brand-info{padding:0;min-width:0}
+ #app>.top .brand-info h1{padding:0}
+ #th{position:static!important;width:38px;height:38px;flex-basis:38px}
+}
+@media(max-width:640px){
+ #app>.top .app-brand{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+ #app>.top .brand-info h1{font-size:clamp(17px,4.5vw,21px);padding:0}
+ #th{width:36px;height:36px;flex-basis:36px}
+}
+
 </style>
 </head>
 <body>
@@ -605,7 +710,7 @@ tbody tr:hover td{background:color-mix(in srgb,var(--ac) 6%,var(--card))}
 
 <div id="app" hidden>
   <div class="card top">
-    <div class="app-brand"><h1>🏢 عمارة 60 - ساوث هيلز 2</h1><span id="who" class="mu"></span> <span id="net" class="bd ok">● قاعدة البيانات متصلة</span><button id="th" title="فاتح / داكن" aria-label="تغيير المظهر" onclick="theme(document.documentElement.dataset.t==='light'?'dark':'light')">☀️</button></div>
+    <div class="app-brand"><div class="brand-info"><h1>🏢 عمارة 60 - ساوث هيلز 2</h1><span id="who" class="mu"></span> <span id="net" class="bd ok">● قاعدة البيانات متصلة</span></div><button id="th" title="فاتح / داكن" aria-label="تغيير المظهر" onclick="theme(document.documentElement.dataset.t==='light'?'dark':'light')">☀️</button></div>
     <div class="row">
       <select id="yr" onchange="Y=this.value;initFlt();render()"><option>2025</option><option selected>2026</option><option>2027</option></select>
       <button class="btn gh" style="color:var(--tx)" onclick="reload()">تحديث ⟳</button>
@@ -1647,81 +1752,7 @@ function printFinance(){
   w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>المراجعة المالية ${esc(Y)}</title>
   <style>body{font-family:Arial,sans-serif;padding:22px;color:#172033}h2,h3{margin:8px 0}p{color:#586579}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.k{border:1px solid #ccd3dd;padding:10px;border-radius:8px}.k b{display:block;font-size:18px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:12px 0 22px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:right;font-size:12px}th{background:#eef2f7}section{break-inside:avoid}@media print{button{display:none}}
 
-/* V6.8 — targeted responsive refinements based on desktop + iPhone screenshots */
-#app>.top{position:sticky}
-.app-brand{position:relative;min-width:0;padding-left:0}
-#th{
- position:fixed;top:auto;bottom:16px;left:12px;
- display:grid;place-items:center;width:40px;height:40px;
- border:1px solid var(--ln);border-radius:50%;
- background:var(--card);color:var(--tx);
- box-shadow:0 5px 16px rgba(0,0,0,.16);cursor:pointer;z-index:9;
-}
-#nav button{overflow-wrap:anywhere}
-#view .card>.top{align-items:center}
-#view .card>.top h3{margin-bottom:0}
-.chips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;overflow:visible}
-.chips .chip{min-width:0;width:100%;white-space:nowrap}
-.chart-card,.g .card{min-width:0}
-.chart-svg{max-width:100%}
-.g .card .mu,.g .card .cap{overflow-wrap:anywhere}
-@media(min-width:851px){
- #app>.top{min-height:82px}
- #nav{padding:12px}
- #nav button{min-height:43px}
- #view>.card{padding:20px}
- .chips{grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}
- .chips .chip{padding:7px 5px;font-size:13px}
-}
-@media(max-width:850px){
- #app>.top{gap:8px}
- #app>.top .app-brand{width:100%;padding-left:0}
- #app>.top .app-brand h1{padding-left:48px}
- #app>.top .row{width:100%}
- #th{position:absolute;top:9px;left:9px;bottom:auto;width:38px;height:38px;z-index:7}
- #nav{scroll-padding-inline:8px}
- #nav button{flex:0 0 auto}
- .chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:2px 0;margin:8px 0 0}
- .chips .chip{min-height:40px;padding:7px 5px;font-size:13px}
- .chart-grid{grid-template-columns:1fr}
-}
-@media(max-width:640px){
- body{padding:7px}
- #app{gap:8px}
- #app>.top{padding:12px 12px 10px;border-radius:16px;gap:7px}
- #app>.top .app-brand{min-height:39px;text-align:right}
- #app>.top .app-brand h1{font-size:clamp(17px,4.5vw,21px);line-height:1.35;padding-left:43px;margin-bottom:2px}
- #who{font-size:11px}
- #net{font-size:10px;padding:2px 7px;min-height:20px}
- #app>.top .row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:stretch}
- #app>.top .row select{grid-column:auto;min-width:0;width:100%;min-height:39px}
- #app>.top .row .btn{min-height:39px;padding:6px 10px;font-size:13px}
- #nav{margin:0;padding:6px;gap:5px}
- #nav button{min-height:39px;padding:7px 10px;font-size:12px}
- #view>.card{padding:12px;border-radius:15px}
- #view .card>.top{gap:8px}
- #view .card>.top h3{font-size:15px}
- .chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
- .chips .chip{min-height:38px;font-size:12px;padding:6px 3px}
- .g{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
- .g .card{padding:11px 10px;border-radius:13px}
- .g .card b{font-size:clamp(16px,4.2vw,19px);line-height:1.35;margin-top:4px}
- .g .card .mu{font-size:11px;line-height:1.5}
- .g .card .cap{font-size:10px;line-height:1.45}
- .chart-card{padding:12px;border-radius:14px}
- .chart-head h3{font-size:15px}
- .chart-sub{font-size:11px}
- #th{top:8px;left:8px;width:36px;height:36px}
-}
-@media(max-width:380px){
- #app>.top .row{grid-template-columns:minmax(0,1fr) auto auto}
- #app>.top .row select{grid-column:auto}
- .chips{grid-template-columns:repeat(3,minmax(0,1fr))}
- #nav button{font-size:11px;padding:7px 8px}
-}
-@media(prefers-reduced-motion:reduce){#nav button,.btn,.chip{transition:none}}
 
-</style>
   <h2>مركز المراجعة المالية — عمارة 60</h2><p>السنة ${esc(Y)} — تاريخ التقرير ${esc(today())}. المتأخرات محسوبة حتى الشهر الحالي، والشهور التالية معروضة كتوقعات.</p>
   <div class="kpis"><div class="k">المطلوب حتى الآن<b>${money(d.totalDue)}</b></div><div class="k">المحصّل<b>${money(d.totalPaid)}</b></div><div class="k">المتأخرات الشهرية<b>${money(d.arrears)}</b></div><div class="k">الرصيد الزائد / المقدم<b>${money(d.surplus)}</b></div><div class="k">المصروفات<b>${money(d.expenses)}</b></div><div class="k">صافي الحركة<b>${money(d.net)}</b></div></div>
   <section><h3>الحركة الشهرية</h3><table><tr><th>الشهر</th><th>السعر</th><th>الشقق</th><th>المستحق</th><th>المتوقع</th><th>المحصل</th><th>المتأخر</th><th>الزائد/المقدم</th><th>المصروفات</th><th>الصافي</th></tr>
