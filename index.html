@@ -1,10 +1,10 @@
-<!-- Building 60 V6.3 — responsive financial summary cards; V6.2 financial and receipt logic preserved. -->
+<!-- Building 60 V6.4 — responsive financial summary cards; V6.2 financial and receipt logic preserved. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عمارة 60 - ساوث هيلز 2 | V6.3</title>
+<title>عمارة 60 - ساوث هيلز 2 | V6.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0b1220;--card:#131f33;--in:#0b1527;--ln:#263750;--tx:#e7eef8;--mu:#9aabc2;--ac:#45e0b0;--am:#ffd166;--rd:#ff718b;--bl:#75aaff;--shadow:0 12px 32px rgba(0,0,0,.16)}
@@ -134,7 +134,7 @@ table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px
 @media(max-width:700px){.finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-kpi b{font-size:17px}.finance-shell .top{align-items:flex-start;flex-wrap:wrap}}
 
 
-/* V6.3 mobile financial month cards */
+/* V6.4 mobile financial month cards */
 .finance-month-mobile{display:none}
 .finance-month-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
 .finance-month-head strong{font-size:16px;color:var(--tx)}
@@ -381,17 +381,18 @@ function setLocal(path,v){
 async function upd(o,msg){
   try{const actor={uid:auth.currentUser?.uid||"",email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||"",role:isA()?"admin":"resident",apartment:isA()?null:Number(U?.apt||0)};
     const w={...o,["log/"+Date.now().toString(36)+Math.random().toString(36).slice(2,4)]:{t:Date.now(),who:isA()?((actor.name||"مشرف")+" ("+(actor.email||"")+")"):("شقة "+U.apt),actorUid:actor.uid,actorEmail:actor.email,actorName:actor.name,actorRole:actor.role,apartment:actor.apartment,msg:(msg||"تعديل").replace(" ✓","")}};await api("","PATCH",w);Object.entries(o).forEach(([p,v])=>setLocal(p,v));toast(msg||"تم الحفظ ✓")}
-  catch(e){console.error("Save failed:",e);toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1)}
+  catch(e){console.error("Save failed:",e);toast("تعذر الحفظ، تأكد من الاتصال وقواعد Firebase",1);render();return false}
   render();
   if(isA())pubSoon();
+  return true;
 }
 async function load(){
   if(!isA())return loadRes();
-  const names=["apartments","years","projects","monthlyDue","monthlyDueHistory"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
+  const names=["apartments","years","projects","monthlyDue","monthlyDueHistory","receiptCounters"].concat(isA()?["residents","pending","phones","tenantPhones","tenantNames"]:[]),o={};
   await Promise.all(names.map(async k=>o[k]=await api(k)));
   o.notifications={admin:{}};
   o.notificationReads={admin:(await api("notificationReads/admin/"+auth.currentUser.uid))||{}};
-  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};G.monthlyDueHistory??={};
+  G=o;G.apartments??={};G.years??={};G.projects??={};G.residents??={};G.pending??={};G.phones??={};G.tenantPhones??={};G.tenantNames??={};G.monthlyDueHistory??={};G.receiptCounters??={};
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
@@ -422,9 +423,137 @@ const actM=(i,m,y=Y)=>{
   return !!key&&!isEmpty(i)&&key>=effectiveStart&&dueFor(m,y)>0;
 };
 const nActM=m=>Array.from({length:N},(_,k)=>k+1).filter(i=>actM(i,m)).length;
-const pay=(i,m)=>Number(G.years?.[Y]?.monthlyPayments?.[i]?.[m]||0);
+const pay=(i,m)=>paymentTotal(i,m,Y);
 const pdate=(i,m)=>G.years?.[Y]?.payDates?.[i]?.[m]||"";
 const pfile=(i,m)=>G.years?.[Y]?.payFiles?.[i]?.[m]||"";
+function paymentTransactions(i,m,y=Y,includeVoided=true){
+  const raw=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]||{};
+  return Object.entries(raw).map(([id,t])=>({id,...(t||{})}))
+    .filter(t=>includeVoided||t.status!=="void")
+    .sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||Number(a.createdAt||0)-Number(b.createdAt||0));
+}
+const legacyPay=(i,m,y=Y)=>Number(G.years?.[y]?.monthlyPayments?.[i]?.[m]||0);
+function paymentTotal(i,m,y=Y){
+  return legacyPay(i,m,y)+paymentTransactions(i,m,y,false).reduce((sum,t)=>sum+Number(t.amount||0),0);
+}
+function paymentActor(){
+  return {uid:auth.currentUser?.uid||"",email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""};
+}
+async function nextReceiptNumber(year=Y){
+  const token=await tok(),endpoint=url("receiptCounters/"+year)+"?auth="+encodeURIComponent(token);
+  for(let attempt=0;attempt<8;attempt++){
+    const get=await fetch(endpoint,{headers:{"X-Firebase-ETag":"true"}});
+    if(!get.ok)throw new Error("تعذر قراءة عداد الإيصالات");
+    const etag=get.headers.get("ETag");
+    if(!etag)throw new Error("Firebase لم يرجع ETag لعداد الإيصالات");
+    const current=Number(await get.json()||0),next=current+1;
+    const put=await fetch(endpoint,{method:"PUT",headers:{"Content-Type":"application/json","if-match":etag},body:JSON.stringify(next)});
+    if(put.status===412)continue;
+    if(!put.ok)throw new Error("تعذر حجز رقم الإيصال");
+    G.receiptCounters??={};G.receiptCounters[year]=next;
+    return `B60-${year}-${String(next).padStart(6,"0")}`;
+  }
+  throw new Error("تعذر حجز رقم إيصال فريد، حاول مرة أخرى");
+}
+function paymentHistoryHtml(i,m,admin=false,y=Y){
+  const legacy=legacyPay(i,m,y),txs=paymentTransactions(i,m,y,true);
+  let out="";
+  if(legacy>0)out+=`<div class="payment-line legacy"><div><b>دفعة سابقة مسجلة</b><small>قبل نظام الحركات المستقلة · ${fd(G.years?.[y]?.payDates?.[i]?.[m]||"")}</small></div><strong>${num(legacy)} ج</strong><button class="btn gh" onclick="rcptLegacy(${i},'${m}')">🖨️ إيصال سابق</button>${G.years?.[y]?.payFiles?.[i]?.[m]?`<button class="btn gh" onclick="showF('${esc(G.years[y].payFiles[i][m])}')">🧾 صورة السداد</button>`:""}</div>`;
+  out+=txs.map(t=>{
+    const voided=t.status==="void";
+    const method=t.method==="cash"?"نقدي":t.method==="transfer"?"تحويل بنكي":t.method==="instapay"?"إنستاباي":"أخرى";
+    return `<div class="payment-line ${voided?"voided":""}">
+      <div class="payment-line-main"><b>${esc(t.receiptNo||"إيصال")}${voided?' <span class="bd no">ملغي</span>':""}</b><small>${fd(t.date||"")} · ${method}${t.note?" · "+esc(t.note):""}</small></div>
+      <strong class="${voided?"mu":"pos"}">${num(t.amount)} ج</strong>
+      ${!voided?`<button class="btn gh" onclick="printPaymentReceipt(${i},'${m}','${t.id}','${y}')">🖨️</button>${admin?`<button class="btn gh" onclick="editPaymentTransaction(${i},'${m}','${t.id}','${y}')">تعديل</button><button class="btn gh" onclick="voidPaymentTransaction(${i},'${m}','${t.id}','${y}')">إلغاء</button>${t.history?`<button class="btn gh" onclick="viewPaymentHistory(${i},'${m}','${t.id}','${y}')">سجل التعديل</button>`:""}`:""}${t.file?`<button class="btn gh" onclick="showF('${esc(t.file)}')">🧾</button>`:""}`:
+      `<small>${esc(t.voidReason||"")}</small>`}
+    </div>`;
+  }).join("");
+  return out||'<div class="mu payment-empty">لا توجد حركات تحصيل مسجلة لهذا الشهر.</div>';
+}
+function openAddPayment(i,m,y=Y){
+  if(!isA())return toast("إضافة التحصيل للمشرف فقط",1);
+  openMo(`<div class="payment-modal">
+    <div class="top"><div><h3>➕ تسجيل دفعة جديدة</h3><div class="mu">شقة ${i} · ${esc(m)} ${y}</div></div><button class="btn gh" onclick="closeMo()">إغلاق ✕</button></div>
+    <div class="payment-form-grid">
+      <label>المبلغ بالجنيه<input id="pt-amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="مثال: 100"></label>
+      <label>تاريخ السداد<input id="pt-date" type="date" value="${today()}"></label>
+      <label>طريقة الدفع<select id="pt-method"><option value="cash">نقدي</option><option value="transfer">تحويل بنكي</option><option value="instapay">إنستاباي</option><option value="other">أخرى</option></select></label>
+      <label>صورة إثبات الدفع (اختياري)<input id="pt-file" type="file" accept="image/*"></label>
+      <label class="wide">ملاحظات (اختياري)<input id="pt-note" maxlength="180" placeholder="مثال: دفعة من الاشتراك المتبقي"></label>
+    </div>
+    <div class="payment-modal-actions"><button class="btn am" onclick="savePaymentTransaction(${i},'${m}','${y}')">حفظ الدفعة وإصدار الإيصال</button></div>
+  </div>`);
+}
+const paymentSaveLocks=new Set();
+async function savePaymentTransaction(i,m,y=Y){
+  if(!isA())return toast("غير مصرح",1);
+  const amount=Number($("#pt-amount")?.value),date=$("#pt-date")?.value||today(),method=$("#pt-method")?.value||"cash",note=$("#pt-note")?.value.trim()||"",fileInput=$("#pt-file");
+  if(!Number.isFinite(amount)||amount<=0||amount>1000000)return toast("اكتب مبلغًا صحيحًا أكبر من صفر",1);
+  if(!date)return toast("حدد تاريخ السداد",1);
+  const lockKey=`${i}:${y}:${m}`;
+  if(paymentSaveLocks.has(lockKey))return toast("جارٍ حفظ دفعة أخرى لهذه الشقة، انتظر قليلًا");
+  paymentSaveLocks.add(lockKey);
+  try{
+    let file=null;
+    if(fileInput?.files?.[0]){
+      toast("جارٍ رفع صورة الإثبات…");file=await attach(fileInput.files[0],"apt/"+i);
+    }
+    const receiptNo=await nextReceiptNumber(y),id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),actor=paymentActor();
+    const tx={receiptNo,amount,date,method,note,status:"active",createdAt:Date.now(),createdBy:actor};
+    if(file)tx.file=file;
+    const ok=await upd({[`apartments/${i}/paymentTransactions/${y}/${m}/${id}`]:tx},`تسجيل دفعة شقة ${i} - ${m} ${y}: ${num(amount)} ج (${receiptNo})`);
+    if(!ok)return;
+    closeMo();render();printPaymentReceipt(i,m,id,y);
+  }catch(e){console.error("Payment transaction failed:",e);toast("تعذر تسجيل الدفعة. لم يتم اعتماد التحصيل؛ راجع الاتصال وحاول مرة أخرى.",1)}
+  finally{paymentSaveLocks.delete(lockKey)}
+}
+function editPaymentTransaction(i,m,id,y=Y){
+  if(!isA())return toast("التعديل للمشرف فقط",1);
+  const t=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]?.[id];if(!t||t.status==="void")return toast("الدفعة غير متاحة للتعديل",1);
+  openMo(`<div class="payment-modal"><div class="top"><div><h3>تصحيح دفعة ${esc(t.receiptNo||"")}</h3><div class="mu">سيتم الاحتفاظ بالقيم القديمة في سجل التعديلات.</div></div><button class="btn gh" onclick="closeMo()">إغلاق ✕</button></div>
+    <div class="payment-form-grid">
+      <label>المبلغ<input id="pe-amount" type="number" min="0.01" step="0.01" value="${Number(t.amount)||0}"></label>
+      <label>تاريخ السداد<input id="pe-date" type="date" value="${esc(t.date||today())}"></label>
+      <label>طريقة الدفع<select id="pe-method"><option value="cash" ${t.method==="cash"?"selected":""}>نقدي</option><option value="transfer" ${t.method==="transfer"?"selected":""}>تحويل بنكي</option><option value="instapay" ${t.method==="instapay"?"selected":""}>إنستاباي</option><option value="other" ${t.method==="other"?"selected":""}>أخرى</option></select></label>
+      <label>ملاحظات<input id="pe-note" maxlength="180" value="${esc(t.note||"")}"></label>
+      <label class="wide">سبب التصحيح (إجباري)<input id="pe-reason" maxlength="220" placeholder="اكتب سبب تعديل بيانات الدفعة"></label>
+    </div><div class="payment-modal-actions"><button class="btn am" onclick="savePaymentEdit(${i},'${m}','${id}','${y}')">حفظ التصحيح</button></div></div>`);
+}
+async function savePaymentEdit(i,m,id,y=Y){
+  if(!isA())return toast("غير مصرح",1);
+  const t=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]?.[id];if(!t||t.status==="void")return toast("الدفعة غير متاحة",1);
+  const amount=Number($("#pe-amount")?.value),date=$("#pe-date")?.value,method=$("#pe-method")?.value,note=$("#pe-note")?.value.trim()||"",reason=$("#pe-reason")?.value.trim();
+  if(!(amount>0)||amount>1000000||!date||!reason)return toast("راجع المبلغ والتاريخ واكتب سبب التصحيح",1);
+  const actor=paymentActor(),stamp=Date.now(),historyId="h"+stamp.toString(36)+Math.random().toString(36).slice(2,5);
+  const before={amount:t.amount,date:t.date,method:t.method,note:t.note||"",editedAt:stamp,editedBy:actor,reason};
+  const base=`apartments/${i}/paymentTransactions/${y}/${m}/${id}`;
+  const ok=await upd({[`${base}/history/${historyId}`]:before,[`${base}/amount`]:amount,[`${base}/date`]:date,[`${base}/method`]:method,[`${base}/note`]:note,[`${base}/lastEditedAt`]:stamp,[`${base}/lastEditedBy`]:actor,[`${base}/lastEditReason`]:reason},`تصحيح دفعة ${t.receiptNo} للشقة ${i}: ${reason}`);
+  if(ok){closeMo();render()}
+}
+async function viewPaymentHistory(i,m,id,y=Y){
+  if(!isA())return toast("سجل التعديلات للمشرف فقط",1);
+  const t=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]?.[id],items=Object.values(t?.history||{}).sort((a,b)=>Number(b.editedAt||0)-Number(a.editedAt||0));
+  if(!items.length)return toast("لا يوجد سجل تعديلات لهذه الدفعة");
+  openMo(`<div class="payment-modal"><div class="top"><div><h3>سجل تعديلات ${esc(t.receiptNo||"الإيصال")}</h3><div class="mu">شقة ${i} · ${esc(m)} ${y}</div></div><button class="btn gh" onclick="closeMo()">إغلاق ✕</button></div>
+    ${items.map(h=>`<article class="payment-line"><div class="payment-line-main"><b>${num(h.amount)} ج · ${fd(h.date||"")}</b><small>${h.method==="cash"?"نقدي":h.method==="transfer"?"تحويل بنكي":h.method==="instapay"?"إنستاباي":"أخرى"} · ${esc(h.editedBy?.name||h.editedBy?.email||"مشرف")}</small><small>سبب التصحيح: ${esc(h.reason||"—")}</small><small>${new Date(Number(h.editedAt||0)).toLocaleString("ar-EG")}</small></div></article>`).join("")}
+  </div>`);
+}
+async function voidPaymentTransaction(i,m,id,y=Y){
+  if(!isA())return toast("إلغاء الدفعة للمشرف فقط",1);
+  const t=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]?.[id];if(!t||t.status==="void")return toast("الدفعة ملغاة بالفعل",1);
+  const reason=prompt(`سبب إلغاء الإيصال ${t.receiptNo||""}؟`);if(!reason||!reason.trim())return toast("لازم تكتب سبب الإلغاء",1);
+  const actor=paymentActor(),base=`apartments/${i}/paymentTransactions/${y}/${m}/${id}`,stamp=Date.now();
+  await upd({[`${base}/status`]:"void",[`${base}/voidReason`]:reason.trim(),[`${base}/voidedAt`]:stamp,[`${base}/voidedBy`]:actor},`إلغاء إيصال ${t.receiptNo} للشقة ${i}: ${reason.trim()}`);
+}
+function printPaymentReceipt(i,m,id,y=Y){
+  if(!isA()&&Number(i)!==Number(U?.apt))return toast("غير مصرح بإصدار إيصال لهذه الشقة",1);
+  const t=G.apartments?.[i]?.paymentTransactions?.[y]?.[m]?.[id];if(!t)return toast("الإيصال غير موجود",1);
+  if(t.status==="void")return toast("هذا الإيصال ملغي ولا يصلح للتحصيل",1);
+  const method=t.method==="cash"?"نقدي":t.method==="transfer"?"تحويل بنكي":t.method==="instapay"?"إنستاباي":"أخرى";
+  openReceipt({i,amount:t.amount,date:t.date,issued:today(),kind:"دفعة اشتراك شهري",purpose:`اشتراك ${m} ${y}${t.note?" — "+t.note:""}`,no:t.receiptNo,method});
+}
+
 const exps=()=>Object.entries(G.years?.[Y]?.expenses||{}).filter(([,e])=>e).map(([id,e])=>({id,...e}))
   .sort((a,b)=>MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month)||(a.date||"").localeCompare(b.date||""));
 function initFlt(){
@@ -660,32 +789,22 @@ function searchApts(raw){
 
 const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}<input type="file" accept="image/*" id="${id}" hidden onchange="this.parentNode.firstChild.textContent='✅'"></label>`;
 function vMonthAdmin(){
-  const A=isA(),d=dueFor(selM,Y);let c=0,rows="";
+  const A=isA(),d=dueFor(selM,Y);let rows="";
   for(let i=1;i<=N;i++){
-    if(!actM(i,selM)){
-      const oldPay=pay(i,selM),oldDate=pdate(i,selM),oldFile=pfile(i,selM);
-      rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>${oldPay?num(oldPay)+" ج":"—"}</td><td>${oldDate?fd(oldDate):"—"}</td><td><b class="bd" style="background:var(--in);color:var(--mu)">${oldPay?"سداد مسجل":"غير مستحقة"}</b></td><td>${oldFile?`<button class="btn gh" onclick="showF('${oldFile}')">🧾</button>`:""}${oldPay?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️</button>`:""}</td></tr>`;
-      continue;
-    }
-    const p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);c+=p;
-    rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td>
-      <td>${A?`<input type="number" min="0" id="pa-${i}" value="${p||""}" placeholder="0">`:num(p)}</td>
-      <td>${A?`<input type="date" id="pd-${i}" value="${dt}">`:fd(dt)}</td><td>${badge(p,d)}</td>
-      <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${p>0?` <button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${selM}')">🖨️</button>`:""}${A?attBtn("pf-"+i)+` <button class="btn" onclick="savePay(${i})">حفظ</button>`:""}${A&&p<d&&!isEmpty(i)?waBtns(i):""}</td></tr>`;
+    const p=pay(i,selM),active=actM(i,selM),history=paymentHistoryHtml(i,selM,A,Y);
+    rows+=`<tr><td data-l="الشقة">${i}</td><td data-l="المالك">${esc(apt(i))}${tag(i)}</td>
+      <td data-l="إجمالي المدفوع"><b class="${p?"pos":"mu"}">${num(p)} ج</b></td>
+      <td data-l="المطلوب">${active?num(d)+" ج":"—"}</td>
+      <td data-l="الموقف">${active?badge(p,d):`<span class="bd">${p?"سداد مسجل":"غير مستحقة"}</span>`}</td>
+      <td data-l="حركات التحصيل"><div class="payment-history">${history}</div>${A&&active?`<button class="btn am" style="margin-top:7px" onclick="openAddPayment(${i},'${selM}','${Y}')">➕ إضافة دفعة</button>`:""}</td></tr>`;
   }
-  c=ALLN().reduce((sum,i)=>sum+pay(i,selM),0);
+  const c=ALLN().reduce((sum,i)=>sum+pay(i,selM),0);
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*nActM(selM))} ج</span></div>
-  ${A?'<div class="row" style="margin-bottom:8px"><button class="btn am" onclick="groupMsg()">📋 نسخ رسالة المتأخرين للجروب</button><button class="btn gh" style="color:var(--tx)" onclick="waGroup()">إرسال في واتساب 💬</button></div><div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ وأرفق صورة التحويل (📎) ثم حفظ. مسح المبلغ = إلغاء الدفعة.</div>':""}
-  <div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>المدفوع</th><th>تاريخ الدفع</th><th>الحالة</th><th>الإيصال</th></tr>${rows}</table></div></div>`;
+  ${A?'<div class="row" style="margin-bottom:8px"><button class="btn am" onclick="groupMsg()">📋 نسخ رسالة المتأخرين للجروب</button><button class="btn gh" style="color:var(--tx)" onclick="waGroup()">إرسال في واتساب 💬</button></div><div class="mu" style="margin-bottom:6px">يمكن تسجيل أكثر من دفعة للشقة في الشهر نفسه. كل دفعة لها إيصال مستقل وطريقة دفع وسجل تعديل/إلغاء.</div>':""}
+  <div class="tw"><table><thead><tr><th>شقة</th><th>المالك</th><th>إجمالي المدفوع</th><th>المطلوب</th><th>الحالة</th><th>سجل الحركات / إضافة دفعة</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
-async function savePay(i){
-  const v=Math.max(0,Number($("#pa-"+i).value)||0),dt=$("#pd-"+i).value||today(),b=`years/${Y}/`,f=$("#pf-"+i).files[0];
-  const pa=`${b}monthlyPayments/${i}/${selM}`,pd=`${b}payDates/${i}/${selM}`,pf=`${b}payFiles/${i}/${selM}`;
-  let fid=null;if(f){toast("جارٍ رفع الصورة…");try{fid=await attach(f,"apt/"+i)}catch(e){return toast("تعذر رفع الصورة",1)}}
-  const o=v?{[pa]:v,[pd]:dt}:{[pa]:null,[pd]:null,[pf]:null};if(fid&&v)o[pf]=fid;
-  upd(o,v?`دفعة شقة ${i} - ${selM}: ${num(v)} ج ✓`:`إلغاء دفعة شقة ${i} - ${selM}`);
-}
+function savePay(i){openAddPayment(i,selM,Y)}
 
 function vExp(){
   const A=isA(),list=exps().filter(e=>expF==="ALL"||e.month===expF),tot=list.reduce((s,e)=>s+Number(e.amount||0),0);
@@ -801,17 +920,18 @@ function vMe(){
     const late=Math.max(0,need-p),extra=reached?Math.max(0,p-need):p;
     arrears+=late;surplus+=extra;
     const status=!reached&&forecast>0?"شهر قادم":!active?"غير مستحق":late>0?(p>0?"سداد جزئي":"لم يدفع"):extra>0?"رصيد زائد / مقدم":"مدفوع";
-    return `<div class="card" style="padding:10px"><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu" style="font-size:12px">المطلوب: ${reached?num(need):"—"} ج</div>${forecast?`<div class="mu" style="font-size:12px">المتوقع: ${num(forecast)} ج</div>`:""}<div class="mu" style="font-size:12px">${status}${late?` — متبقي ${num(late)} ج`:extra?` — ${num(extra)} ج`:""}</div>${p>0?`<button class="btn gh" style="margin-top:5px" onclick="rcpt(${i},'${m}')">🖨️ إيصال</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾 المرفق</button>`:""}`:""}</div>`;
+    return `<article class="statement-month"><div class="statement-month-head"><b>${m}</b><span class="bd ${late?"no":extra?"wa":"ok"}">${status}</span></div>
+      <div class="statement-month-grid"><div><small>المطلوب</small><b>${reached?num(need):forecast?num(forecast)+" (قادم)":"—"} ج</b></div><div><small>المدفوع</small><b class="pos">${num(p)} ج</b></div><div><small>المتبقي</small><b class="${late?"neg":""}">${num(late)} ج</b></div><div><small>الرصيد الزائد</small><b>${num(extra)} ج</b></div></div>
+      <div class="payment-history">${paymentHistoryHtml(i,m,isA(),Y)}</div></article>`;
   }).join("");
-  const balance=dueTotal-paidTotal;
   return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}
   <h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
   <div class="g"><div class="card"><span class="mu">المطلوب حتى الآن</span><b>${num(dueTotal)} ج</b></div>
   <div class="card"><span class="mu">إجمالي المدفوع</span><b class="pos">${num(paidTotal)} ج</b></div>
   <div class="card"><span class="mu">المتأخرات</span><b class="${arrears?"neg":"pos"}">${num(arrears)} ج</b></div>
   <div class="card"><span class="mu">رصيد زائد / مقدم</span><b>${num(surplus)} ج</b></div></div>
-  <div class="finance-note">الاشتراك يبدأ من يوليو 2026. الشهور القادمة لا تدخل في المتأخرات، وأي دفعة مسجلة لها تظهر كرصيد مقدم. الإيصالات متاحة للطباعة للمشرف والساكن.</div>
-  <h3>الحركة الشهرية ${Y}</h3><div class="mg">${grid}</div>
+  <div class="finance-note">الاشتراك يبدأ من يوليو 2026. الشهور القادمة لا تدخل في المتأخرات. كل حركة تحصيل تظهر بإيصال مستقل، والدفعات السابقة محفوظة كما هي.</div>
+  <h3>كشف الحركات الشهرية ${Y}</h3><div class="statement-months">${grid}</div>
   ${prj().map(q=>`<div class="card"><h3>${esc(q.name)}${q.closed?" (مغلق)":""}</h3><div>نصيب الشقة: <b>${eligible(q,i)?num(share(q))+" ج":"غير مستحق"}</b> — المدفوع: <b>${num(pp(q,i))} ج</b></div>${eligible(q,i)&&pp(q,i)>0?`<button class="btn gh" style="margin-top:6px" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال المشروع</button>`:""}</div>`).join("")}
   </div>`;
 }
@@ -837,9 +957,22 @@ function vReq(){
     ||`<tr><td colspan="6" class="mu" style="text-align:center;padding:16px">لا توجد طلبات بانتظار الاعتماد</td></tr>`;
   return `<div class="card"><h3>📥 طلبات تحويل بانتظار الاعتماد</h3><div class="tw"><table><tr><th>شقة</th><th>المالك</th><th>الشهر</th><th>المبلغ</th><th>التاريخ</th><th></th></tr>${rows}</table></div></div>`;
 }
-function okReq(id){
-  const r=G.pending[id],y=r.year||Y,b=`years/${y}/`,cur=Number(G.years?.[y]?.monthlyPayments?.[r.apt]?.[r.month]||0);
-  upd({[`${b}monthlyPayments/${r.apt}/${r.month}`]:cur+Number(r.amount),[`${b}payDates/${r.apt}/${r.month}`]:r.date,[`${b}payFiles/${r.apt}/${r.month}`]:r.file,[`pending/${id}`]:null},`اعتماد تحويل شقة ${r.apt} - ${r.month}: ${num(r.amount)} ج ✓`);
+const approvingRequests=new Set();
+async function okReq(id){
+  if(!isA())return toast("غير مصرح",1);
+  const r=G.pending?.[id];if(!r)return toast("طلب التحويل غير موجود",1);
+  if(approvingRequests.has(id))return toast("جارٍ اعتماد الطلب بالفعل");
+  approvingRequests.add(id);
+  try{
+    const y=String(r.year||Y),m=r.month,aptNo=Number(r.apt),amount=Number(r.amount);
+    if(!Number.isInteger(aptNo)||aptNo<1||aptNo>N||!(amount>0))return toast("بيانات طلب التحويل غير صحيحة",1);
+    const receiptNo=await nextReceiptNumber(y),txid="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),actor=paymentActor();
+    const tx={receiptNo,amount,date:r.date||today(),method:"transfer",note:"تحويل مقدم من الساكن وتم اعتماده",file:r.file||null,status:"active",createdAt:Date.now(),createdBy:actor,sourceRequest:id};
+    const path=`apartments/${aptNo}/paymentTransactions/${y}/${m}/${txid}`;
+    const ok=await upd({[path]:tx,[`pending/${id}`]:null},`اعتماد تحويل شقة ${aptNo} - ${m}: ${num(amount)} ج (${receiptNo})`);
+    if(ok)printPaymentReceipt(aptNo,m,txid,y);
+  }catch(e){console.error("Approve transfer failed:",e);toast("تعذر اعتماد التحويل أو إصدار رقم الإيصال",1)}
+  finally{approvingRequests.delete(id)}
 }
 function noReq(id){const r=G.pending[id];if(confirm("رفض الطلب؟"))upd({[`pending/${id}`]:null,[`files/${r.file}`]:null},`رفض تحويل شقة ${r.apt} - ${r.month}`)}
 
@@ -983,6 +1116,20 @@ function vFinance(){
     </div>
   </article>`).join("");
   const apartments=list.map(r=>`<tr><td>${r.i}</td><td>${esc(r.name)}</td><td>${r.status==="rent"?"مستأجرة":r.status==="vac"?"غير مقيمة":"مقيمة"}</td><td>${num(r.due)} ج</td><td>${num(r.paid)} ج</td><td class="${r.arrears?"neg":"pos"}">${num(r.arrears)} ج</td><td class="${r.surplus?"pos":""}">${num(r.surplus)} ج</td><td>${r.arrears?'<span class="bd no">متأخر</span>':r.surplus?'<span class="bd ok">رصيد زائد / مقدم</span>':r.due>0?'<span class="bd ok">مسدد</span>':'<span class="bd">غير مستحق</span>'}</td></tr>`).join("")||`<tr><td colspan="8" class="mu">لا توجد شقق في هذا التصنيف</td></tr>`;
+  const apartmentMobile=list.map(r=>{
+    const st=r.status==="rent"?"مستأجرة":r.status==="vac"?"غير مقيمة":"مقيمة";
+    const badgeText=r.arrears?'<span class="bd no">متأخر</span>':r.surplus?'<span class="bd ok">رصيد زائد / مقدم</span>':r.due>0?'<span class="bd ok">مسدد</span>':'<span class="bd">غير مستحق</span>';
+    return `<article class="finance-apt-card">
+      <div class="finance-apt-head"><div><strong>شقة ${r.i}</strong><span>${esc(r.name)}</span></div><div>${badgeText}<small>${st}</small></div></div>
+      <div class="finance-apt-metrics">
+        <div class="primary"><span>المطلوب</span><b>${num(r.due)} ج</b></div>
+        <div class="positive"><span>المدفوع</span><b>${num(r.paid)} ج</b></div>
+        <div class="negative"><span>المتأخر</span><b>${num(r.arrears)} ج</b></div>
+        <div><span>الزائد / المقدم</span><b>${num(r.surplus)} ج</b></div>
+      </div>
+      <button class="btn gh finance-apt-open" onclick="openApt(${r.i})">فتح كشف حساب الشقة ←</button>
+    </article>`;
+  }).join("")||'<div class="chart-empty">لا توجد شقق في هذا التصنيف</div>';
   const projectRows=d.projects.map(p=>`<tr><td>${esc(p.name)}</td><td>${num(p.target)} ج</td><td>${num(p.collected)} ج</td><td>${num(p.remaining)} ج</td><td>${p.closed?"مغلق":"مفتوح"}</td></tr>`).join("")||'<tr><td colspan="5">لا توجد مشروعات</td></tr>';
   return `<div class="card finance-shell">
     <div class="top"><div><h3>💰 مركز المراجعة المالية</h3><div class="chart-sub">ملخص الاشتراكات والمصروفات والمشروعات — ${esc(Y)}</div></div><span class="bd ok">للمشرف فقط</span></div>
@@ -1001,7 +1148,7 @@ function vFinance(){
     <div class="finance-month-mobile">${monthlyMobile}</div>
     <div class="tw finance-month-desktop"><table class="finance-table"><thead><tr><th>الشهر</th><th>السعر</th><th>الشقق</th><th>المستحق</th><th>المتوقع لاحقًا</th><th>المحصل</th><th>المتأخر</th><th>الزائد / المقدم</th><th>المصروفات</th><th>صافي الحركة</th></tr></thead><tbody>${monthly}</tbody></table></div>
     <div class="top" style="margin-top:20px"><h3>موقف كل شقة</h3><label>تصفية <select onchange="financeFilter=this.value;render()"><option value="all" ${financeFilter==="all"?"selected":""}>كل الشقق</option><option value="late" ${financeFilter==="late"?"selected":""}>عليها متأخرات</option><option value="surplus" ${financeFilter==="surplus"?"selected":""}>لديها رصيد زائد / مقدم</option><option value="settled" ${financeFilter==="settled"?"selected":""}>بدون متأخرات أو زيادة</option></select></label></div>
-    <div class="tw"><table><thead><tr><th>شقة</th><th>الاسم</th><th>الحالة الحالية</th><th>المطلوب</th><th>المدفوع</th><th>المتأخر</th><th>الزائد / المقدم</th><th>الموقف</th></tr></thead><tbody>${apartments}</tbody></table></div>
+    <div class="finance-apt-mobile">${apartmentMobile}</div><div class="tw finance-apt-desktop"><table><thead><tr><th>شقة</th><th>الاسم</th><th>الحالة الحالية</th><th>المطلوب</th><th>المدفوع</th><th>المتأخر</th><th>الزائد / المقدم</th><th>الموقف</th></tr></thead><tbody>${apartments}</tbody></table></div>
     <h3 class="report-table-title">صندوق المشروعات — منفصل</h3><div class="tw"><table><thead><tr><th>المشروع</th><th>التكلفة / المستهدف</th><th>المحصل</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>${projectRows}</tbody></table></div>
     <div class="finance-note">تنبيه محاسبي: المتأخرات محسوبة لكل شهر على حدة، لذلك دفعة شهر قادم لا تسدد تلقائيًا متأخرات شهر سابق. حالة الإشغال المستخدمة هي الحالة الحالية مع تاريخ بداية الاستحقاق المسجل للشقة.</div>
   </div>`;
@@ -1188,7 +1335,61 @@ function printFinance(){
   const d=financeData(),w=window.open("","_blank");if(!w)return toast("اسمح بفتح النوافذ المنبثقة للطباعة",1);
   const money=v=>num(v)+" ج";
   w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>المراجعة المالية ${esc(Y)}</title>
-  <style>body{font-family:Arial,sans-serif;padding:22px;color:#172033}h2,h3{margin:8px 0}p{color:#586579}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.k{border:1px solid #ccd3dd;padding:10px;border-radius:8px}.k b{display:block;font-size:18px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:12px 0 22px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:right;font-size:12px}th{background:#eef2f7}section{break-inside:avoid}@media print{button{display:none}}</style>
+  <style>body{font-family:Arial,sans-serif;padding:22px;color:#172033}h2,h3{margin:8px 0}p{color:#586579}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.k{border:1px solid #ccd3dd;padding:10px;border-radius:8px}.k b{display:block;font-size:18px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:12px 0 22px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:right;font-size:12px}th{background:#eef2f7}section{break-inside:avoid}@media print{button{display:none}}
+/* V6.4 — compact apartment cards and payment transaction ledger */
+.payment-history{display:grid;gap:6px;min-width:0}
+.payment-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 9px;border:1px solid var(--ln);border-radius:11px;background:var(--in);min-width:0}
+.payment-line-main{display:flex;flex:1 1 145px;flex-direction:column;gap:2px;min-width:0}
+.payment-line-main b,.payment-line>div b{font-size:12px;overflow-wrap:anywhere}
+.payment-line small{font-size:10px;color:var(--mu);line-height:1.5;overflow-wrap:anywhere}
+.payment-line strong{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.payment-line .btn{padding:5px 8px;font-size:11px}
+.payment-line.legacy{border-style:dashed}
+.payment-line.voided{opacity:.72;border-color:color-mix(in srgb,var(--rd) 45%,var(--ln))}
+.payment-empty{padding:7px 2px;font-size:11px}
+.payment-modal{max-width:620px;margin:auto}
+.payment-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.payment-form-grid label{display:flex;flex-direction:column;gap:5px;color:var(--mu);font-size:12px;min-width:0}
+.payment-form-grid input,.payment-form-grid select{width:100%;min-width:0}
+.payment-form-grid .wide{grid-column:1/-1}
+.payment-modal-actions{display:flex;justify-content:flex-start;margin-top:14px}
+.statement-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.statement-month{border:1px solid var(--ln);background:var(--card);border-radius:15px;padding:11px;min-width:0}
+.statement-month-head{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:9px}
+.statement-month-head>b{font-size:15px}
+.statement-month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.statement-month-grid>div{background:var(--in);border:1px solid var(--ln);border-radius:9px;padding:7px;min-width:0}
+.statement-month-grid small{display:block;color:var(--mu);font-size:10px;margin-bottom:3px}
+.statement-month-grid b{display:block;font-size:13px;overflow-wrap:anywhere}
+.finance-apt-mobile{display:none}
+.finance-apt-card{background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--card) 86%,var(--in)));border:1px solid var(--ln);border-radius:16px;padding:12px;margin:0 0 9px;min-width:0;box-shadow:0 7px 18px rgba(0,0,0,.10)}
+.finance-apt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--ln)}
+.finance-apt-head>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.finance-apt-head strong{font-size:15px;color:var(--tx)}
+.finance-apt-head span{font-size:12px;color:var(--mu);overflow-wrap:anywhere}
+.finance-apt-head>div:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.finance-apt-head small{font-size:10px;color:var(--mu)}
+.finance-apt-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.finance-apt-metrics>div{min-width:0;background:var(--in);border:1px solid color-mix(in srgb,var(--ln) 80%,transparent);border-radius:11px;padding:8px 9px}
+.finance-apt-metrics span{display:block;color:var(--mu);font-size:11px;line-height:1.4;margin-bottom:3px}
+.finance-apt-metrics b{display:block;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.finance-apt-metrics .positive b{color:var(--ac)}
+.finance-apt-metrics .negative b{color:var(--rd)}
+.finance-apt-metrics .primary{border-color:color-mix(in srgb,var(--bl) 42%,var(--ln))}
+.finance-apt-open{width:100%;margin-top:9px}
+@media(max-width:760px){
+ .finance-apt-mobile{display:block}
+ .finance-apt-desktop{display:none}
+ .statement-months{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+ .payment-form-grid{grid-template-columns:1fr}
+ .payment-form-grid .wide{grid-column:auto}
+ .payment-line{gap:5px;padding:7px}
+ .payment-line .btn{padding:5px 6px}
+ .finance-apt-card{padding:10px}
+}
+</style>
   <h2>مركز المراجعة المالية — عمارة 60</h2><p>السنة ${esc(Y)} — تاريخ التقرير ${esc(today())}. المتأخرات محسوبة حتى الشهر الحالي، والشهور التالية معروضة كتوقعات.</p>
   <div class="kpis"><div class="k">المطلوب حتى الآن<b>${money(d.totalDue)}</b></div><div class="k">المحصّل<b>${money(d.totalPaid)}</b></div><div class="k">المتأخرات الشهرية<b>${money(d.arrears)}</b></div><div class="k">الرصيد الزائد / المقدم<b>${money(d.surplus)}</b></div><div class="k">المصروفات<b>${money(d.expenses)}</b></div><div class="k">صافي الحركة<b>${money(d.net)}</b></div></div>
   <section><h3>الحركة الشهرية</h3><table><tr><th>الشهر</th><th>السعر</th><th>الشقق</th><th>المستحق</th><th>المتوقع</th><th>المحصل</th><th>المتأخر</th><th>الزائد/المقدم</th><th>المصروفات</th><th>الصافي</th></tr>
@@ -1274,11 +1475,14 @@ async function loadRes(){
 function vMonth(){return isA()?vMonthAdmin():vMonthRes()}
 function vCam(){return isA()?vCamAdmin():vCamRes()}
 function vMonthRes(){
-  const i=U.apt,d=dueFor(selM,Y),k=MONTHS.indexOf(selM),pb=G.pub?.years?.[Y]||{},c=Number((pb.paid||[])[k]||0),t=Number((pb.due||[])[k]||0),p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);
+  const i=U.apt,d=dueFor(selM,Y),k=MONTHS.indexOf(selM),pb=G.pub?.years?.[Y]||{},c=Number((pb.paid||[])[k]||0),t=Number((pb.due||[])[k]||0),p=pay(i,selM);
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="g"><div class="card"><span class="mu">تحصيل العمارة (${selM})</span><b class="pos">${num(c)} من ${num(t)} ج</b></div>
   <div class="card"><span class="mu">نسبة التحصيل</span><b>${t?Math.round(c/t*100):0}%</b></div></div>
-  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>${!actM(i,selM)&&!p?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="row"><span>المدفوع: <b>${num(p)} ج</b>${actM(i,selM)?` من ${num(d)} ج`:""}</span>${actM(i,selM)?badge(p,d):'<b class="bd">سداد مسجل</b>'}<span class="mu">تاريخ الدفع: ${fd(dt)}</span>${p>0?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}</div>`}</div>`;
+  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>
+    <div class="g"><div class="card"><span class="mu">المطلوب</span><b>${actM(i,selM)?num(d):"—"} ج</b></div><div class="card"><span class="mu">إجمالي المدفوع</span><b class="pos">${num(p)} ج</b></div></div>
+    ${!actM(i,selM)&&!p?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="mu">حركات السداد والإيصالات الخاصة بشقتك:</div><div class="payment-history">${paymentHistoryHtml(i,selM,false,Y)}</div>`}
+  </div>`;
 }
 function vCamRes(){
   const L=prj(),i=U.apt;
@@ -1303,9 +1507,14 @@ function waBtns(i){
   return o&&t?b("o","💬 المالك")+b("t","💬 المستأجر"):b(t&&!o?"t":"o","💬 تذكير");
 }
 
-function rcpt(i,m){
+function rcptLegacy(i,m){
   if(!isA()&&Number(i)!==Number(U?.apt))return toast("غير مصرح بإصدار إيصال لهذه الشقة",1);
-  const a=pay(i,m);if(a>0)openReceipt({i,amount:a,date:pdate(i,m),issued:today(),kind:"اشتراك شهري",purpose:`اشتراك صيانة شهر ${m} ${Y}`,no:`B60-${Y}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`});
+  const a=legacyPay(i,m);if(a>0)openReceipt({i,amount:a,date:pdate(i,m),issued:today(),kind:"دفعة سابقة مسجلة",purpose:`اشتراك صيانة شهر ${m} ${Y}`,no:`B60-LEGACY-${Y}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`});
+}
+function rcpt(i,m){
+  const txs=paymentTransactions(i,m,Y,false);
+  if(txs.length){const t=txs[txs.length-1];return printPaymentReceipt(i,m,t.id,Y)}
+  return rcptLegacy(i,m);
 }
 function rcptPrj(id,i){
   if(!isA()&&Number(i)!==Number(U?.apt))return toast("غير مصرح بإصدار إيصال لهذه الشقة",1);
@@ -1315,7 +1524,7 @@ function openReceipt(r){
   openMo(`<div class="noprint top" style="margin-bottom:8px"><b>إيصال استلام إلكتروني</b><div class="row"><button class="btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إغلاق ✕</button></div></div>
   <div class="rc"><h2>إيصال استلام</h2><div style="text-align:center;margin-bottom:8px">عمارة 60 - ساوث هيلز 2</div>
   <div class="ln"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div>
-  <div class="ln"><span>نوع التحصيل</span><b>${esc(r.kind||"تحصيل")}</b></div>
+  <div class="ln"><span>نوع التحصيل</span><b>${esc(r.kind||"تحصيل")}</b></div>${r.method?`<div class="ln"><span>طريقة الدفع</span><b>${esc(r.method)}</b></div>`:""}
   <div class="ln"><span>تاريخ السداد</span><b>${fd(r.date)}</b></div>
   <div class="ln"><span>تاريخ إصدار النسخة</span><b>${fd(r.issued||today())}</b></div>
   <div class="ln"><span>الشقة</span><b>${r.i} - ${esc(apt(r.i))}</b></div>
