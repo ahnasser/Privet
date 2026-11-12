@@ -1,4 +1,4 @@
-<!-- Building 60 V6.1 — subscription start July 2026, monthly rate history, preserve recorded payments. -->
+<!-- Building 60 V6.2 — financial review center + resident/admin receipts; Spark-compatible; no DB schema or rules migration. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -123,6 +123,16 @@ table.adm input,table.adm select{width:100%!important;padding:6px;font-size:13px
 .sig{display:flex;justify-content:space-between;margin-top:26px;font-size:13px}
 .ln2{display:flex;justify-content:space-between;background:var(--in);border:1px solid var(--ln);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14px}
 .cap{display:block;font-size:12px;color:var(--mu);margin-top:2px}
+
+.finance-shell{overflow:hidden}
+.finance-note{background:var(--in);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;color:var(--mu);font-size:13px;margin:10px 0}
+.finance-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.finance-kpi{background:var(--in);border:1px solid var(--ln);border-radius:14px;padding:12px;min-width:0}
+.finance-kpi span{display:block;color:var(--mu);font-size:12px}
+.finance-kpi b{display:block;font-size:20px;margin-top:5px;overflow-wrap:anywhere}
+.finance-table{min-width:900px}
+@media(max-width:700px){.finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-kpi b{font-size:17px}.finance-shell .top{align-items:flex-start;flex-wrap:wrap}}
+
 nav .l{display:none}
 @media print{body{padding:0;background:#fff}body>*:not(#mo){display:none!important}.mo{position:static;background:none;padding:0}.mb{border:0;max-height:none;padding:0;background:#fff}.noprint{display:none!important}}
 @media(min-width:1000px){
@@ -483,13 +493,13 @@ function go(k){if(k==="me")adminApt=0;tab=k;render();scrollTo(0,0)}
 function render(){
   if(!G||!U)return;
   const np=Object.keys(G.pending||{}).length,
-    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["notifs","التنبيهات 🔔"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],["reports","التقارير 📊"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
+    T=isA()?[["req","الطلبات"+(np?` (${np})`:"")],["notifs","التنبيهات 🔔"],["sum","الملخص"],["finance","المراجعة المالية 💰"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"],["search","بحث 🔎"],["reports","التقارير 📊"],...((U.apt||adminApt)?[["me",isA()&&adminApt?"كشف شقة "+adminApt:"شقتي 🏠"]]:[]),["adm","الإدارة ⚙️"]]
             :[["me","شقتي 🏠"],["send","رفع تحويل 📤"],["notifs","التنبيهات 🔔"],["sum","الملخص"],["month","التحصيل الشهري"],["exp","المصروفات"],["cam","المشاريع"]];
   if(!T.some(t=>t[0]===tab))tab=T[0][0];
-  const LONG={req:"طلبات التحويل بانتظار الاعتماد",notifs:"مركز التنبيهات والإشعارات",sum:"ملخص خزينة العمارة",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل",reports:"تقارير المصروفات والمشروعات وكشوف الشقق"};
+  const LONG={req:"طلبات التحويل بانتظار الاعتماد",notifs:"مركز التنبيهات والإشعارات",sum:"ملخص خزينة العمارة",finance:"مراجعة الاشتراكات والتحصيل والمصروفات",month:"التحصيل الشهري للشقق",exp:"المصروفات وفواتير الصيانة",cam:"المشاريع الخاصة (الكاميرات وغيرها)",me:"كشف حساب شقتي وإيصالاتي",send:"رفع إشعار تحويل وسداد",adm:"الإدارة والإعدادات ⚙️",search:"بحث شامل عن شقة أو مالك أو رقم موبايل",reports:"تقارير المصروفات والمشروعات وكشوف الشقق"};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')"><span class="s">${l}</span><span class="l">${LONG[k]||l}${k==="req"&&np?` (${np})`:""}</span></button>`).join("");
   $("#who").textContent=isA()?"وضع المشرف 🛠️":`شقة ${U.apt} - ${apt(U.apt)}`;
-  $("#view").innerHTML=({sum:vSum,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch,reports:vReports,notifs:vNotifications})[tab]();
+  $("#view").innerHTML=({sum:vSum,finance:vFinance,month:vMonth,exp:vExp,cam:vCam,adm:vAdm,me:vMe,req:vReq,send:vSend,search:vSearch,reports:vReports,notifs:vNotifications})[tab]();
   if(tab==="adm")loadLog();
   mob();
 }
@@ -756,15 +766,27 @@ function addPrj(){
 function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
 function vMe(){
-  const i=meApt(),d=dueFor(selM,Y);let tot=0,totalDue=0;
-  const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;if(actM(i,m))totalDue+=dueFor(m,Y);
-    return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div>${p?`<span style="display:block;margin-top:4px"><button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${m}')">🖨️</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾</button>`:""}</span>`:""}</div>`}).join("");
-  return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}<h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
-  <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
-  ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${!eligible(q,i)?"mu":pp(q,i)>=share(q)?"pos":"neg"}">${eligible(q,i)?`${num(pp(q,i))} / ${num(share(q))} ج`:"غير مستحق"}</b>${eligible(q,i)&&pp(q,i)>0?`<span style="display:block;margin-top:6px"><button class="btn gh" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال</button></span>`:""}</div>`).join("")}</div>
-  <h3>الدفع الشهري (${actM(i,selM)?`المطلوب ${num(d)} ج`:'غير مستحق في هذا الشهر'})</h3><div class="mg">${grid}</div></div>`;
+  const i=meApt();let paidTotal=0,dueTotal=0,arrears=0,surplus=0;
+  const grid=MONTHS.map(m=>{
+    const p=pay(i,m),active=actM(i,m),reached=monthReached(m),need=active&&reached?dueFor(m,Y):0,forecast=active&&!reached?dueFor(m,Y):0;
+    paidTotal+=p;dueTotal+=need;
+    const late=Math.max(0,need-p),extra=reached?Math.max(0,p-need):p;
+    arrears+=late;surplus+=extra;
+    const status=!reached&&forecast>0?"شهر قادم":!active?"غير مستحق":late>0?(p>0?"سداد جزئي":"لم يدفع"):extra>0?"رصيد زائد / مقدم":"مدفوع";
+    return `<div class="card" style="padding:10px"><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu" style="font-size:12px">المطلوب: ${reached?num(need):"—"} ج</div>${forecast?`<div class="mu" style="font-size:12px">المتوقع: ${num(forecast)} ج</div>`:""}<div class="mu" style="font-size:12px">${status}${late?` — متبقي ${num(late)} ج`:extra?` — ${num(extra)} ج`:""}</div>${p>0?`<button class="btn gh" style="margin-top:5px" onclick="rcpt(${i},'${m}')">🖨️ إيصال</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾 المرفق</button>`:""}`:""}</div>`;
+  }).join("");
+  const balance=dueTotal-paidTotal;
+  return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}
+  <h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
+  <div class="g"><div class="card"><span class="mu">المطلوب حتى الآن</span><b>${num(dueTotal)} ج</b></div>
+  <div class="card"><span class="mu">إجمالي المدفوع</span><b class="pos">${num(paidTotal)} ج</b></div>
+  <div class="card"><span class="mu">المتأخرات</span><b class="${arrears?"neg":"pos"}">${num(arrears)} ج</b></div>
+  <div class="card"><span class="mu">رصيد زائد / مقدم</span><b>${num(surplus)} ج</b></div></div>
+  <div class="finance-note">الاشتراك يبدأ من يوليو 2026. الشهور القادمة لا تدخل في المتأخرات، وأي دفعة مسجلة لها تظهر كرصيد مقدم. الإيصالات متاحة للطباعة للمشرف والساكن.</div>
+  <h3>الحركة الشهرية ${Y}</h3><div class="mg">${grid}</div>
+  ${prj().map(q=>`<div class="card"><h3>${esc(q.name)}${q.closed?" (مغلق)":""}</h3><div>نصيب الشقة: <b>${eligible(q,i)?num(share(q))+" ج":"غير مستحق"}</b> — المدفوع: <b>${num(pp(q,i))} ج</b></div>${eligible(q,i)&&pp(q,i)>0?`<button class="btn gh" style="margin-top:6px" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال المشروع</button>`:""}</div>`).join("")}
+  </div>`;
 }
-
 function vSend(){
   return `<div class="card"><h3>📤 رفع صورة تحويل (شقة ${U.apt})</h3><div class="mu" style="margin-bottom:8px">بعد الإرسال الأدمن بيراجع الصورة ويعتمد الدفعة.</div>
   <div class="row"><select id="sm">${MONTHS.map(m=>`<option ${m===selM?"selected":""}>${m}</option>`).join("")}</select>
@@ -820,7 +842,7 @@ async function markNotificationRead(id){
   }catch(e){toast("تعذر تحديث حالة التنبيه",1)}
 }
 
-let reportType="expenses",reportMonth="ALL",reportApt="1",reportProject="";
+let reportType="expenses",reportMonth="ALL",reportApt="1",reportProject="",financeFilter="all";
 function reportRows(){
   const rows=[];
   if(reportType==="expenses"){
@@ -911,6 +933,36 @@ function reportCharts(data){
       [{label:"المطلوب",color:blue,values:MONTHS.map(m=>{const r=paid.find(x=>x[1]===m);return r?Number(r[2]||0):0})},
        {label:"المدفوع",color:green,values:MONTHS.map(m=>{const r=paid.find(x=>x[1]===m);return r?Number(r[3]||0):0})}]);
 }
+
+function vFinance(){
+  if(!isA())return '<div class="card">مركز المراجعة المالية متاح للمشرف فقط.</div>';
+  const d=financeData();
+  const list=d.aptRows.filter(r=>financeFilter==="late"?r.arrears>0:financeFilter==="surplus"?r.surplus>0:financeFilter==="settled"?r.arrears===0&&r.surplus===0:true);
+  const currentMonth=today().slice(5,7),currentName=MONTHS[Number(currentMonth)-1]||"—";
+  const monthly=d.monthRows.map(r=>`<tr><td>${esc(r.month)} ${!r.reached?'<span class="bd wa">قادم</span>':""}</td><td>${num(r.rate)} ج</td><td>${r.active}</td><td>${num(r.due)} ج</td><td>${num(r.reached?0:r.target)} ج</td><td class="pos">${num(r.paid)} ج</td><td class="${r.arrears?"neg":""}">${num(r.arrears)} ج</td><td>${num(r.surplus)} ج</td><td>${num(r.expenses)} ج</td><td class="${r.net<0?"neg":"pos"}">${num(r.net)} ج</td></tr>`).join("");
+  const apartments=list.map(r=>`<tr><td>${r.i}</td><td>${esc(r.name)}</td><td>${r.status==="rent"?"مستأجرة":r.status==="vac"?"غير مقيمة":"مقيمة"}</td><td>${num(r.due)} ج</td><td>${num(r.paid)} ج</td><td class="${r.arrears?"neg":"pos"}">${num(r.arrears)} ج</td><td class="${r.surplus?"pos":""}">${num(r.surplus)} ج</td><td>${r.arrears?'<span class="bd no">متأخر</span>':r.surplus?'<span class="bd ok">رصيد زائد / مقدم</span>':r.due>0?'<span class="bd ok">مسدد</span>':'<span class="bd">غير مستحق</span>'}</td></tr>`).join("")||`<tr><td colspan="8" class="mu">لا توجد شقق في هذا التصنيف</td></tr>`;
+  const projectRows=d.projects.map(p=>`<tr><td>${esc(p.name)}</td><td>${num(p.target)} ج</td><td>${num(p.collected)} ج</td><td>${num(p.remaining)} ج</td><td>${p.closed?"مغلق":"مفتوح"}</td></tr>`).join("")||'<tr><td colspan="5">لا توجد مشروعات</td></tr>';
+  return `<div class="card finance-shell">
+    <div class="top"><div><h3>💰 مركز المراجعة المالية</h3><div class="chart-sub">ملخص الاشتراكات والمصروفات والمشروعات — ${esc(Y)}</div></div><span class="bd ok">للمشرف فقط</span></div>
+    <div class="finance-note">الحسابات مستحقة حتى ${currentName} ${esc(Y)} فقط. الشهور التالية تظهر كتوقعات ولا تدخل في المتأخرات. أموال المشروعات منفصلة عن اشتراكات الصيانة.</div>
+    <div class="finance-kpis">
+      <div class="finance-kpi"><span>المطلوب حتى الآن</span><b>${num(d.totalDue)} ج</b></div>
+      <div class="finance-kpi"><span>إجمالي المحصّل</span><b class="pos">${num(d.totalPaid)} ج</b></div>
+      <div class="finance-kpi"><span>المتأخرات الشهرية</span><b class="${d.arrears?"neg":"pos"}">${num(d.arrears)} ج</b></div>
+      <div class="finance-kpi"><span>رصيد زائد / مقدم</span><b>${num(d.surplus)} ج</b></div>
+      <div class="finance-kpi"><span>مصروفات العمارة</span><b>${num(d.expenses)} ج</b></div>
+      <div class="finance-kpi"><span>صافي حركة الاشتراكات</span><b class="${d.net<0?"neg":"pos"}">${num(d.net)} ج</b></div>
+    </div>
+    <div class="finance-note">صافي الحركة = التحصيلات الشهرية المسجلة ناقص المصروفات المسجلة. لا يمثل رصيد الخزينة الفعلي لأنه لا يتضمن رصيد افتتاحي أو تسويات نقدية خارج النظام.</div>
+    <div class="report-actions"><button class="btn" onclick="exportFinanceCsv('months')">📥 تصدير الحركة الشهرية CSV</button><button class="btn gh" onclick="exportFinanceCsv('apartments')">📥 تصدير موقف الشقق CSV</button><button class="btn gh" onclick="printFinance()">🖨️ طباعة / PDF</button></div>
+    <h3 class="report-table-title">الحركة المالية الشهرية</h3><div class="tw"><table class="finance-table"><thead><tr><th>الشهر</th><th>السعر</th><th>الشقق</th><th>المستحق</th><th>المتوقع لاحقًا</th><th>المحصل</th><th>المتأخر</th><th>الزائد / المقدم</th><th>المصروفات</th><th>صافي الحركة</th></tr></thead><tbody>${monthly}</tbody></table></div>
+    <div class="top" style="margin-top:20px"><h3>موقف كل شقة</h3><label>تصفية <select onchange="financeFilter=this.value;render()"><option value="all" ${financeFilter==="all"?"selected":""}>كل الشقق</option><option value="late" ${financeFilter==="late"?"selected":""}>عليها متأخرات</option><option value="surplus" ${financeFilter==="surplus"?"selected":""}>لديها رصيد زائد / مقدم</option><option value="settled" ${financeFilter==="settled"?"selected":""}>بدون متأخرات أو زيادة</option></select></label></div>
+    <div class="tw"><table><thead><tr><th>شقة</th><th>الاسم</th><th>الحالة الحالية</th><th>المطلوب</th><th>المدفوع</th><th>المتأخر</th><th>الزائد / المقدم</th><th>الموقف</th></tr></thead><tbody>${apartments}</tbody></table></div>
+    <h3 class="report-table-title">صندوق المشروعات — منفصل</h3><div class="tw"><table><thead><tr><th>المشروع</th><th>التكلفة / المستهدف</th><th>المحصل</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>${projectRows}</tbody></table></div>
+    <div class="finance-note">تنبيه محاسبي: المتأخرات محسوبة لكل شهر على حدة، لذلك دفعة شهر قادم لا تسدد تلقائيًا متأخرات شهر سابق. حالة الإشغال المستخدمة هي الحالة الحالية مع تاريخ بداية الاستحقاق المسجل للشقة.</div>
+  </div>`;
+}
+
 function vReports(){
   if(!isA())return '<div class="card">التقارير التفصيلية متاحة للمشرف فقط.</div>';
   const projects=prj();
@@ -1039,6 +1091,71 @@ function stat(){
   const p=G.pub?.years?.[Y]||{},f=a=>Array.from({length:12},(_,i)=>Number((a||[])[i]||0));
   return{paid:f(p.paid),due:f(p.due),spent:f(p.spent)};
 }
+const monthReached=(m,y=Y)=>monthKey(m,y)<=today().slice(0,7);
+function financeData(){
+  const aptRows=ALLN().map(i=>{
+    let due=0,paid=0,arrears=0,surplus=0;
+    MONTHS.forEach(m=>{
+      const p=pay(i,m),reached=monthReached(m),active=actM(i,m),need=active&&reached?dueFor(m,Y):0;
+      paid+=p;due+=need;
+      if(reached){arrears+=Math.max(0,need-p);surplus+=Math.max(0,p-need)}
+      else surplus+=p;
+    });
+    return{i,name:apt(i),status:statusOf(i),due,paid,arrears,surplus};
+  });
+  const monthRows=MONTHS.map(m=>{
+    const reached=monthReached(m),rate=dueFor(m,Y),active=ALLN().filter(i=>actM(i,m)).length;
+    let paid=0,arrears=0,surplus=0;
+    ALLN().forEach(i=>{
+      const p=pay(i,m),need=active&&actM(i,m)?rate:0;
+      paid+=p;
+      if(reached){arrears+=Math.max(0,need-p);surplus+=Math.max(0,p-need)}
+      else surplus+=p;
+    });
+    const target=rate*active,expenses=exps().filter(e=>e.month===m).reduce((a,e)=>a+Number(e.amount||0),0);
+    return{month:m,rate,active,target,reached,due:reached?target:0,paid,arrears,surplus,expenses,net:paid-expenses};
+  });
+  const projects=prj().map(p=>{
+    const members=Array.isArray(p.eligibleApts)?p.eligibleApts.map(Number):ALLN().filter(i=>eligible(p,i));
+    const target=Number(p.totalCost!=null?p.totalCost:share(p)*members.length)||0;
+    const collected=Object.values(p.payments||{}).reduce((a,v)=>a+Number(v||0),0);
+    return{id:p.id,name:p.name,target,collected,remaining:Math.max(0,target-collected),surplus:Math.max(0,collected-target),closed:!!p.closed};
+  });
+  const totalDue=aptRows.reduce((a,r)=>a+r.due,0);
+  const totalPaid=aptRows.reduce((a,r)=>a+r.paid,0);
+  const arrears=aptRows.reduce((a,r)=>a+r.arrears,0);
+  const surplus=aptRows.reduce((a,r)=>a+r.surplus,0);
+  const expenses=monthRows.reduce((a,r)=>a+r.expenses,0);
+  const projectCollected=projects.reduce((a,r)=>a+r.collected,0);
+  const projectRemaining=projects.reduce((a,r)=>a+r.remaining,0);
+  return{aptRows,monthRows,projects,totalDue,totalPaid,arrears,surplus,expenses,net:totalPaid-expenses,projectCollected,projectRemaining};
+}
+function exportFinanceCsv(kind){
+  if(!isA())return toast("غير مصرح",1);
+  const d=financeData(),rows=kind==="apartments"
+    ?[["الشقة","الاسم","الحالة","المطلوب حتى الآن","إجمالي المدفوع","المتأخرات","الرصيد الزائد / مقدم"],...d.aptRows.map(r=>[r.i,r.name,r.status,r.due,r.paid,r.arrears,r.surplus])]
+    :[["الشهر","سعر الاشتراك","عدد الشقق المستحقة","المستحق حتى الآن","المتوقع للشهور القادمة","المحصل","المتأخرات","المدفوع الزائد / مقدم","المصروفات","صافي الحركة"],...d.monthRows.map(r=>[r.month,r.rate,r.active,r.due,r.reached?0:r.target,r.paid,r.arrears,r.surplus,r.expenses,r.net])];
+  const csv="\ufeff"+rows.map(row=>row.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`building60-finance-${kind}-${Y}-${today()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function printFinance(){
+  if(!isA())return toast("غير مصرح",1);
+  const d=financeData(),w=window.open("","_blank");if(!w)return toast("اسمح بفتح النوافذ المنبثقة للطباعة",1);
+  const money=v=>num(v)+" ج";
+  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>المراجعة المالية ${esc(Y)}</title>
+  <style>body{font-family:Arial,sans-serif;padding:22px;color:#172033}h2,h3{margin:8px 0}p{color:#586579}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.k{border:1px solid #ccd3dd;padding:10px;border-radius:8px}.k b{display:block;font-size:18px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:12px 0 22px}th,td{border:1px solid #cbd2dc;padding:7px;text-align:right;font-size:12px}th{background:#eef2f7}section{break-inside:avoid}@media print{button{display:none}}</style>
+  <h2>مركز المراجعة المالية — عمارة 60</h2><p>السنة ${esc(Y)} — تاريخ التقرير ${esc(today())}. المتأخرات محسوبة حتى الشهر الحالي، والشهور التالية معروضة كتوقعات.</p>
+  <div class="kpis"><div class="k">المطلوب حتى الآن<b>${money(d.totalDue)}</b></div><div class="k">المحصّل<b>${money(d.totalPaid)}</b></div><div class="k">المتأخرات الشهرية<b>${money(d.arrears)}</b></div><div class="k">الرصيد الزائد / المقدم<b>${money(d.surplus)}</b></div><div class="k">المصروفات<b>${money(d.expenses)}</b></div><div class="k">صافي الحركة<b>${money(d.net)}</b></div></div>
+  <section><h3>الحركة الشهرية</h3><table><tr><th>الشهر</th><th>السعر</th><th>الشقق</th><th>المستحق</th><th>المتوقع</th><th>المحصل</th><th>المتأخر</th><th>الزائد/المقدم</th><th>المصروفات</th><th>الصافي</th></tr>
+  ${d.monthRows.map(r=>`<tr><td>${esc(r.month)}</td><td>${money(r.rate)}</td><td>${r.active}</td><td>${money(r.due)}</td><td>${money(r.reached?0:r.target)}</td><td>${money(r.paid)}</td><td>${money(r.arrears)}</td><td>${money(r.surplus)}</td><td>${money(r.expenses)}</td><td>${money(r.net)}</td></tr>`).join("")}</table></section>
+  <section><h3>موقف الشقق</h3><table><tr><th>الشقة</th><th>الاسم</th><th>الحالة</th><th>المطلوب</th><th>المدفوع</th><th>المتأخر</th><th>الزائد/المقدم</th></tr>
+  ${d.aptRows.map(r=>`<tr><td>${r.i}</td><td>${esc(r.name)}</td><td>${r.status==="rent"?"مستأجرة":r.status==="vac"?"غير مقيمة":"مقيمة"}</td><td>${money(r.due)}</td><td>${money(r.paid)}</td><td>${money(r.arrears)}</td><td>${money(r.surplus)}</td></tr>`).join("")}</table></section>
+  <section><h3>صندوق المشروعات — مستقل عن الاشتراكات</h3><table><tr><th>المشروع</th><th>التكلفة/المستهدف</th><th>المحصل</th><th>المتبقي</th></tr>${d.projects.map(p=>`<tr><td>${esc(p.name)}</td><td>${money(p.target)}</td><td>${money(p.collected)}</td><td>${money(p.remaining)}</td></tr>`).join("")}</table></section>
+  <script>window.onload=()=>window.print()<\/script></html>`);
+  w.document.close();
+}
+
 function buildPub(){
   const old=Y,out={monthlyDue:Number(G.monthlyDue||due()),monthlyDueHistory:{...(G.monthlyDueHistory||{})},years:{},projects:{},
     apartmentStatus:{total:N,
@@ -1117,7 +1234,7 @@ function vMonthRes(){
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="g"><div class="card"><span class="mu">تحصيل العمارة (${selM})</span><b class="pos">${num(c)} من ${num(t)} ج</b></div>
   <div class="card"><span class="mu">نسبة التحصيل</span><b>${t?Math.round(c/t*100):0}%</b></div></div>
-  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>${!actM(i,selM)?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="row"><span>المدفوع: <b>${num(p)} ج</b> من ${num(d)} ج</span>${badge(p,d)}<span class="mu">تاريخ الدفع: ${fd(dt)}</span>${p>0?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}</div>`}</div>`;
+  <div class="card"><h3>شقتي - ${selM} ${Y}</h3>${!actM(i,selM)&&!p?'<div class="mu">الشهر ده غير محسوب على شقتك.</div>':`<div class="row"><span>المدفوع: <b>${num(p)} ج</b>${actM(i,selM)?` من ${num(d)} ج`:""}</span>${actM(i,selM)?badge(p,d):'<b class="bd">سداد مسجل</b>'}<span class="mu">تاريخ الدفع: ${fd(dt)}</span>${p>0?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️ إيصال</button>`:""}${f?`<button class="btn gh" onclick="showF('${f}')">🧾 إيصالي</button>`:""}</div>`}</div>`;
 }
 function vCamRes(){
   const L=prj(),i=U.apt;
@@ -1142,15 +1259,26 @@ function waBtns(i){
   return o&&t?b("o","💬 المالك")+b("t","💬 المستأجر"):b(t&&!o?"t":"o","💬 تذكير");
 }
 
-function rcpt(i,m){const a=pay(i,m);if(a>0)openReceipt({i,amount:a,date:pdate(i,m),purpose:`اشتراك صيانة شهر ${m} ${Y}`,no:`${Y}-${String(i).padStart(2,"0")}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}`})}
-function rcptPrj(id,i){const q=G.projects[id],a=pp(q,i);if(a>0)openReceipt({i,amount:a,date:q.dates?.[i]||"",purpose:`مشروع: ${q.name}`,no:`P-${String(i).padStart(2,"0")}-${String(id).slice(-4)}`})}
+function rcpt(i,m){
+  if(!isA()&&Number(i)!==Number(U?.apt))return toast("غير مصرح بإصدار إيصال لهذه الشقة",1);
+  const a=pay(i,m);if(a>0)openReceipt({i,amount:a,date:pdate(i,m),issued:today(),kind:"اشتراك شهري",purpose:`اشتراك صيانة شهر ${m} ${Y}`,no:`B60-${Y}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`});
+}
+function rcptPrj(id,i){
+  if(!isA()&&Number(i)!==Number(U?.apt))return toast("غير مصرح بإصدار إيصال لهذه الشقة",1);
+  const q=G.projects[id],a=pp(q,i);if(a>0)openReceipt({i,amount:a,date:q.dates?.[i]||"",issued:today(),kind:"مساهمة مشروع",purpose:`مشروع: ${q.name}`,no:`B60-P-${String(id).slice(-5)}-${String(i).padStart(2,"0")}`});
+}
 function openReceipt(r){
-  openMo(`<div class="noprint top" style="margin-bottom:8px"><b>إيصال استلام</b><div class="row"><button class="btn" onclick="window.print()">🖨️ طباعة</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إغلاق ✕</button></div></div>
+  openMo(`<div class="noprint top" style="margin-bottom:8px"><b>إيصال استلام إلكتروني</b><div class="row"><button class="btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button><button class="btn gh" style="color:var(--tx)" onclick="closeMo()">إغلاق ✕</button></div></div>
   <div class="rc"><h2>إيصال استلام</h2><div style="text-align:center;margin-bottom:8px">عمارة 60 - ساوث هيلز 2</div>
-  <div class="ln"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div><div class="ln"><span>التاريخ</span><b>${fd(r.date)}</b></div>
+  <div class="ln"><span>رقم الإيصال</span><b>${esc(r.no)}</b></div>
+  <div class="ln"><span>نوع التحصيل</span><b>${esc(r.kind||"تحصيل")}</b></div>
+  <div class="ln"><span>تاريخ السداد</span><b>${fd(r.date)}</b></div>
+  <div class="ln"><span>تاريخ إصدار النسخة</span><b>${fd(r.issued||today())}</b></div>
   <div class="ln"><span>الشقة</span><b>${r.i} - ${esc(apt(r.i))}</b></div>
-  <div class="ln"><span>المبلغ</span><b>${num(r.amount)} جنيه مصري</b></div><div class="ln"><span>عن</span><b>${esc(r.purpose)}</b></div>
-  <div class="sig"><span>توقيع المستلم: ........................</span><span>ختم / اعتماد</span></div></div>`);
+  <div class="ln"><span>المبلغ المستلم</span><b>${num(r.amount)} جنيه مصري</b></div>
+  <div class="ln"><span>عن</span><b>${esc(r.purpose)}</b></div>
+  <p style="font-size:12px;margin:14px 0 0;text-align:center">هذا الإيصال مستخرج من سجل التحصيل المسجل بالنظام الإلكتروني لعمارة 60.</p>
+  <div class="sig"><span>توقيع المستلم: ........................</span><span>ختم / اعتماد الإدارة</span></div></div>`);
 }
 const BK=["apartments","years","projects","monthlyDue","monthlyDueHistory","phones","tenantPhones","tenantNames","residents","pending"];
 function exportBackup(){
