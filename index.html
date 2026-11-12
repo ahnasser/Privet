@@ -1,4 +1,4 @@
-<!-- Building 60 V5.8 FREE — manual JSON backup, shared-admin audit metadata, scoped in-app notifications. No Cloud Functions / Storage backup. -->
+<!-- Building 60 V6.1 — subscription start July 2026, monthly rate history, preserve recorded payments. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -357,17 +357,20 @@ async function load(){
 }
 async function reload(){try{await load();initFlt();render();toast("تم التحديث ✓")}catch(e){console.error("Reload failed:",e);toast("تعذر الاتصال بقاعدة البيانات",1)}}
 
-function dueFor(month, year=Y){
-  const map=G.monthlyDueHistory||{};
+const SUBSCRIPTION_START="2026-07";
+function monthKey(month,year=Y){
   const idx=MONTHS.indexOf(month)+1;
-  const key=`${year}-${String(idx).padStart(2,"0")}`;
-  if(map[key]!=null) return Number(map[key]);
-  const keys=Object.keys(map).sort();
-  let last=Number(G.monthlyDue||180);
-  for(const k of keys){ if(k<=key) last=Number(map[k]); }
-  return last;
+  return idx?`${year}-${String(idx).padStart(2,"0")}`:"";
 }
-const due=()=>Number(G.monthlyDue||180), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
+function dueFor(month, year=Y){
+  const key=monthKey(month,year);
+  if(!key||key<SUBSCRIPTION_START)return 0;
+  const map=G.monthlyDueHistory||{};
+  const keys=Object.keys(map).filter(k=>/^\d{4}-\d{2}$/.test(k)&&k>=SUBSCRIPTION_START&&k<=key).sort();
+  if(!keys.length)return 0;
+  return Math.max(0,Number(map[keys[keys.length-1]])||0);
+}
+const due=()=>dueFor(selM,Y), share=p=>Number(p?.eligibleApts?.length&&p.totalCost!=null?Number(p.totalCost)/p.eligibleApts.length:Number(p?.perApt||0)),prj=()=>Object.entries(G.projects||{}).map(([id,p])=>({id,...p})),pp=(p,i)=>Number(p.payments?.[i]||0),eligible=(p,i)=>Array.isArray(p?.eligibleApts)?p.eligibleApts.map(Number).includes(Number(i)):!isEmpty(Number(i));
 const apt=i=>G.apartments?.[i]?.ownerName||"—";
 const isEmpty=i=>{const a=G.apartments?.[i]||{},n=(a.ownerName||"").trim();return a.vacant===true||!n||n==="(فارغ)"};
 const nAct=()=>Array.from({length:N},(_,k)=>k+1).filter(i=>!isEmpty(i)).length;
@@ -375,7 +378,11 @@ const sinceOf=i=>G.apartments?.[i]?.since||"";
 const isRented=i=>G.apartments?.[i]?.occupancyStatus==="rented";
 const statusOf=i=>isEmpty(i)?"vac":isRented(i)?"rent":"occ";
 const tag=i=>isRented(i)?' <span class="bd wa" style="font-size:11px">مستأجرة</span>':"";
-const actM=(i,m,y=Y)=>!isEmpty(i)&&(!sinceOf(i)||`${y}-${String(MONTHS.indexOf(m)+1).padStart(2,"0")}`>=sinceOf(i));
+const actM=(i,m,y=Y)=>{
+  const key=monthKey(m,y),since=sinceOf(i)||SUBSCRIPTION_START;
+  const effectiveStart=since<SUBSCRIPTION_START?SUBSCRIPTION_START:since;
+  return !!key&&!isEmpty(i)&&key>=effectiveStart&&dueFor(m,y)>0;
+};
 const nActM=m=>Array.from({length:N},(_,k)=>k+1).filter(i=>actM(i,m)).length;
 const pay=(i,m)=>Number(G.years?.[Y]?.monthlyPayments?.[i]?.[m]||0);
 const pdate=(i,m)=>G.years?.[Y]?.payDates?.[i]?.[m]||"";
@@ -389,7 +396,7 @@ function initFlt(){
     if(hasPay||exps().some(e=>e.month===m))flt.add(m);
   });
 }
-const badge=(p,d)=>p>=d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
+const badge=(p,d)=>p>d?`<b class="bd ok">زيادة ${num(p-d)} ج</b>`:p===d?'<b class="bd ok">مدفوع</b>':p>0?`<b class="bd wa">متبقي ${num(d-p)}</b>`:'<b class="bd no">لم يدفع</b>';
 function toast(t,bad){const e=$("#toast");e.textContent=t;e.className="show"+(bad?" bad":"");clearTimeout(toast.t);toast.t=setTimeout(()=>e.className="",2600)}
 
 const tok=()=>auth.currentUser.getIdToken();
@@ -540,9 +547,10 @@ function vSum(){
   const statusValue=v=>statusSummary?num(v):"—";
   for(let i=1;i<=N&&isA();i++){
     if(isEmpty(i)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td>—</td></tr>`;continue}
-    const am=ms.filter(m=>actM(i,m)),p=am.reduce((s,m)=>s+pay(i,m),0),need=am.reduce((s,m)=>s+dueFor(m,Y),0),cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);c+=p;if(need>0){if(need-p<=0)okN++;else lateN++}
+    const am=ms.filter(m=>actM(i,m)),p=ms.reduce((s,m)=>s+pay(i,m),0),need=am.reduce((s,m)=>s+dueFor(m,Y),0),cp=isEmpty(i)?0:AP.reduce((s,q)=>s+Math.max(0,share(q)-pp(q,i)),0);if(need>0){if(need-p<=0)okN++;else lateN++}
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td><td class="pos">${num(p)}</td><td class="${need-p>0?"neg":""}">${num(Math.max(0,need-p))}</td><td>${cp<=0?'<b class="bd ok">مسدّد</b>':`<b class="bd no">متبقي ${num(cp)}</b>`}</td></tr>`;
   }
+  c=ms.reduce((sum,m)=>sum+ALLN().reduce((a,i)=>a+pay(i,m),0),0);
   const x=exps().filter(e=>flt.has(e.month)).reduce((s,e)=>s+Number(e.amount||0),0);
   const cam=!isA()?AP.reduce((s,q)=>s+Number(q.collected||0),0):AP.reduce((s,q)=>s+Object.entries(q.payments||{}).filter(([i])=>!isEmpty(+i)).reduce((a,[,b])=>a+Number(b||0),0),0);
   const st=stat(),monthlyPaid=st.paid,monthlyDue=st.due,monthlyExpense=st.spent;
@@ -616,13 +624,18 @@ const attBtn=(id,t="")=>`<label class="btn gh" style="padding:6px 10px">📎${t}
 function vMonthAdmin(){
   const A=isA(),d=dueFor(selM,Y);let c=0,rows="";
   for(let i=1;i<=N;i++){
-    if(!actM(i,selM)){rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>—</td><td>—</td><td><b class="bd" style="background:var(--in);color:var(--mu)">غير مقيمة</b></td><td></td></tr>`;continue}
+    if(!actM(i,selM)){
+      const oldPay=pay(i,selM),oldDate=pdate(i,selM),oldFile=pfile(i,selM);
+      rows+=`<tr><td>${i}</td><td>${esc(apt(i))}</td><td>${oldPay?num(oldPay)+" ج":"—"}</td><td>${oldDate?fd(oldDate):"—"}</td><td><b class="bd" style="background:var(--in);color:var(--mu)">${oldPay?"سداد مسجل":"غير مستحقة"}</b></td><td>${oldFile?`<button class="btn gh" onclick="showF('${oldFile}')">🧾</button>`:""}${oldPay?` <button class="btn gh" onclick="rcpt(${i},'${selM}')">🖨️</button>`:""}</td></tr>`;
+      continue;
+    }
     const p=pay(i,selM),dt=pdate(i,selM),f=pfile(i,selM);c+=p;
     rows+=`<tr><td>${i}</td><td>${esc(apt(i))}${tag(i)}</td>
       <td>${A?`<input type="number" min="0" id="pa-${i}" value="${p||""}" placeholder="0">`:num(p)}</td>
       <td>${A?`<input type="date" id="pd-${i}" value="${dt}">`:fd(dt)}</td><td>${badge(p,d)}</td>
       <td>${f?`<button class="btn gh" onclick="showF('${f}')">🧾</button> `:""}${p>0?` <button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${selM}')">🖨️</button>`:""}${A?attBtn("pf-"+i)+` <button class="btn" onclick="savePay(${i})">حفظ</button>`:""}${A&&p<d&&!isEmpty(i)?waBtns(i):""}</td></tr>`;
   }
+  c=ALLN().reduce((sum,i)=>sum+pay(i,selM),0);
   return `<div class="chips">${MONTHS.map(m=>`<button class="chip ${m===selM?"on":""}" onclick="selM='${m}';render()">${m}</button>`).join("")}</div>
   <div class="card"><div class="top"><h3>تحصيل ${selM} ${Y}</h3><span>المحصّل: <b class="pos">${num(c)} ج</b> من ${num(d*nActM(selM))} ج</span></div>
   ${A?'<div class="row" style="margin-bottom:8px"><button class="btn am" onclick="groupMsg()">📋 نسخ رسالة المتأخرين للجروب</button><button class="btn gh" style="color:var(--tx)" onclick="waGroup()">إرسال في واتساب 💬</button></div><div class="mu" style="margin-bottom:6px">اكتب المبلغ والتاريخ وأرفق صورة التحويل (📎) ثم حفظ. مسح المبلغ = إلغاء الدفعة.</div>':""}
@@ -743,13 +756,13 @@ function addPrj(){
 function togPrj(){const p=G.projects[selP];upd({[`projects/${selP}/closed`]:p.closed?null:true},`${p.closed?"إعادة فتح":"إغلاق"} مشروع ${p.name}`)}
 
 function vMe(){
-  const i=meApt(),d=dueFor(selM,Y);let tot=0;
-  const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;
+  const i=meApt(),d=dueFor(selM,Y);let tot=0,totalDue=0;
+  const grid=MONTHS.map(m=>{const p=pay(i,m);tot+=p;if(actM(i,m))totalDue+=dueFor(m,Y);
     return `<div><div class="mu">${m}</div><b class="${p?"pos":"mu"}">${num(p)} ج</b><div class="mu">${p?fd(pdate(i,m)):"—"}</div>${p?`<span style="display:block;margin-top:4px"><button class="btn gh" title="إيصال استلام" onclick="rcpt(${i},'${m}')">🖨️</button>${pfile(i,m)?` <button class="btn gh" onclick="showF('${pfile(i,m)}')">🧾</button>`:""}</span>`:""}</div>`}).join("");
   return `<div class="card">${isA()&&adminApt?`<button class="btn gh" style="color:var(--tx);margin-bottom:8px" onclick="adminApt=0;go('sum')">← رجوع للملخص</button>`:""}<h3>كشف حساب شقة ${i} - ${esc(apt(i))}</h3>
   <div class="g"><div class="card"><span class="mu">إجمالي الاشتراكات ${Y}</span><b class="pos">${num(tot)} ج</b></div>
   ${prj().map(q=>`<div class="card"><span class="mu">${esc(q.name)}${q.closed?" (مغلق)":""}</span><b class="${!eligible(q,i)?"mu":pp(q,i)>=share(q)?"pos":"neg"}">${eligible(q,i)?`${num(pp(q,i))} / ${num(share(q))} ج`:"غير مستحق"}</b>${eligible(q,i)&&pp(q,i)>0?`<span style="display:block;margin-top:6px"><button class="btn gh" onclick="rcptPrj('${q.id}',${i})">🖨️ إيصال</button></span>`:""}</div>`).join("")}</div>
-  <h3>الدفع الشهري (المطلوب ${num(d)} ج)</h3><div class="mg">${grid}</div></div>`;
+  <h3>الدفع الشهري (${actM(i,selM)?`المطلوب ${num(d)} ج`:'غير مستحق في هذا الشهر'})</h3><div class="mg">${grid}</div></div>`;
 }
 
 function vSend(){
@@ -828,8 +841,8 @@ function reportRows(){
     const i=Math.max(1,Math.min(N,Number(reportApt)||1)),months=MONTHS;
     rows.push(["نوع الحركة","الفترة / المشروع","المطلوب","المدفوع","المتبقي","التاريخ"]);
     months.forEach(m=>{
-      const active=actM(i,m),need=active?dueFor(m,Y):0,p=active?pay(i,m):0;
-      rows.push(["اشتراك شهري",m,need,p,Math.max(0,need-p),active?pdate(i,m)||"": "غير محسوب"]);
+      const active=actM(i,m),need=active?dueFor(m,Y):0,p=pay(i,m);
+      rows.push(["اشتراك شهري",m,need,p,Math.max(0,need-p),active?pdate(i,m)||"":(pdate(i,m)||"غير مستحق")]);
     });
     prj().forEach(p=>{
       const el=eligible(p,i),need=el?share(p):0,paid=el?pp(p,i):0;
@@ -951,9 +964,11 @@ function vAdm(){
     <td><input id="em-${i}" dir="ltr" value="${esc(emailsOf(i).join(", "))}" placeholder="gmail واحد أو أكتر"></td>
     <td><input id="ph-${i}" dir="ltr" inputmode="tel" value="${esc(G.phones?.[i]||"")}" placeholder="رقم واتس المالك"><div class="tenant-box" id="ptw-${i}" ${s==="rent"?"":"hidden"}><input id="tn-${i}" value="${esc(G.tenantNames?.[i]||"")}" placeholder="اسم المستأجر"><input id="pt-${i}" dir="ltr" inputmode="tel" value="${esc(G.tenantPhones?.[i]||"")}" placeholder="رقم واتس المستأجر"></div></td>
     <td><select id="st-${i}" onchange="document.getElementById('ptw-${i}').hidden=this.value!=='rent'"><option value="occ" ${s==="occ"?"selected":""}>مقيمة</option><option value="rent" ${s==="rent"?"selected":""}>مستأجرة</option><option value="vac" ${s==="vac"?"selected":""}>غير مقيمة</option></select></td>
+    <td><input id="sf-${i}" type="month" value="${esc(sinceOf(i)||SUBSCRIPTION_START)}" title="بداية استحقاق الاشتراك"></td>
     <td><button class="btn" onclick="saveApt(${i})">حفظ</button></td></tr>`}).join("");
-  return `<div class="card"><h3>⚙️ الإعدادات</h3><div class="row"><label>الاشتراك الشهري <input id="s-due" type="number" value="${dueFor(selM,Y)}" style="width:90px"></label><button class="btn am" onclick="saveSet()">حفظ</button></div></div>
-  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:70px"></th></tr>${rows}</table></div></div>
+  const rateRows=Object.entries(G.monthlyDueHistory||{}).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>{const m=Number(k.slice(5))-1;return `<tr><td>${MONTHS[m]||esc(k.slice(5))} ${esc(k.slice(0,4))}</td><td>${num(v)} ج</td></tr>`}).join("")||'<tr><td colspan="2">لا يوجد سجل أسعار بعد</td></tr>';
+  return `<div class="card"><h3>⚙️ إعداد الاشتراك الشهري</h3><div class="row"><label>يبدأ تطبيق السعر من <select id="s-due-month" onchange="document.getElementById('s-due').value=dueFor(MONTHS[Number(this.value)-1],Y)">${MONTHS.map((m,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${String(i+1).padStart(2,"0")==String(MONTHS.indexOf(selM)+1).padStart(2,"0")?"selected":""}>${m} ${Y}</option>`).join("")}</select></label><label>قيمة الاشتراك <input id="s-due" type="number" min="1" step="1" value="${dueFor(selM,Y)}" style="width:110px"></label><button class="btn am" onclick="saveSet()">حفظ السعر</button></div><div class="mu" style="margin-top:7px">أي تغيير يبدأ من الشهر المختار فقط، ولا يغيّر أسعار الشهور السابقة. بداية الاشتراكات المعتمدة: يوليو 2026.</div><div class="tw" style="margin-top:10px"><table><tr><th>الشهر</th><th>السعر المسجل</th></tr>${rateRows}</table></div></div>
+  <div class="card"><h3>👥 الملاك وإيميلات Google للدخول</h3><div class="mu" style="margin-bottom:8px">اكتب إيميل Gmail لكل شقة.</div><div class="tw"><table class="adm"><tr><th style="width:34px">شقة</th><th style="width:20%">الاسم</th><th>إيميل الدخول</th><th style="width:18%">واتساب (مالك / مستأجر)</th><th style="width:15%">الحالة</th><th style="width:135px">بداية الاستحقاق</th><th style="width:70px"></th></tr>${rows}</table></div></div>
   <div class="card"><h3>🕘 آخر التعديلات</h3><div id="logbox" class="mu">جارٍ التحميل…</div></div>
   <div class="card"><h3>🧰 صيانة البيانات</h3><button class="btn" onclick="exportCsv()">تصدير Excel (CSV) 📥</button> <button class="btn" onclick="exportBackup()">نسخة احتياطية JSON 💾</button> <label class="btn gh" style="padding:8px 14px">استيراد نسخة 📤<input type="file" accept=".json,application/json" hidden onchange="importBackup(this)"></label></div>`;
 }
@@ -971,12 +986,21 @@ function saveApt(i){
   if(pt===false||(pt&&(pt.length<11||pt.length>15)))return toast("رقم واتساب المستأجر غير صحيح",1);
   o[`phones/${i}`]=ph||null;o[`tenantPhones/${i}`]=pt||null;o[`tenantNames/${i}`]=tn||null;
   o[`apartments/${i}/ownerName`]=$("#on-"+i).value.trim();
+  const startMonth=$("#sf-"+i)?.value||SUBSCRIPTION_START;
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(startMonth))return toast("شهر بداية الاستحقاق غير صحيح",1);
+  o[`apartments/${i}/since`]=startMonth;
   o[`apartments/${i}/vacant`]=st==="vac"?true:null;
   o[`apartments/${i}/occupancyStatus`]=st==="rent"?"rented":null;
   upd(o,`تحديث بيانات شقة ${i} (${st==="rent"?"مستأجرة":st==="vac"?"غير مقيمة":"مقيمة"}) ✓`);
 }
 
-function saveSet(){upd({monthlyDue:Number($("#s-due").value)||180},"تم حفظ الإعدادات ✓")}
+function saveSet(){
+  const mm=$("#s-due-month")?.value,rate=Number($("#s-due")?.value),key=mm?`${Y}-${mm}`:"";
+  if(!key||key<SUBSCRIPTION_START)return toast("بداية الاشتراكات المعتمدة هي يوليو 2026",1);
+  if(!Number.isFinite(rate)||rate<=0||rate>100000)return toast("اكتب قيمة اشتراك صحيحة أكبر من صفر",1);
+  const history={...(G.monthlyDueHistory||{}),[key]:rate},latest=Object.keys(history).filter(k=>/^\d{4}-\d{2}$/.test(k)).sort().pop();
+  upd({[`monthlyDueHistory/${key}`]:rate,monthlyDue:Number(history[latest]||rate)},`تم تسجيل اشتراك ${MONTHS[Number(mm)-1]} ${Y} بقيمة ${num(rate)} جنيه ✓`);
+}
 async function reseed(){
   if(!confirm("هيتم استبدال كل بيانات قاعدة البيانات ببيانات الشيت الأصلية. متأكد؟"))return;
   try{await api("","PATCH",makeSeed());await load();initFlt();render();toast("تمت استعادة البيانات ✓")}
@@ -1009,14 +1033,14 @@ function waGroup(){
 }
 
 const ALLN=()=>Array.from({length:N},(_,k)=>k+1);
-function calcStat(){return{paid:MONTHS.map(m=>ALLN().filter(i=>actM(i,m)).reduce((s,i)=>s+pay(i,m),0)),due:MONTHS.map(m=>dueFor(m,Y)*nActM(m)),spent:MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((s,e)=>s+Number(e.amount||0),0))}}
+function calcStat(){return{paid:MONTHS.map(m=>ALLN().reduce((s,i)=>s+pay(i,m),0)),due:MONTHS.map(m=>dueFor(m,Y)*nActM(m)),spent:MONTHS.map(m=>exps().filter(e=>e.month===m).reduce((s,e)=>s+Number(e.amount||0),0))}}
 function stat(){
   if(isA())return calcStat();
   const p=G.pub?.years?.[Y]||{},f=a=>Array.from({length:12},(_,i)=>Number((a||[])[i]||0));
   return{paid:f(p.paid),due:f(p.due),spent:f(p.spent)};
 }
 function buildPub(){
-  const old=Y,out={monthlyDue:due(),years:{},projects:{},
+  const old=Y,out={monthlyDue:Number(G.monthlyDue||due()),monthlyDueHistory:{...(G.monthlyDueHistory||{})},years:{},projects:{},
     apartmentStatus:{total:N,
       occupied:ALLN().filter(i=>statusOf(i)==="occ").length,
       rented:ALLN().filter(i=>statusOf(i)==="rent").length,
@@ -1052,7 +1076,7 @@ async function syncAccess(){
 
 /* تعديل مهم لـ loadRes لجعل التحميل آمناً حتى لو اختفت القواعد أو كانت الوصولات محددة */
 async function loadRes(){
-  const a=U.apt,pub=(await api("pub").catch(()=>({})))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,pub,residents:{},pending:{},phones:{},notifications:{residents:{}},notificationReads:{residents:{}}};
+  const a=U.apt,pub=(await api("pub").catch(()=>({})))||{},o={apartments:{},years:{},projects:{},monthlyDue:pub.monthlyDue||180,monthlyDueHistory:pub.monthlyDueHistory||{},pub,residents:{},pending:{},phones:{},notifications:{residents:{}},notificationReads:{residents:{}}};
   
   const [residentNotifs,residentReads]=await Promise.all([
     api(`notifications/residents/${a}`).catch(()=>({})),
@@ -1128,7 +1152,7 @@ function openReceipt(r){
   <div class="ln"><span>المبلغ</span><b>${num(r.amount)} جنيه مصري</b></div><div class="ln"><span>عن</span><b>${esc(r.purpose)}</b></div>
   <div class="sig"><span>توقيع المستلم: ........................</span><span>ختم / اعتماد</span></div></div>`);
 }
-const BK=["apartments","years","projects","monthlyDue","phones","tenantPhones","tenantNames","residents","pending"];
+const BK=["apartments","years","projects","monthlyDue","monthlyDueHistory","phones","tenantPhones","tenantNames","residents","pending"];
 function exportBackup(){
   const o={};BK.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:"application/json"}));a.download=`building60-backup-${today()}.json`;a.click();
