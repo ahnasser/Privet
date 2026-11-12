@@ -1,10 +1,10 @@
-<!-- Building 60 V6.5 — statement layout polish and reversible project closure. -->
+<!-- Building 60 V6.7 — lightweight visual polish; no application logic changes. -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عمارة 60 - ساوث هيلز 2 | V6.5</title>
+<title>عمارة 60 - ساوث هيلز 2 | V6.7</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0b1220;--card:#131f33;--in:#0b1527;--ln:#263750;--tx:#e7eef8;--mu:#9aabc2;--ac:#45e0b0;--am:#ffd166;--rd:#ff718b;--bl:#75aaff;--shadow:0 12px 32px rgba(0,0,0,.16)}
@@ -422,6 +422,172 @@ button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible
  .statement-month-grid{gap:6px}.statement-month-grid>div{padding:8px}
  .statement-month-grid b{font-size:13px}
  .finance-month-metrics{gap:5px}.finance-month-metrics>div{padding:7px}.finance-month-metrics b{font-size:14px}
+}
+
+
+/* V6.7 — visual refinement only: CSS, no added scripts, libraries, images or network calls */
+:root{
+ --shadow:0 8px 24px rgba(0,0,0,.13);
+ --radius-lg:18px;
+ --radius-md:13px;
+}
+body{line-height:1.7}
+.w{max-width:1320px}
+#app{gap:16px}
+#app>.top{
+ border-radius:18px;
+ border-color:color-mix(in srgb,var(--ac) 20%,var(--ln));
+ background:var(--card);
+ box-shadow:0 5px 18px rgba(0,0,0,.10);
+}
+#app>.top h1{font-size:clamp(19px,2vw,24px);line-height:1.35}
+#who{display:inline-block;margin-top:5px}
+#net{display:inline-flex;align-items:center;gap:5px;margin-top:7px}
+#nav{
+ background:var(--card);
+ border-color:color-mix(in srgb,var(--ln) 82%,var(--ac));
+ box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+#nav:before{letter-spacing:.1px}
+#nav button{
+ min-height:44px;
+ border:1px solid transparent;
+ border-radius:11px;
+ color:var(--mu);
+ font-weight:600;
+ line-height:1.55;
+}
+#nav button:hover{
+ background:color-mix(in srgb,var(--ac) 7%,var(--card));
+ border-color:color-mix(in srgb,var(--ac) 22%,var(--ln));
+ color:var(--tx);
+ transform:none;
+}
+#nav button.on{
+ background:color-mix(in srgb,var(--ac) 13%,var(--card));
+ color:var(--ac);
+ border-color:color-mix(in srgb,var(--ac) 32%,var(--ln));
+ box-shadow:inset -3px 0 0 var(--ac);
+}
+#view{min-width:0}
+#view>.card,.chart-card{
+ border-radius:var(--radius-lg);
+ box-shadow:var(--shadow);
+}
+#view>.card{padding:clamp(14px,1.8vw,22px)}
+h2{line-height:1.45}
+h3{line-height:1.5;letter-spacing:0}
+.card h3{padding-bottom:8px;border-bottom:1px solid color-mix(in srgb,var(--ln) 72%,transparent)}
+.g{gap:12px}
+.g .card,.statcard,.report-kpi,.finance-kpi,.finance-apt-card,.statement-month,.search-result{
+ border-radius:14px;
+ box-shadow:none;
+}
+.g .card{padding:15px;background:var(--in)}
+.g .card b{font-size:clamp(18px,2vw,23px);font-variant-numeric:tabular-nums}
+.btn{
+ min-height:40px;
+ border-radius:11px;
+ padding:9px 15px;
+ box-shadow:none;
+}
+.btn:hover{filter:brightness(1.04);box-shadow:0 3px 10px rgba(0,0,0,.10)}
+.btn.gh{background:transparent;border-color:var(--ln)}
+input,select{
+ min-height:40px;
+ border-radius:11px;
+}
+input:focus,select:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--ac) 16%,transparent)}
+.tw{border-radius:13px}
+table{border-spacing:0}
+th{font-weight:700;letter-spacing:.1px}
+tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--in) 28%,transparent)}
+tbody tr:hover td{background:color-mix(in srgb,var(--ac) 6%,var(--card))}
+.bd{display:inline-flex;align-items:center;justify-content:center;min-height:23px;padding:2px 10px}
+.chart-card{box-shadow:none}
+.chart-card h3{border:0;padding:0}
+.report-filters,.finance-note,.project-state-note{border-radius:13px}
+.report-kpi{padding:14px 15px}
+.report-kpi b{font-variant-numeric:tabular-nums}
+.payment-line{border-radius:12px}
+.mb{border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+#th{width:42px;height:42px;box-shadow:0 5px 15px rgba(0,0,0,.12)}
+#toast{border:1px solid rgba(255,255,255,.12)}
+/* Avoid replaying page-entry motion on every render; keeps the interface calm and light. */
+#view>.card{animation:none}
+@media(min-width:1000px){
+ body{padding:18px}
+ #app{grid-template-columns:252px minmax(0,1fr);gap:16px}
+ #nav{top:18px;max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain}
+ #nav button{padding:10px 12px}
+}
+@media(max-width:999px){
+ body{padding:10px}
+ #app{gap:10px}
+ #nav{
+  position:relative;
+  top:auto;
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
+  gap:7px;
+  padding:8px;
+  min-height:0;
+  border-radius:14px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+ }
+ #nav button{
+  flex:0 0 auto;
+  width:auto;
+  min-height:42px;
+  padding:8px 12px;
+  white-space:nowrap;
+  text-align:center;
+  border-radius:10px;
+ }
+ #nav button.on{box-shadow:inset 0 -3px 0 var(--ac)}
+ #nav .s{display:inline}
+ #nav .l{display:none}
+ #view>.card{padding:15px}
+}
+@media(max-width:640px){
+ body{padding:8px}
+ #app>.top{
+  border-radius:15px;
+  padding:13px;
+  gap:10px;
+ }
+ #app>.top .row{width:100%;display:grid;grid-template-columns:1fr auto auto;gap:7px}
+ #app>.top .row select{width:100%;min-width:0}
+ #app>.top .row .btn{min-height:40px;padding:7px 11px}
+ #nav{margin:0 0 2px;padding:7px;gap:6px}
+ #nav button{font-size:13px;min-height:40px;padding:7px 10px}
+ #view>.card{padding:13px;border-radius:15px}
+ .g{gap:8px}
+ .g .card{padding:11px}
+ .report-kpis{gap:8px}
+ .report-kpi{padding:10px}
+ .chart-card{border-radius:14px}
+ .chart-head{gap:8px}
+ .btn{min-height:42px}
+ .report-actions .btn{min-height:42px}
+ #th{bottom:12px;left:10px;width:40px;height:40px}
+}
+@media(max-width:380px){
+ #app>.top .row{grid-template-columns:1fr 1fr}
+ #app>.top .row select{grid-column:1/-1}
+ #nav button{font-size:12px;padding:7px 9px}
+ .g .card b{font-size:16px}
+}
+[data-t=light] #app>.top{background:rgba(255,255,255,.96)}
+[data-t=light] #nav{background:#fff}
+[data-t=light] #nav button.on{background:#e8f7f2;color:#087f63}
+[data-t=light] tbody tr:nth-child(even) td{background:#f8fafc}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
 </style>
